@@ -6,6 +6,10 @@ module OpenDataMaker
 
     enable :sessions
 
+    get '/' do
+        render :home, locals: {'title' => 'Open Data Maker'}
+    end
+
     ##
     # Caching support.
     #

@@ -16,7 +16,7 @@ gem 'rake'
 # Component requirements
 gem 'sass'
 gem 'liquify'
-gem 'liquid', '= 2.1.2'
+gem 'liquid', '= 3.0.3'
 
 # Test requirements
 gem 'rspec', :group => 'test'
