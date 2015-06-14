@@ -1,0 +1,9 @@
+---
+:orm: none
+:test: rspec
+:mock: none
+:script: jquery
+:renderer: liquid
+:stylesheet: sass
+:namespace: OpenDataMaker
+:migration_format: number
