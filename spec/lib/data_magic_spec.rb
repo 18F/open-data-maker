@@ -2,11 +2,10 @@ require 'spec_helper'
 require 'data_magic'
 
 describe DataMagic do
-
   describe "#import_csv" do
     it "throws errors for bad format" do
       data = StringIO.new("not a csv file")
-      expect{DataMagic.import_csv('test-index', data)}.to raise_error
+      expect{DataMagic.import_csv('test-index', data)}.to raise_error(DataMagic::InvalidData)
     end
 
     it "reads file and reports number of rows and headers" do
@@ -16,14 +15,16 @@ a,b
 3,4
 eos
       data = StringIO.new(data_str)
-      num_rows, fields = DataMagic.import_csv('test-index', data)
+      num_rows, fields = DataMagic.import_csv('my-index', data)
       expect(num_rows).to be(2)
       expect(fields).to eq( [:a,:b] )
+
+      DataMagic.delete_index('my-index')
     end
   end
 
   describe "#search" do
-    before do
+    before(:all) do
       data_str = <<-eos
 name,address
 Paul,15 Penny Lane
@@ -36,10 +37,14 @@ eos
       num_rows, fields = DataMagic.import_csv('people', data)
     end
 
+    after(:all) do
+      DataMagic.delete_index('people')
+    end
+
     it "can find an attribute from an imported file" do
-      query = { term: { name: "Paul" }}
+      query = { query: { match: {name: "Paul" }}}
       result = DataMagic.search('people', query)
-      expect(result).to eq({name:'Paul', address:'15 Penny Lane'})
+      expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane"}])
     end
 
   end
