@@ -10,7 +10,7 @@ task :import => :environment do
     puts filepath
     begin
       File.open(filepath) do |file|
-        rows, fields = DataMagic.import_csv(file)
+        rows, fields = DataMagic.import_csv('data', file)
         puts "imported #{rows} rows"
       end
     rescue Exception => e
