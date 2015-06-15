@@ -10,6 +10,9 @@ source 'https://rubygems.org'
 # Optional JSON codec (faster performance)
 # gem 'oj'
 
+# open-data-maker requirements
+gem 'elasticsearch'
+
 # Project requirements
 gem 'rake'
 

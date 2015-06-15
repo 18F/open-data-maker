@@ -6,7 +6,7 @@ class DataMagic
   class << self
     require 'csv'
 
-    def import_csv(datafile)
+    def import_csv(index_name, datafile)
       data = datafile.read
 
       fields = nil
@@ -24,6 +24,9 @@ class DataMagic
 
       raise InvalidData, "invalid file format or zero rows" if num_rows == 0
       return [num_rows, fields ]
+    end
+
+    def search(index_name, query)
     end
   end
 end
