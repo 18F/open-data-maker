@@ -20,11 +20,16 @@ you think an email list would be helpful, [file an issue](https://github.com/18F
 
 ## Development Process
 
-Fork the project and follow the instructions in the [README](README.md) to set up your
-development environment.
+Fork the project and follow the instructions in the [Installation Guide](INSTALL.md) to set up your development environment.
 
 All the tests should pass and new functionality or bug fixes should have a new
 test before submitting a pull request.
+
+Key Dependencies:
+
+* [Padrino](http://www.padrinorb.com/) - Ruby Web framework
+* [Liquid](http://liquidmarkup.org/) view templates
+* [Elastic Search](https://www.elastic.co)
 
 ### Testing
 

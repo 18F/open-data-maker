@@ -1,7 +1,7 @@
 require 'data_magic'
 
+desc "import files from /data directory"
 task :import => :environment do
-  puts "--------------- import files from /data directory ---"
   # collect list of files, searching directories recursively
   files = Dir.glob("./data/**/*").select { |entry| File.file? entry }
   puts "files found: #{files.length}"

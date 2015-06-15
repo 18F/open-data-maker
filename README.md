@@ -1,31 +1,15 @@
 
-## Get Started
 
-install ruby 2.2.2 (slightly older versions probably work)
+## How this works
 
-```
-brew install elasticsearch
+1. Make sure elasticsearch is running
+1. Put csv files into /data
+1. Import files from /data: ```rake import```
 
-cd open-data-maker
-bundle
-```
+## TO DO
 
-## Run the App
-
-Make sure elasticsearch is running:
-```
-elasticsearch --config=/usr/local/opt/elasticsearch/config/elasticsearch.yml
-```
-
-Run the web app:
-```
-padrino start
-```
-
-go to: http://127.0.0.1:3000/
-
-
-## Developer Notes
-
-* [Padrino](http://www.padrinorb.com/) - Ruby Web framework
-* [Liquid](http://liquidmarkup.org/) view templates
+1. Import...
+  a. there can be multiple files (must end in .csv)
+  b. optional .yaml file that specified column -> field mapping
+1. api endpoint to get the data
+1. support multiple endpoints
