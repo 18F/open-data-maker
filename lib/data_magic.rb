@@ -30,9 +30,16 @@ class DataMagic
       client.indices.clear_cache
     end
 
-    def import_csv(index_name, datafile)
+    def import_csv(index_name, datafile, options={})
+      unless datafile.respond_to?(:read)
+        raise ArgumentError, "can't read datafile #{datafile.inspect}"
+      end
       index_name = scoped_index_name(index_name)
       data = datafile.read
+
+      if options[:force_utf8]
+        data = data.encode('UTF-8', invalid: :replace, replace: '')
+      end
 
       fields = nil
       num_rows = 0
@@ -45,12 +52,11 @@ class DataMagic
         end
       rescue Exception => e
         puts "row #{num_rows}: #{e.message}"
-        num_rows -=1
       end
 
       raise InvalidData, "invalid file format or zero rows" if num_rows == 0
 
-      client.indices.refresh index: index_name
+      client.indices.refresh index: index_name if num_rows > 0
       return [num_rows, fields ]
     end
 
