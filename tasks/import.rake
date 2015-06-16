@@ -2,8 +2,8 @@ require 'data_magic'
 
 desc "import files from /data directory"
 task :import => :environment do
-  # collect list of files, searching directories recursively
-  files = Dir.glob("./data/**/*").select { |entry| File.file? entry }
+  # collect list of csv files, searching directories recursively
+  files = Dir.glob("./data/**/*.csv").select { |entry| File.file? entry }
   puts "files found: #{files.length}"
 
   files.each do |filepath|
