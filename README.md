@@ -23,6 +23,7 @@ be a nice longer term feature).
 1. Make sure elasticsearch is running
 1. Put csv files into /data
 1. Import files from /data: ```rake import```
+   a. there can be multiple files (must end in .csv)
 
 ## TO DO
 

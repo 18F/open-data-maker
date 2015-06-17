@@ -49,8 +49,9 @@ eos
   end
 
   describe "#search" do
-    before(:all) do
-      data_str = <<-eos
+    def address_data
+      if @address_data.nil?
+        data_str = <<-eos
 name,address
 Paul,15 Penny Lane
 Michelle,600 Pennsylvania Avenue
@@ -58,19 +59,75 @@ Marilyn,1313 Mockingbird Lane
 Sherlock,221B Baker Street
 Bart,742 Evergreen Terrace
 eos
-      data = StringIO.new(data_str)
-      num_rows, fields = DataMagic.import_csv('people', data)
+        @address_data = StringIO.new(data_str)
+      else
+        @address_data.rewind
+      end
+      @address_data
+    end
+
+    describe "default" do
+      before (:all) do
+        num_rows, fields = DataMagic.import_csv('people', address_data)
+      end
+
+      after(:all) do
+        DataMagic.delete_index('people')
+      end
+
+      it "can find an attribute from an imported file" do
+        query = { query: { match: {name: "Paul" }}}
+        result = DataMagic.search('people', query)
+        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane"}])
+      end
+    end
+    describe "with mapping" do
+      before (:all) do
+        options = {}
+        options[:fields] = {name: 'person_name', address: 'street'}
+        num_rows, fields = DataMagic.import_csv('people', address_data, options)
+        expect(fields.sort).to eq(options[:fields].values.sort)
+      end
+
+      after(:all) do
+        DataMagic.delete_index('people')
+      end
+
+      it "can find an attribute from an imported file" do
+        query = { query: { match: {person_name: "Paul" }}}
+        result = DataMagic.search('people', query)
+        expect(result).to eq([{"person_name" => "Paul", "street" => "15 Penny Lane"}])
+      end
+
+
+    end
+
+
+  end
+
+
+
+  describe "#import_all" do
+
+    before(:all) do
+      dir_path = './spec/fixtures/import_all'
+      @csv_files = Dir.glob("#{dir_path}/**/*.csv")
+                            .select { |entry| File.file? entry }
+      DataMagic.import_all(dir_path)
+    end
+
+    it "can get list of imported csv files" do
+      expect(DataMagic.files.sort).to eq(@csv_files.sort)
+    end
+
+    it "indexes files with yaml mapping" do
+      query = { query: { match: {name: "Chicago" }}}
+      result = DataMagic.search('cities', query)
+      expect(result).to eq([{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "lattitude"=>"41.837551", "longitude"=>"-87.681844"}])
     end
 
     after(:all) do
-      DataMagic.delete_index('people')
+      DataMagic.delete_index('cities')
     end
-
-    it "can find an attribute from an imported file" do
-      query = { query: { match: {name: "Paul" }}}
-      result = DataMagic.search('people', query)
-      expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane"}])
-    end
-
   end
 end
