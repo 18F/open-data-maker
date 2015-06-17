@@ -2,7 +2,7 @@ language: ruby
 rvm:
  - "2.2.2"
 # uncomment this line if your project needs to run something other than `rake`:
-# script: bundle exec rspec spec
+script: bundle exec rake spec
 services:
   - elasticsearch
 
