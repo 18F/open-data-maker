@@ -1,0 +1,12 @@
+language: ruby
+rvm:
+ - "2.2.2"
+# uncomment this line if your project needs to run something other than `rake`:
+# script: bundle exec rspec spec
+services:
+  - elasticsearch
+
+# ElasticSearch may take few seconds to start and may not be available
+# when the script is executed, so we make Travis CI wait with the sleep command
+before_script:
+  - sleep 10
