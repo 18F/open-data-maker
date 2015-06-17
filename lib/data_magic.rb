@@ -5,7 +5,7 @@ class DataMagic
   end
 
   require 'elasticsearch'
-  @@client = Elasticsearch::Client.new log: true
+  @@client = Elasticsearch::Client.new #log: true
 
   class << self
     require 'csv'
