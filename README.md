@@ -27,7 +27,7 @@ be a nice longer term feature).
 ## TO DO
 
 1. Import...
-  1.1. there can be multiple files (must end in .csv)
-  1.1. optional .yaml file that specified column -> field mapping
+  1. there can be multiple files (must end in .csv)
+  1. optional .yaml file that specified column -> field mapping
 1. api endpoint to get the data
 1. support multiple endpoints
