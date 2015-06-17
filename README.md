@@ -1,6 +1,7 @@
 
 
 # Open Data Maker
+[![Build Status](https://travis-ci.org/18F/open-data-maker.svg?branch=master)](https://travis-ci.org/18F/open-data-maker)
 
 The goal of this project is to make it easy to turn a lot of potentially large
 csv files into open data via an API and the ability for people to download
@@ -26,7 +27,7 @@ be a nice longer term feature).
 ## TO DO
 
 1. Import...
-  a. there can be multiple files (must end in .csv)
-  b. optional .yaml file that specified column -> field mapping
+  1.1. there can be multiple files (must end in .csv)
+  1.1. optional .yaml file that specified column -> field mapping
 1. api endpoint to get the data
 1. support multiple endpoints
