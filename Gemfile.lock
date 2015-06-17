@@ -7,6 +7,7 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
+    cf-app-utils (0.4)
     diff-lcs (1.2.5)
     elasticsearch (1.0.12)
       elasticsearch-api (= 1.0.12)
@@ -23,6 +24,7 @@ GEM
       url_mount (~> 0.2.1)
     i18n (0.7.0)
     json (1.8.3)
+    kgio (2.9.3)
     liquid (3.0.3)
     liquify (0.2.7)
       liquid (>= 2.2.2)
@@ -75,6 +77,7 @@ GEM
       rack
     rack-test (0.6.3)
       rack (>= 1.0)
+    raindrops (0.13.0)
     rake (10.4.2)
     rspec (3.3.0)
       rspec-core (~> 3.3.0)
@@ -102,6 +105,10 @@ GEM
       polyglot (>= 0.3.1)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
+    unicorn (4.9.0)
+      kgio (~> 2.6)
+      rack
+      raindrops (~> 0.7)
     url_mount (0.2.1)
       rack
 
@@ -109,6 +116,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  cf-app-utils
   elasticsearch
   liquid (= 3.0.3)
   liquify
@@ -117,6 +125,7 @@ DEPENDENCIES
   rake
   rspec
   sass
+  unicorn
 
 BUNDLED WITH
    1.10.3
