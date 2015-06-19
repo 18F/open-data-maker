@@ -14,7 +14,7 @@ data sets that we have in government are huge.
 The first version of this project will allow us to host a website for an
 agency with a specific set of csv files, which are deployed with the app.
 This will allows us to deploy more quickly since there will be a lower risk
-security profile than if ab agency could upload the CSV files (which might
+security profile than if an agency could upload the CSV files (which might
 be a nice longer term feature).
 
 
