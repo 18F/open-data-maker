@@ -9,10 +9,12 @@ module OpenDataMaker
         render :home, locals: {'title' => 'Open Data Maker'}
     end
 
-    get '/query' do
+    get '/:endpoint' do
       puts params.inspect
+      index = params['endpoint']
+      params.delete('endpoint')
       query = { query: { match: params }}
-      result = DataMagic.search('cities', query)
+      result = DataMagic.search(query, api:endpoint)
       result.to_json
     end
 

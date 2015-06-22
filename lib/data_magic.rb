@@ -9,6 +9,7 @@ class DataMagic
   @@client = Elasticsearch::Client.new #log: true
   @@files = []
   @@mapping = {}
+  @@api_endpoints = {}
 
   class << self
     require 'csv'
@@ -23,6 +24,10 @@ class DataMagic
 
     def mapping
       @@mapping
+    end
+
+    def find_index_for(api)
+      @@api_endpoints[api][:index]
     end
 
     def scoped_index_name(index_name)
@@ -92,7 +97,13 @@ class DataMagic
 
       files.each do |filepath|
         fname = filepath.split('/').last
-        options[:fields] = mapping[index][fname]['fields'] if mapping[index][fname] && mapping[index][fname]['fields']
+        file_config = mapping[index][fname] || []
+        options[:fields] = file_config['fields'] #if mapping[index][fname] && mapping[index][fname]['fields']
+        puts "--------- file_config: #{file_config.inspect}"
+        puts "--------- file_config['api']: #{file_config['api'].inspect}"
+        endpoint = file_config['api'] || 'data'
+        puts "--------- endpoint: #{endpoint} index: #{index}"
+        @@api_endpoints[endpoint] = {index: index}
         begin
           puts "reading #{filepath}"
           File.open(filepath) do |file|
@@ -106,7 +117,18 @@ class DataMagic
       end
     end
 
-    def search(index_name, query)
+    def search(query, options = {})
+      options[:api] = options['api'].to_sym if options['api']
+      options[:index] = options['index'].to_sym if options['index']
+      puts "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
+      if options[:api]
+        index_name = find_index_for(options[:api])
+        if index_name.nil?
+          raise ArgumentError, "no configuration found for #{options[:api]}"
+        end
+      else
+        index_name = options[:index]
+      end
       index_name = scoped_index_name(index_name)
       puts "index_name #{index_name}"
       full_query = {index: index_name, body: query}
