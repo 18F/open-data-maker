@@ -9,6 +9,14 @@ module OpenDataMaker
         render :home, locals: {'title' => 'Open Data Maker'}
     end
 
+    get '/query' do
+      puts params.inspect
+      query = { query: { match: params }}
+      result = DataMagic.search('cities', query)
+      result.to_json
+    end
+
+
     ##
     # Caching support.
     #
