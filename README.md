@@ -18,14 +18,17 @@ security profile than if an agency could upload the CSV files (which might
 be a nice longer term feature).
 
 
+## Install and Run the App (as a developer)
+
+See our [Installation Guide](INSTALL.md)
+
 ## How this works
 
-1. Make sure elasticsearch is running
 1. Put csv files into /data
 1. Import files from /data: ```rake import```
    1.1 there can be multiple files (must end in .csv)
    1.1 optional data.yaml file that specified column -> field mapping
-1. api endpoint to get the data
+1. api endpoint to get the data /query?name=value
 
 ## TO DO
 
