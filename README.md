@@ -23,12 +23,10 @@ be a nice longer term feature).
 1. Make sure elasticsearch is running
 1. Put csv files into /data
 1. Import files from /data: ```rake import```
-   a. there can be multiple files (must end in .csv)
+   1.1 there can be multiple files (must end in .csv)
+   1.1 optional data.yaml file that specified column -> field mapping
+1. api endpoint to get the data
 
 ## TO DO
 
-1. Import...
-  1. there can be multiple files (must end in .csv)
-  1. optional .yaml file that specified column -> field mapping
-1. api endpoint to get the data
 1. support multiple endpoints
