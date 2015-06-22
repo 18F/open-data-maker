@@ -9,6 +9,7 @@ class DataMagic
   @@client = Elasticsearch::Client.new #log: true
   @@files = []
   @@mapping = {}
+  @@api_endpoints = {}
 
   class << self
     require 'csv'
@@ -23,6 +24,10 @@ class DataMagic
 
     def mapping
       @@mapping
+    end
+
+    def find_index_for(api)
+      @@api_endpoints[api][:index]
     end
 
     def scoped_index_name(index_name)
@@ -92,7 +97,10 @@ class DataMagic
 
       files.each do |filepath|
         fname = filepath.split('/').last
-        options[:fields] = mapping[index][fname]['fields'] if mapping[index][fname] && mapping[index][fname]['fields']
+        file_config = mapping[index][fname] || []
+        options[:fields] = file_config['fields'] #if mapping[index][fname] && mapping[index][fname]['fields']
+        endpoint = file_config['api'] || 'data'
+        @@api_endpoints[endpoint] = {index: index}
         begin
           puts "reading #{filepath}"
           File.open(filepath) do |file|
@@ -106,12 +114,29 @@ class DataMagic
       end
     end
 
-    def search(index_name, query)
+    # get the real index name when given either
+    # api: api endpoint configured in data.yaml
+    # index: index name
+    def index_name_from_options(options)
+      options[:api] = options['api'].to_sym if options['api']
+      options[:index] = options['index'].to_sym if options['index']
+      puts "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
+      if options[:api]
+        index_name = find_index_for(options[:api])
+        if index_name.nil?
+          raise ArgumentError, "no configuration found for #{options[:api]}"
+        end
+      else
+        index_name = options[:index]
+      end
       index_name = scoped_index_name(index_name)
-      puts "index_name #{index_name}"
+    end
+
+    # thin layer on elasticsearch query
+    def search(query, options = {})
+      index_name = index_name_from_options(options)
       full_query = {index: index_name, body: query}
       result = client.search full_query
-      puts result
       hits = result["hits"]
       hits["hits"].map {|hit| hit["_source"]}
     end

@@ -77,7 +77,7 @@ eos
 
       it "can find an attribute from an imported file" do
         query = { query: { match: {name: "Paul" }}}
-        result = DataMagic.search('people', query)
+        result = DataMagic.search(query, index: 'people')
         expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane"}])
       end
     end
@@ -95,7 +95,7 @@ eos
 
       it "can find an attribute from an imported file" do
         query = { query: { match: {person_name: "Paul" }}}
-        result = DataMagic.search('people', query)
+        result = DataMagic.search(query, index: 'people')
         expect(result).to eq([{"person_name" => "Paul", "street" => "15 Penny Lane"}])
       end
 
@@ -120,14 +120,18 @@ eos
       expect(DataMagic.files.sort).to eq(@csv_files.sort)
     end
 
+    it "can get index name from api endpoint" do
+      expect(DataMagic.find_index_for('cities')).to eq('city-data')
+    end
+
     it "indexes files with yaml mapping" do
       query = { query: { match: {name: "Chicago" }}}
-      result = DataMagic.search('cities', query)
+      result = DataMagic.search(query, api: 'cities')
       expect(result).to eq([{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "lattitude"=>"41.837551", "longitude"=>"-87.681844"}])
     end
 
     after(:all) do
-      DataMagic.delete_index('cities')
+      DataMagic.delete_index('city-data')
     end
   end
 end
