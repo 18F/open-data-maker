@@ -99,10 +99,7 @@ class DataMagic
         fname = filepath.split('/').last
         file_config = mapping[index][fname] || []
         options[:fields] = file_config['fields'] #if mapping[index][fname] && mapping[index][fname]['fields']
-        puts "--------- file_config: #{file_config.inspect}"
-        puts "--------- file_config['api']: #{file_config['api'].inspect}"
         endpoint = file_config['api'] || 'data'
-        puts "--------- endpoint: #{endpoint} index: #{index}"
         @@api_endpoints[endpoint] = {index: index}
         begin
           puts "reading #{filepath}"
@@ -117,7 +114,10 @@ class DataMagic
       end
     end
 
-    def search(query, options = {})
+    # get the real index name when given either
+    # api: api endpoint configured in data.yaml
+    # index: index name
+    def index_name_from_options(options)
       options[:api] = options['api'].to_sym if options['api']
       options[:index] = options['index'].to_sym if options['index']
       puts "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
@@ -130,10 +130,13 @@ class DataMagic
         index_name = options[:index]
       end
       index_name = scoped_index_name(index_name)
-      puts "index_name #{index_name}"
+    end
+
+    # thin layer on elasticsearch query
+    def search(query, options = {})
+      index_name = index_name_from_options(options)
       full_query = {index: index_name, body: query}
       result = client.search full_query
-      puts result
       hits = result["hits"]
       hits["hits"].map {|hit| hit["_source"]}
     end
