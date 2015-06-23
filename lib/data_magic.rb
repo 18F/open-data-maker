@@ -30,6 +30,12 @@ class DataMagic
       @@api_endpoints[api][:index]
     end
 
+    # returns an array of api_endpoints
+    # list of strings
+    def api_endpoint_names
+      @@api_endpoints.keys
+    end
+
     def scoped_index_name(index_name)
       env = ENV['RACK_ENV']
       "#{env}-#{index_name}"
@@ -98,6 +104,7 @@ class DataMagic
       files.each do |filepath|
         fname = filepath.split('/').last
         file_config = mapping[index][fname] || []
+        # puts "indexing #{fname} config:#{file_config}"
         options[:fields] = file_config['fields'] #if mapping[index][fname] && mapping[index][fname]['fields']
         endpoint = file_config['api'] || 'data'
         @@api_endpoints[endpoint] = {index: index}
@@ -124,7 +131,7 @@ class DataMagic
       if options[:api]
         index_name = find_index_for(options[:api])
         if index_name.nil?
-          raise ArgumentError, "no configuration found for #{options[:api]}"
+          raise ArgumentError, "no configuration found for '#{options[:api]}', available endpoints: #{api_endpoint_names.inspect}"
         end
       else
         index_name = options[:index]
