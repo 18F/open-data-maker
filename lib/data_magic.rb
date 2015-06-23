@@ -6,7 +6,17 @@ class DataMagic
 
   require 'elasticsearch'
   require 'yaml'
-  @@client = Elasticsearch::Client.new #log: true
+
+  if ENV['VCAP_APPLICATION']
+    # Cloud Foundry
+    require 'cf-app-utils'
+    eservice = CF::App::Credentials.find_by_service_name('eservice')
+    service_uri = eservice['uri']
+    @@client = Elasticsearch::Client.new host: service_uri, log: true
+  else
+    @@client = Elasticsearch::Client.new #log: true
+  end
+
   @@files = []
   @@mapping = {}
   @@api_endpoints = {}
@@ -98,7 +108,7 @@ class DataMagic
       files.each do |filepath|
         fname = filepath.split('/').last
         file_config = mapping[index][fname] || []
-        options[:fields] = file_config['fields'] #if mapping[index][fname] && mapping[index][fname]['fields']
+        options[:fields] = file_config['fields']
         endpoint = file_config['api'] || 'data'
         @@api_endpoints[endpoint] = {index: index}
         begin
