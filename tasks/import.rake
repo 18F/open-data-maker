@@ -6,6 +6,8 @@ task :import, [:encoding] => :environment do |t, args|
   if args[:encoding] == "force"
     options[:force_utf8] = true
   end
-  DataMagic.import_all('./data', options)
+  dir_path = ENV['DATA_PATH']
+  dir_path ||= './sample-data'
+  DataMagic.import_all(dir_path, options)
 
 end

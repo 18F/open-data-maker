@@ -24,12 +24,29 @@ See our [Installation Guide](INSTALL.md)
 
 ## How this works
 
+By default, data will be loaded from /sample-data
+
+* [cities100.csv](sample-data/cities100.csv) - dataset of 100 most populous cities in the US
+* [data.yaml](sample-data/data.yaml) - configuration for
+  * how columns are mapped to fields in json output
+  * index name *city-data*
+  * api endpoint name *cities*
+
+When you run the app (after ```rake import```), you can query the dataset via json API, like: /cities?name=Chicago
+
+To use your own data, you can set a different directory with
+
+```
+export export DATA_PATH='./data'
+```
+
 1. Put csv files into /data
 1. Import files from /data: ```rake import```
    1.1 there can be multiple files (must end in .csv)
-   1.1 optional data.yaml file that specified column -> field mapping
-1. api endpoint to get the data /query?name=value
+   1.1 optional data.yaml file that specifies column -> field mapping, index and API endpoint
+1. api endpoint to get the data /api?name=value
 
-## TO DO
+## Help Wanted
 
-1. support multiple endpoints
+1. Try out importing multiple data sets with different endpoints and data.yaml configuration
+2. Take a look at our [open issues](https://github.com/18F/open-data-maker/issues) and our [Contribution Guide](CONTRIBUTING.md)
