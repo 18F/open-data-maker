@@ -9,4 +9,3 @@ db/*.db
 
 # expect people to put their own data in /data
 data/*
-
