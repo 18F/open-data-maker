@@ -7,7 +7,7 @@ task :import, [:encoding] => :environment do |t, args|
     options[:force_utf8] = true
   end
   dir_path = ENV['DATA_PATH']
-  dir_path ||= './sample-data'
+  dir_path ||= DataMagic::DEFAULT_PATH
   DataMagic.import_all(dir_path, options)
 
 end
