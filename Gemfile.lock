@@ -119,6 +119,3 @@ DEPENDENCIES
   rspec
   sass
   sinatra-cross_origin
-
-BUNDLED WITH
-   1.10.3
