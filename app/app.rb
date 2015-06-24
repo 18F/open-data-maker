@@ -7,16 +7,14 @@ module OpenDataMaker
 
     enable :sessions
 
-    configure do
-      enable :cross_origin
-    end
-
     get '/' do
         render :home, locals: {'title' => 'Open Data Maker'}
     end
 
     get '/:endpoint' do
       content_type :json
+      headers 'Access-Control-Allow-Origin' => '*',
+               'Access-Control-Allow-Methods' => ['GET']
 
       puts params.inspect
       endpoint = params['endpoint']
