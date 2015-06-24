@@ -1,7 +1,9 @@
+require 'sinatra/cross_origin'
 module OpenDataMaker
   class App < Padrino::Application
     register SassInitializer
     register Padrino::Helpers
+    register Sinatra::CrossOrigin
 
     enable :sessions
 
@@ -11,6 +13,8 @@ module OpenDataMaker
 
     get '/:endpoint' do
       content_type :json
+      headers 'Access-Control-Allow-Origin' => '*',
+               'Access-Control-Allow-Methods' => ['GET']
 
       puts params.inspect
       endpoint = params['endpoint']
