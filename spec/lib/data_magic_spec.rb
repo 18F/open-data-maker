@@ -115,6 +115,9 @@ eos
                             .select { |entry| File.file? entry }
       DataMagic.import_all(dir_path)
     end
+    after(:all) do
+      DataMagic.delete_index('city-data')
+    end
 
     it "can get list of imported csv files" do
       expect(DataMagic.files.sort).to eq(@csv_files.sort)
@@ -130,8 +133,5 @@ eos
       expect(result).to eq([{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "lattitude"=>"41.837551", "longitude"=>"-87.681844"}])
     end
 
-    after(:all) do
-      DataMagic.delete_index('city-data')
-    end
   end
 end
