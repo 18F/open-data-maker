@@ -1,9 +1,15 @@
+require 'sinatra/cross_origin'
 module OpenDataMaker
   class App < Padrino::Application
     register SassInitializer
     register Padrino::Helpers
+    register Sinatra::CrossOrigin
 
     enable :sessions
+
+    configure do
+      enable :cross_origin
+    end
 
     get '/' do
         render :home, locals: {'title' => 'Open Data Maker'}
