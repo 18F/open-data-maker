@@ -13,5 +13,5 @@ files:
       USPS: state
       NAME: name
       POP10: population
-      INTPTLAT: lattitude
+      INTPTLAT: latitude
       INTPTLONG: longitude
