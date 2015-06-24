@@ -10,11 +10,14 @@ module OpenDataMaker
     end
 
     get '/:endpoint' do
+      content_type :json
+
       puts params.inspect
       endpoint = params['endpoint']
       params.delete('endpoint')
       query = { query: { match: params }}
       result = DataMagic.search(query, api:endpoint)
+
       result.to_json
     end
 
