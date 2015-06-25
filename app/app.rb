@@ -5,6 +5,15 @@ module OpenDataMaker
 
     enable :sessions
 
+    puts ENV['DATA_AUTH'].inspect
+    if ENV['DATA_AUTH']
+      auth = ENV['DATA_AUTH']
+      authorized_user, authorized_pass = auth.split(',')
+      use Rack::Auth::Basic, "Restricted Area" do |username, password|
+        username == authorized_user and password == authorized_pass
+      end
+    end
+
     get '/' do
         render :home, locals: {'title' => 'Open Data Maker'}
     end
