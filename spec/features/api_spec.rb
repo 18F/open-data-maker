@@ -6,7 +6,7 @@ shared_examples_for "api request" do
 			expect(last_response.headers['Access-Control-Allow-Origin']).to eq('*')
 		end
 
-		it "allow GET HTTP method thru CORS" do
+		it "allows GET HTTP method thru CORS" do
 			allowed_http_methods = last_response.header['Access-Control-Allow-Methods']
 			%w{GET}.each do |method|  # don't expect we'll need: POST PUT DELETE
 				expect(allowed_http_methods).to include(method)
