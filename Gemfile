@@ -13,6 +13,8 @@ ruby '2.2.2'
 
 # open-data-maker requirements
 gem 'elasticsearch'
+gem 'cf-app-utils'
+gem 'unicorn'
 
 # Project requirements
 gem 'rake'

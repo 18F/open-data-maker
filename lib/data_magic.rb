@@ -8,7 +8,27 @@ class DataMagic
   require 'elasticsearch'
   require 'yaml'
   require 'csv'
-  @@client = Elasticsearch::Client.new #log: true
+
+  puts "--"*40
+  puts "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
+  puts "--"*40
+  if ENV['VCAP_APPLICATION']
+    # Cloud Foundry
+    puts "connect to Cloud Foundry elasticsearch service"
+    require 'cf-app-utils'
+    eservice = CF::App::Credentials.find_by_service_name('eservice')
+    puts "eservice: #{eservice.inspect}"
+    service_uri = eservice['url']
+    puts "service_uri: #{service_uri}"
+    @@client = Elasticsearch::Client.new host: service_uri, log: true
+  else
+    puts "default elasticsearch connection"
+    @@client = Elasticsearch::Client.new #log: true
+  end
+
+  @@files = []
+  @@mapping = {}
+  @@api_endpoints = {}
 
 
   #========================================================================
