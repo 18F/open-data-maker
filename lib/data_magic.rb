@@ -48,10 +48,17 @@ class DataMagic
   end
 
   def self.data_path
-    ENV['DATA_PATH'] || DEFAULT_PATH
+    path = ENV['DATA_PATH']
+    if path.nil? or path.empty?
+      path = DEFAULT_PATH
+    end
+    path
   end
 
-  def self.load_config(directory_path = data_path)
+  def self.load_config(directory_path = nil)
+    if directory_path.nil? or directory_path.empty?
+      directory_path = data_path
+    end
     puts "load config #{directory_path.inspect}"
     @@files = Dir.glob("#{directory_path}/**/*.csv").select { |entry| File.file? entry }
     config = YAML.load_file("#{directory_path}/data.yaml")
