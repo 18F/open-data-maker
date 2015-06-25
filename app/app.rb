@@ -1,9 +1,7 @@
-require 'sinatra/cross_origin'
 module OpenDataMaker
   class App < Padrino::Application
     register SassInitializer
     register Padrino::Helpers
-    register Sinatra::CrossOrigin
 
     enable :sessions
 
