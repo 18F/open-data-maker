@@ -94,7 +94,8 @@ class DataMagic
 
   def self.find_index_for(api)
     load_config_if_needed
-    @@api_endpoints[api][:index]
+    api_info = @@api_endpoints[api] || {}
+    api_info[:index]
   end
 
   # returns an array of api_endpoints
