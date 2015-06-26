@@ -6,4 +6,8 @@
 
 require File.expand_path("../config/boot.rb", __FILE__)
 
+require './lib/protected_app.rb'
+
+use ProtectedApp
+
 run Padrino.application
