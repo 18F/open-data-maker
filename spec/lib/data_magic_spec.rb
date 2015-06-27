@@ -52,12 +52,12 @@ eos
     def address_data
       if @address_data.nil?
         data_str = <<-eos
-name,address
-Paul,15 Penny Lane
-Michelle,600 Pennsylvania Avenue
-Marilyn,1313 Mockingbird Lane
-Sherlock,221B Baker Street
-Bart,742 Evergreen Terrace
+name,address,city
+Paul,15 Penny Lane,Liverpool
+Michelle,600 Pennsylvania Avenue,Washington
+Marilyn,1313 Mockingbird Lane,Burbank
+Sherlock,221B Baker Street,London
+Bart,742 Evergreen Terrace,Springfield
 eos
         @address_data = StringIO.new(data_str)
       else
@@ -78,7 +78,7 @@ eos
       it "can find an attribute from an imported file" do
         query = { query: { match: {name: "Paul" }}}
         result = DataMagic.search(query, index: 'people')
-        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane"}])
+        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}])
       end
     end
     describe "with mapping" do
