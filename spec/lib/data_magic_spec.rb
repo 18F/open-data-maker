@@ -76,8 +76,7 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        query = { query: { match: {name: "Paul" }}}
-        result = DataMagic.search(query, index: 'people')
+        result = DataMagic.search({name: "Paul"}, index: 'people')
         expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}])
       end
     end
@@ -94,8 +93,7 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        query = { query: { match: {person_name: "Paul" }}}
-        result = DataMagic.search(query, index: 'people')
+        result = DataMagic.search({person_name: "Paul" }, index: 'people')
         expect(result).to eq([{"person_name" => "Paul", "street" => "15 Penny Lane"}])
       end
 
@@ -128,8 +126,7 @@ eos
     end
 
     it "indexes files with yaml mapping" do
-      query = { query: { match: {name: "Chicago" }}}
-      result = DataMagic.search(query, api: 'cities')
+      result = DataMagic.search({name: "Chicago"}, api: 'cities')
       expect(result).to eq([{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}])
     end
 

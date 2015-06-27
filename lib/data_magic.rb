@@ -183,10 +183,10 @@ class DataMagic
 
 
   # thin layer on elasticsearch query
-  def self.search(query, options = {})
+  def self.search(terms, options = {})
     load_config_if_needed
     index_name = index_name_from_options(options)
-    full_query = {index: index_name, body: query}
+    full_query = {index: index_name, body: {query: {match: terms}}}
     result = client.search full_query
     hits = result["hits"]
     hits["hits"].map {|hit| hit["_source"]}
