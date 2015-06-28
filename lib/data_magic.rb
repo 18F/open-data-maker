@@ -140,20 +140,13 @@ class DataMagic
     end
 
     fields = nil
-    new_fields = options[:fields]
+    new_field_names = options[:fields]
     num_rows = 0
     begin
       CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
         fields ||= row.headers
         row = row.to_hash
-        if new_fields
-          mapped = {}
-          row.each do |key, value|
-            new_key = new_fields[key.to_sym] || new_fields[key.to_s]
-            mapped[new_key] = value if new_key
-          end
-          row = mapped
-        end
+        row = map_field_names(row, new_field_names) if new_field_names
         client.index index:index_name, type:'document', body: row
         num_rows += 1
       end
@@ -163,7 +156,7 @@ class DataMagic
 
     raise InvalidData, "invalid file format or zero rows" if num_rows == 0
 
-    fields = new_fields.values if new_fields
+    fields = new_field_names.values if new_field_names
     client.indices.refresh index: index_name if num_rows > 0
 
     return [num_rows, fields ]
@@ -215,6 +208,21 @@ class DataMagic
 
   end
 private
+
+# row: a hash  (keys may be strings or symbols)
+# new_fields: hash current_name : new_name
+# returns a hash (which may be a subset of row) where keys are new_name
+#         with value of corresponding row[current_name]
+def self.map_field_names(row, new_fields)
+  mapped = {}
+  row.each do |key, value|
+    new_key = new_fields[key.to_sym] || new_fields[key.to_s]
+    mapped[new_key] = value if new_key
+  end
+  mapped
+end
+
+
 # get the real index name when given either
 # api: api endpoint configured in data.yaml
 # index: index name
