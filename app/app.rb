@@ -26,8 +26,7 @@ module OpenDataMaker
       puts params.inspect
       endpoint = params['endpoint']
       params.delete('endpoint')
-      query = { query: { match: params }}
-      result = DataMagic.search(query, api:endpoint)
+      result = DataMagic.search(params, api:endpoint)
 
       result.to_json
     end

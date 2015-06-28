@@ -13,6 +13,7 @@ ruby '2.2.2'
 
 # open-data-maker requirements
 gem 'elasticsearch'
+gem 'stretchy'
 gem 'cf-app-utils'
 gem 'unicorn'
 

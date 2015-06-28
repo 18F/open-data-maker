@@ -80,6 +80,11 @@ eos
         result = DataMagic.search({name: "Marilyn"}, index: 'people')
         expect(result).to eq([{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Burbank"}])
       end
+      
+      it "can find based on multiple attributes from an imported file" do
+        result = DataMagic.search({name: "Paul", city:"Liverpool"}, index: 'people')
+        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}])
+      end
 
     end
     describe "with mapping" do
