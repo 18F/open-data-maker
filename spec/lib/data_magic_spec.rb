@@ -100,7 +100,11 @@ eos
     end
     describe "with geolocation" do
       before (:all) do
-        num_rows, fields = DataMagic.import_csv('places', geo_data)
+        options = {}
+        options[:fields] = {lat: 'location.lat',
+                            lon: 'location.lon',
+                            city: 'city'}
+        num_rows, fields = DataMagic.import_csv('places', geo_data, options)
       end
 
       after(:all) do
@@ -108,10 +112,17 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        sfo_location = { lat: "37.615223", lon:"-122.389977" }
-        distance = "20m"
-        result = DataMagic.geo_search(sfo_location, distance)
-        expect(result).to eq([{"city" => "San Francisco"}])
+        sfo_location = { lat: 37.615223, lon:-122.389977 }
+        puts "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
+        distance = "100mi"
+        result = DataMagic.geo_search(sfo_location, distance, index:'places')
+        result = result.sort_by { |k| k["city"] }
+
+        expected = [
+          {"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},
+          {"city"=>"San Jose",        "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
+        ]
+        expect(result).to eq(expected)
       end
 
     end

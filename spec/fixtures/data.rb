@@ -16,7 +16,7 @@ end
 
 def geo_data
   @geo_data ||= StringIO.new <<-eos
-state,city,location.y,location.x
+state,city,lat,lon
 CA,San Francisco,37.727239,-123.032229
 NY,"New York",40.664274,-73.938500
 CA,"Los Angeles",34.019394,-118.410825

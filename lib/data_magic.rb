@@ -2,6 +2,7 @@ require 'elasticsearch'
 require 'yaml'
 require 'csv'
 require 'stretchy'
+require 'nested_hash'
 
 class DataMagic
   DEFAULT_PATH = './sample-data'
@@ -147,6 +148,8 @@ class DataMagic
         fields ||= row.headers
         row = row.to_hash
         row = map_field_names(row, new_field_names) if new_field_names
+        row = NestedHash.new.add(row)
+        #puts "indexing: #{row.inspect}"
         client.index index:index_name, type:'document', body: row
         num_rows += 1
       end
@@ -203,9 +206,21 @@ class DataMagic
 
   # location {x: , y: }
   # distance: string like "20mi"
-  def self.geo_search(location, distance)
+  def self.geo_search(location, distance, options = {})
+    load_config_if_needed
+    index_name = index_name_from_options(options)
+    #puts "===========> geo_search #{location.inspect}, #{distance.inspect}"
+    squery = Stretchy.query(type: 'document')
+    squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
+    full_query = {index: index_name, body: {
+        query: squery.to_search
+      }
+    }
+    #puts "===========> full_query:#{full_query.inspect}"
 
-
+    result = client.search full_query
+    hits = result["hits"]
+    hits["hits"].map {|hit| hit["_source"]}
   end
 private
 
@@ -217,7 +232,10 @@ def self.map_field_names(row, new_fields)
   mapped = {}
   row.each do |key, value|
     new_key = new_fields[key.to_sym] || new_fields[key.to_s]
-    mapped[new_key] = value if new_key
+    if new_key
+      value = value.to_f if new_key.include? "location"
+      mapped[new_key] = value
+    end
   end
   mapped
 end
