@@ -58,6 +58,7 @@ Michelle,600 Pennsylvania Avenue,Washington
 Marilyn,1313 Mockingbird Lane,Burbank
 Sherlock,221B Baker Street,London
 Bart,742 Evergreen Terrace,Springfield
+Paul,19 N Square,Boston
 eos
         @address_data = StringIO.new(data_str)
       else
@@ -76,9 +77,10 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        result = DataMagic.search({name: "Paul"}, index: 'people')
-        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}])
+        result = DataMagic.search({name: "Marilyn"}, index: 'people')
+        expect(result).to eq([{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Burbank"}])
       end
+
     end
     describe "with mapping" do
       before (:all) do
@@ -93,8 +95,8 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        result = DataMagic.search({person_name: "Paul" }, index: 'people')
-        expect(result).to eq([{"person_name" => "Paul", "street" => "15 Penny Lane"}])
+        result = DataMagic.search({person_name: "Marilyn" }, index: 'people')
+        expect(result).to eq([{"person_name" => "Marilyn", "street" => "1313 Mockingbird Lane"}])
       end
 
 
