@@ -90,7 +90,6 @@ class DataMagic
     init_config
   end
 
-
   def self.find_index_for(api)
     load_config_if_needed
     api_info = @@api_endpoints[api] || {}
@@ -124,6 +123,16 @@ class DataMagic
       raise ArgumentError, "can't read datafile #{datafile.inspect}"
     end
     index_name = scoped_index_name(index_name)
+    client.indices.create index: index_name, body: {
+      mappings: {
+        document: {    # for now type 'document' is always used
+          properties: {
+           location: { type: 'geo_point' }
+          }
+        }
+      }
+    }
+
     data = datafile.read
 
     if options[:force_utf8]
@@ -199,6 +208,12 @@ class DataMagic
     hits["hits"].map {|hit| hit["_source"]}
   end
 
+  # location {x: , y: }
+  # distance: string like "20mi"
+  def self.geo_search(location, distance)
+
+
+  end
 private
 # get the real index name when given either
 # api: api endpoint configured in data.yaml
