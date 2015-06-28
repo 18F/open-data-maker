@@ -6,7 +6,7 @@ module OpenDataMaker
     enable :sessions
 
     puts ENV['DATA_AUTH'].inspect
-    if ENV['DATA_AUTH']
+    if ENV['DATA_AUTH'] and not ENV['DATA_AUTH'].empty?
       auth = ENV['DATA_AUTH']
       authorized_user, authorized_pass = auth.split(',')
       use Rack::Auth::Basic, "Restricted Area" do |username, password|
@@ -26,8 +26,7 @@ module OpenDataMaker
       puts params.inspect
       endpoint = params['endpoint']
       params.delete('endpoint')
-      query = { query: { match: params }}
-      result = DataMagic.search(query, api:endpoint)
+      result = DataMagic.search(params, api:endpoint)
 
       result.to_json
     end

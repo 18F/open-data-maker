@@ -1,13 +1,12 @@
-
+require 'elasticsearch'
+require 'yaml'
+require 'csv'
+require 'stretchy'
 
 class DataMagic
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
-
-  require 'elasticsearch'
-  require 'yaml'
-  require 'csv'
 
   puts "--"*40
   puts "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
@@ -183,10 +182,18 @@ class DataMagic
 
 
   # thin layer on elasticsearch query
-  def self.search(query, options = {})
+  def self.search(terms, options = {})
     load_config_if_needed
     index_name = index_name_from_options(options)
-    full_query = {index: index_name, body: query}
+    puts "===========> search terms:#{terms.inspect}"
+    squery = Stretchy.query(type: 'document')
+    squery = squery.where(terms)
+    full_query = {index: index_name, body: {
+        query: squery.to_search
+      }
+    }
+    puts "===========> full_query:#{full_query.inspect}"
+
     result = client.search full_query
     hits = result["hits"]
     hits["hits"].map {|hit| hit["_source"]}

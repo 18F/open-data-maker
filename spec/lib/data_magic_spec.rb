@@ -52,12 +52,13 @@ eos
     def address_data
       if @address_data.nil?
         data_str = <<-eos
-name,address
-Paul,15 Penny Lane
-Michelle,600 Pennsylvania Avenue
-Marilyn,1313 Mockingbird Lane
-Sherlock,221B Baker Street
-Bart,742 Evergreen Terrace
+name,address,city
+Paul,15 Penny Lane,Liverpool
+Michelle,600 Pennsylvania Avenue,Washington
+Marilyn,1313 Mockingbird Lane,Burbank
+Sherlock,221B Baker Street,London
+Bart,742 Evergreen Terrace,Springfield
+Paul,19 N Square,Boston
 eos
         @address_data = StringIO.new(data_str)
       else
@@ -76,10 +77,15 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        query = { query: { match: {name: "Paul" }}}
-        result = DataMagic.search(query, index: 'people')
-        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane"}])
+        result = DataMagic.search({name: "Marilyn"}, index: 'people')
+        expect(result).to eq([{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Burbank"}])
       end
+      
+      it "can find based on multiple attributes from an imported file" do
+        result = DataMagic.search({name: "Paul", city:"Liverpool"}, index: 'people')
+        expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}])
+      end
+
     end
     describe "with mapping" do
       before (:all) do
@@ -94,9 +100,8 @@ eos
       end
 
       it "can find an attribute from an imported file" do
-        query = { query: { match: {person_name: "Paul" }}}
-        result = DataMagic.search(query, index: 'people')
-        expect(result).to eq([{"person_name" => "Paul", "street" => "15 Penny Lane"}])
+        result = DataMagic.search({person_name: "Marilyn" }, index: 'people')
+        expect(result).to eq([{"person_name" => "Marilyn", "street" => "1313 Mockingbird Lane"}])
       end
 
 
@@ -128,8 +133,7 @@ eos
     end
 
     it "indexes files with yaml mapping" do
-      query = { query: { match: {name: "Chicago" }}}
-      result = DataMagic.search(query, api: 'cities')
+      result = DataMagic.search({name: "Chicago"}, api: 'cities')
       expect(result).to eq([{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}])
     end
 
