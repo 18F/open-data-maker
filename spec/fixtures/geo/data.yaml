@@ -1,17 +1,16 @@
-version: cities100-2010
+
+
 # cities100.txt
 # National Places Gazetteer Files, from US Census 2010
 # https://www.census.gov/geo/maps-data/data/gazetteer2010.html
 # (head -n 1 source.txt && tail -n +2 source.txt | LC_ALL=C sort -k7rn,7 -t$'\t' source.txt) > result.txt
 # head -n 101 results.txt > cities100.txt
 # then convertes to csv and removed " city" from after each city name
-index: city-data
+index: place-data
 files:
-  cities100.csv:
-    api: cities
+  places.csv:
+    api: places
     fields:
-      USPS: state
-      NAME: name
-      POP10: population
-      INTPTLAT: location.lat
-      INTPTLONG: location.lon
+      city: city
+      lat: location.lat
+      lon: location.lon
