@@ -2,7 +2,7 @@ require 'elasticsearch'
 require 'yaml'
 require 'csv'
 require 'stretchy'
-require 'nested_hash'
+require './lib/nested_hash'
 
 class DataMagic
   DEFAULT_PATH = './sample-data'
@@ -124,6 +124,7 @@ class DataMagic
       raise ArgumentError, "can't read datafile #{datafile.inspect}"
     end
     index_name = scoped_index_name(index_name)
+    puts "index:#{index_name}"
     client.indices.create index: index_name, body: {
       mappings: {
         document: {    # for now type 'document' is always used
@@ -149,7 +150,7 @@ class DataMagic
         row = row.to_hash
         row = map_field_names(row, new_field_names) if new_field_names
         row = NestedHash.new.add(row)
-        #puts "indexing: #{row.inspect}"
+        puts "indexing: #{row.inspect}"
         client.index index:index_name, type:'document', body: row
         num_rows += 1
       end
@@ -192,11 +193,24 @@ class DataMagic
     index_name = index_name_from_options(options)
     puts "===========> search terms:#{terms.inspect}"
     squery = Stretchy.query(type: 'document')
-    squery = squery.where(terms)
+
+    distance = terms[:distance] || terms['distance']
+    if distance && !distance.empty?
+      location = { lat: 37.615223, lon:-122.389977 } #sfo
+      squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
+      terms.delete("distance")
+      terms.delete("zip")
+      terms.delete(:distance)
+      terms.delete(:zip)
+      puts "--> terms: #{terms.inspect}"
+    end
+    squery = squery.where(terms) unless terms.empty?
+
     full_query = {index: index_name, body: {
         query: squery.to_search
       }
     }
+
     puts "===========> full_query:#{full_query.inspect}"
 
     result = client.search full_query
@@ -204,7 +218,7 @@ class DataMagic
     hits["hits"].map {|hit| hit["_source"]}
   end
 
-  # location {x: , y: }
+  # location {lat: , lon: }
   # distance: string like "20mi"
   def self.geo_search(location, distance, options = {})
     load_config_if_needed
