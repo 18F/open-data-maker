@@ -31,10 +31,23 @@ brew_is_upgradable() {
   ! brew outdated --quiet "$1" >/dev/null
 }
 
+brew_tap_is_installed() {
+  brew tap | grep -Fqx "$1"
+}
+
+brew_tap() {
+  if ! brew_tap_is_installed "$1"; then
+    fancy_echo "Tapping $1..."
+    brew tap "$1" 2> /dev/null
+  fi
+}
+
 echo 'Installing dependencies...'
 
 if command -v brew >/dev/null; then
   brew update
+
+  brew_tap 'homebrew/services'
 
   brew_install_or_upgrade 'elasticsearch'
 
