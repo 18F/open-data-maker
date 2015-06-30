@@ -60,15 +60,16 @@ class DataMagic
       directory_path = data_path
     end
     puts "load config #{directory_path.inspect}"
-    @@files = Dir.glob("#{directory_path}/**/*.csv").select { |entry| File.file? entry }
+    @@files = []
     config = YAML.load_file("#{directory_path}/data.yaml")
     index = config['index'] || 'general'
     mapping[index] = config['files']
-    files.each do |filepath|
-      fname = filepath.split('/').last
+    files = config["files"].keys
+    files.each do |fname|
       file_config = mapping[index][fname] ||= {}  # initialize to empty hash if not given
       endpoint = file_config['api'] || 'data'
       @@api_endpoints[endpoint] = {index: index}
+      @@files << File.join(directory_path, fname)
     end
     index
   end
@@ -150,7 +151,7 @@ class DataMagic
         row = row.to_hash
         row = map_field_names(row, new_field_names) if new_field_names
         row = NestedHash.new.add(row)
-        puts "indexing: #{row.inspect}"
+        #puts "indexing: #{row.inspect}"
         client.index index:index_name, type:'document', body: row
         num_rows += 1
       end
