@@ -3,32 +3,30 @@
 ## Install Prerequisites
 
 Before you can run Open Data Maker, you'll need to have the following software
-installed on your computer: [Git], [Ruby] 2.2+, [RVM][RVM] (or rbenv),
-[Elasticsearch], and [Homebrew][Homebrew] (for Mac users only).
+installed on your computer:
+* [Elasticsearch]
+* [Ruby] 2.2+
+
+If you are contributing to development you will also need [Git].  
+
+Our install instructions are focused on the Mac platform, we recommend: [RVM][RVM] (or rbenv),
+and [Homebrew][Homebrew].
 
 If you already have all of the prerequisites installed, you can skip
 to the [Open Data Maker Installation](#install-open-data-maker).
 
-The easiest way to install everything on a Mac is to use the 18F [laptop]
-script.
-
-[laptop]: https://github.com/18F/laptop
-
 ## Install Open Data Maker
 
 ### Clone the repo to your machine
-If you're an 18F employee, you can clone the repo directly:
 
-```
-git clone https://github.com/18F/open-data-maker.git && cd open-data-maker
-```
-
-Otherwise, you'll need to [fork](http://help.github.com/fork-a-repo/) the repo
+For development, [fork](http://help.github.com/fork-a-repo/) the repo
 first, then clone your fork.
 
 ```
 git clone https://github.com/<your GitHub username>/open-data-maker.git && cd open-data-maker
 ```
+
+If you just want to install, then you can just download a [zip file]().
 
 ### Install the dependencies
 
@@ -37,6 +35,9 @@ script/bootstrap
 ```
 
 ### Run the App
+
+Make sure you are running Elastic Search: ```brew services restart elasticsearch```
+if you installed with homebrew on OSX.
 
 ```
 padrino start
@@ -72,6 +73,11 @@ export DATA_PATH=presidents
 rake import
 # or, more succintly:
 DATA_PATH=presidents rake import
+```
+
+to restart with new data (deleting all the indices):
+```
+rake delete:all
 ```
 
 ## Want to help?
