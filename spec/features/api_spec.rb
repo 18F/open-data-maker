@@ -37,6 +37,14 @@ describe 'api' do
 			it "responds with json" do
 			  expect(last_response).to be_ok
 				expect(last_response.content_type).to eq('application/json')
+
+				result = JSON.parse(last_response.body)
+
+				expected = [
+					{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}
+				]
+				expect(result).to eq(expected)
+
 			end
 		end
 
