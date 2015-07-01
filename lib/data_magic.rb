@@ -216,7 +216,15 @@ class DataMagic
 
     result = client.search full_query
     hits = result["hits"]
+    total = hits["total"]
     hits["hits"].map {|hit| hit["_source"]}
+    results = hits["hits"].map {|hit| hit["_source"]}
+    {
+      "total" => total,
+      "page" => 1,
+      "per_page" => 10,
+      "results" => 	results
+    }
   end
 
   # location {lat: , lon: }
@@ -235,8 +243,14 @@ class DataMagic
 
     result = client.search full_query
     hits = result["hits"]
-    hits["hits"].map {|hit| hit["_source"]}
-  end
+    total = hits["total"]
+    results = hits["hits"].map {|hit| hit["_source"]}
+    {
+      "total" => total,
+      "page" => 1,
+      "per_page" => 10,
+      "results" => 	results
+    }  end
 private
 
 # row: a hash  (keys may be strings or symbols)
