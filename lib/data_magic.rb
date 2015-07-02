@@ -2,9 +2,29 @@ require 'elasticsearch'
 require 'yaml'
 require 'csv'
 require 'stretchy'
+require 'hashie'
 require './lib/nested_hash'
 
 class DataMagic
+  class << self
+    # class instance variables, which may be overridden by a subclass
+    # note these are different from class variables
+    # where value is shared by class and all subclasses
+    attr_accessor :page_size, :client
+    attr_reader :files, :mapping
+  end
+  @files = []
+  @mapping = {}
+  @api_endpoints = {}
+  @page_size = 10
+
+
+  class IndifferentHash < Hash
+    include Hashie::Extensions::MergeInitializer
+    include Hashie::Extensions::IndifferentAccess
+  end
+
+
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
@@ -20,32 +40,15 @@ class DataMagic
     puts "eservice: #{eservice.inspect}"
     service_uri = eservice['url']
     puts "service_uri: #{service_uri}"
-    @@client = Elasticsearch::Client.new host: service_uri, log: true
+    self.client = Elasticsearch::Client.new host: service_uri, log: true
   else
     puts "default elasticsearch connection"
-    @@client = Elasticsearch::Client.new #log: true
+    self.client = Elasticsearch::Client.new #log: true
   end
-
-  @@files = []
-  @@mapping = {}
-  @@api_endpoints = {}
-
 
   #========================================================================
   #    Setup
   #========================================================================
-
-  def self.client
-    @@client
-  end
-
-  def self.files
-    @@files
-  end
-
-  def self.mapping
-    @@mapping
-  end
 
   def self.data_path
     path = ENV['DATA_PATH']
@@ -60,7 +63,7 @@ class DataMagic
       directory_path = data_path
     end
     puts "load config #{directory_path.inspect}"
-    @@files = []
+    @files = []
     config = YAML.load_file("#{directory_path}/data.yaml")
     index = config['index'] || 'general'
     mapping[index] = config['files']
@@ -68,16 +71,16 @@ class DataMagic
     files.each do |fname|
       file_config = mapping[index][fname] ||= {}  # initialize to empty hash if not given
       endpoint = file_config['api'] || 'data'
-      @@api_endpoints[endpoint] = {index: index}
-      @@files << File.join(directory_path, fname)
+      @api_endpoints[endpoint] = {index: index}
+      @files << File.join(directory_path, fname)
     end
     index
   end
 
   def self.init_config
-    @@files = []
-    @@mapping = {}
-    @@api_endpoints = {}
+    @files = []
+    @mapping = {}
+    @api_endpoints = {}
   end
 
   self.init_config
@@ -94,7 +97,7 @@ class DataMagic
 
   def self.find_index_for(api)
     load_config_if_needed
-    api_info = @@api_endpoints[api] || {}
+    api_info = @api_endpoints[api] || {}
     api_info[:index]
   end
 
@@ -102,7 +105,7 @@ class DataMagic
   # list of strings
   def self.api_endpoint_names
     load_config_if_needed
-    @@api_endpoints.keys
+    @api_endpoints.keys
   end
 
   def self.scoped_index_name(index_name)
@@ -190,24 +193,32 @@ class DataMagic
 
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
+    terms = IndifferentHash.new(terms)
     load_config_if_needed
     index_name = index_name_from_options(options)
     puts "===========> search terms:#{terms.inspect}"
     squery = Stretchy.query(type: 'document')
 
-    distance = terms[:distance] || terms['distance']
+    distance = terms[:distance]
     if distance && !distance.empty?
       location = { lat: 37.615223, lon:-122.389977 } #sfo
       squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
-      terms.delete("distance")
-      terms.delete("zip")
       terms.delete(:distance)
       terms.delete(:zip)
       puts "--> terms: #{terms.inspect}"
     end
+
+    page = terms[:page] || 0
+    per_page = terms[:per_page] || self.page_size
+
+    terms.delete(:page)
+    terms.delete(:per_page)
+
     squery = squery.where(terms) unless terms.empty?
 
     full_query = {index: index_name, body: {
+        from: page,
+        size: per_page,
         query: squery.to_search
       }
     }
@@ -215,42 +226,19 @@ class DataMagic
     puts "===========> full_query:#{full_query.inspect}"
 
     result = client.search full_query
+    puts "result: #{result.inspect}"
     hits = result["hits"]
     total = hits["total"]
     hits["hits"].map {|hit| hit["_source"]}
     results = hits["hits"].map {|hit| hit["_source"]}
     {
       "total" => total,
-      "page" => 1,
-      "per_page" => 10,
+      "page" => page,
+      "per_page" => per_page,
       "results" => 	results
     }
   end
 
-  # location {lat: , lon: }
-  # distance: string like "20mi"
-  def self.geo_search(location, distance, options = {})
-    load_config_if_needed
-    index_name = index_name_from_options(options)
-    #puts "===========> geo_search #{location.inspect}, #{distance.inspect}"
-    squery = Stretchy.query(type: 'document')
-    squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
-    full_query = {index: index_name, body: {
-        query: squery.to_search
-      }
-    }
-    #puts "===========> full_query:#{full_query.inspect}"
-
-    result = client.search full_query
-    hits = result["hits"]
-    total = hits["total"]
-    results = hits["hits"].map {|hit| hit["_source"]}
-    {
-      "total" => total,
-      "page" => 1,
-      "per_page" => 10,
-      "results" => 	results
-    }  end
 private
 
 # row: a hash  (keys may be strings or symbols)
@@ -289,7 +277,7 @@ def self.index_name_from_options(options)
 end
 
 def self.needs_loading?
-  @@files.empty?
+  @files.empty?
 end
 
 def self.load_config_if_needed

@@ -5,10 +5,14 @@ require 'fixtures/data.rb'
 describe DataMagic do
   let (:expected) { {
             "total" => 1,
-            "page" => 1,
+            "page" => 0,
             "per_page" => 10,
             "results" => 	[]
           } }
+
+  it "has default page size" do
+    expect(DataMagic.page_size).to eq(10)
+  end
 
   describe "#import_csv" do
     describe "with errors" do
@@ -85,6 +89,20 @@ eos
           expect(result).to eq(expected)
         end
 
+        it "supports pagination" do
+          result = DataMagic.search({address: "Lane", page:1, per_page: 3}, index: 'people')
+          expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
+          expected = {"total"=>4, "page"=>1, "per_page"=>3,
+              "results"=>[{"name"=>"Marilyn", "address"=>"1313 Mockingbird Lane", "city"=>"Burbank"},
+                          {"name"=>"Peter", "address"=>"66 Parker Lane", "city"=>"New York"},
+                          {"name"=>"Paul", "address"=>"15 Penny Lane", "city"=>"Liverpool"}]}
+
+          expect(result["per_page"]).to eq(3)
+          expect(result["page"]).to eq(1)
+          expect(result["results"].length).to eq(3)
+        end
+
+
       end
       describe "with mapping" do
         before (:all) do
@@ -120,20 +138,6 @@ eos
 
       after(:all) do
         DataMagic.delete_index('places')
-      end
-
-      it "#geo_search can find an attribute" do
-        sfo_location = { lat: 37.615223, lon:-122.389977 }
-        puts "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
-        distance = "100mi"
-        result = DataMagic.geo_search(sfo_location, distance, index:'places')
-        result["results"] = result["results"].sort_by { |k| k["city"] }
-        expected["results"] = [
-          {"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},
-          {"city"=>"San Jose",        "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
-        ]
-        expected["total"] = expected["results"].length
-        expect(result).to eq(expected)
       end
 
       it "#search can find an attribute" do

@@ -42,7 +42,7 @@ describe 'api' do
 
 				expected = {
 					"total" => 1,
-				  "page"  => 1,
+				  "page"  => 0,
 				  "per_page" => 10,
 				  "results" => [
 							{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}
@@ -75,7 +75,7 @@ describe 'api' do
 
 				expected = {
 				  "total" => 2,
-				  "page"  => 1,
+				  "page"  => 0,
 				  "per_page" => 10,
 				  "results" => [
 						{"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},

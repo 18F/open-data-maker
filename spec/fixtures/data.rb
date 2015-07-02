@@ -7,8 +7,10 @@ Paul,15 Penny Lane,Liverpool
 Michelle,600 Pennsylvania Avenue,Washington
 Marilyn,1313 Mockingbird Lane,Burbank
 Sherlock,221B Baker Street,London
+Clark,66 Lois Lane,Smallville
 Bart,742 Evergreen Terrace,Springfield
 Paul,19 N Square,Boston
+Peter,66 Parker Lane,New York
 eos
   @address_data.rewind
   @address_data
