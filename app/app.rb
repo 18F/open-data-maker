@@ -5,7 +5,6 @@ module OpenDataMaker
 
     enable :sessions
 
-    puts ENV['DATA_AUTH'].inspect
     if ENV['DATA_AUTH'] and not ENV['DATA_AUTH'].empty?
       auth = ENV['DATA_AUTH']
       authorized_user, authorized_pass = auth.split(',')
