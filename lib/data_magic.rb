@@ -196,7 +196,7 @@ class DataMagic
     terms = IndifferentHash.new(terms)
     load_config_if_needed
     index_name = index_name_from_options(options)
-    puts "===========> search terms:#{terms.inspect}"
+    # puts "===========> search terms:#{terms.inspect}"
     squery = Stretchy.query(type: 'document')
 
     distance = terms[:distance]
@@ -205,7 +205,6 @@ class DataMagic
       squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
       terms.delete(:distance)
       terms.delete(:zip)
-      puts "--> terms: #{terms.inspect}"
     end
 
     page = terms[:page] || 0
@@ -214,6 +213,7 @@ class DataMagic
     terms.delete(:page)
     terms.delete(:per_page)
 
+    # puts "--> terms: #{terms.inspect}"
     squery = squery.where(terms) unless terms.empty?
 
     full_query = {index: index_name, body: {
