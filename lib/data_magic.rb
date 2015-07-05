@@ -11,10 +11,10 @@ class DataMagic
     # note these are different from class variables
     # where value is shared by class and all subclasses
     attr_accessor :page_size, :client
-    attr_reader :files, :mapping
+    attr_reader :files, :config
   end
   @files = []
-  @mapping = {}
+  @config = {}
   @api_endpoints = {}
   @page_size = 10
 
@@ -64,23 +64,29 @@ class DataMagic
     end
     puts "load config #{directory_path.inspect}"
     @files = []
-    config = YAML.load_file("#{directory_path}/data.yaml")
+    @config = YAML.load_file("#{directory_path}/data.yaml")
     index = config['index'] || 'general'
     endpoint = config['api'] || 'data'
+    @global_mapping = config['global_mapping'] || {}
     @api_endpoints[endpoint] = {index: index}
 
-    mapping[index] = config['files']
-    files = config["files"].keys
-    files.each do |fname|
-      file_config = mapping[index][fname] ||= {}  # initialize to empty hash if not given
-      @files << File.join(directory_path, fname)
+    file_config = config['files']
+    puts "file_config: #{file_config.inspect}"
+    if file_config.nil?
+      puts "no files found"
+    else
+      files = config["files"].keys
+      files.each do |fname|
+        config["files"][fname] ||= {}
+        @files << File.join(directory_path, fname)
+      end
     end
     index
   end
 
   def self.init_config
     @files = []
-    @mapping = {}
+    @config = {}
     @api_endpoints = {}
   end
 
@@ -130,15 +136,17 @@ class DataMagic
     end
     index_name = scoped_index_name(index_name)
     puts "index:#{index_name}"
-    client.indices.create index: index_name, body: {
-      mappings: {
-        document: {    # for now type 'document' is always used
-          properties: {
-           location: { type: 'geo_point' }
+    unless client.indices.exists? index: index_name
+      client.indices.create index: index_name, body: {
+        mappings: {
+          document: {    # for now type 'document' is always used
+            properties: {
+             location: { type: 'geo_point' }
+            }
           }
         }
       }
-    }
+    end
 
     data = datafile.read
 
@@ -147,17 +155,21 @@ class DataMagic
     end
 
     fields = nil
-    new_field_names = options[:fields]
+    new_field_names = options[:fields] || {}
+    new_field_names = new_field_names.merge(@global_mapping)
     num_rows = 0
     begin
       CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
         fields ||= row.headers
         row = row.to_hash
-        row = map_field_names(row, new_field_names) if new_field_names
+        row = map_field_names(row, new_field_names) unless new_field_names.empty?
         row = NestedHash.new.add(row)
         #puts "indexing: #{row.inspect}"
         client.index index:index_name, type:'document', body: row
         num_rows += 1
+        if num_rows % 500 == 0
+          print "#{num_rows}..."; $stdout.flush
+        end
       end
     rescue Exception => e
       puts "row #{num_rows}: #{e.message}"
@@ -165,7 +177,7 @@ class DataMagic
 
     raise InvalidData, "invalid file format or zero rows" if num_rows == 0
 
-    fields = new_field_names.values if new_field_names
+    fields = new_field_names.values unless new_field_names.empty?
     client.indices.refresh index: index_name if num_rows > 0
 
     return [num_rows, fields ]
@@ -175,9 +187,8 @@ class DataMagic
     index = load_config(directory_path)
     files.each do |filepath|
       fname = filepath.split('/').last
-      file_config = mapping[index][fname]
-      #puts "indexing #{fname} config:#{file_config}"
-      options[:fields] = file_config['fields']
+      puts "indexing #{fname} config:#{config['files'][fname].inspect}"
+      options[:fields] = config['files'][fname]['fields']
       begin
         puts "reading #{filepath}"
         File.open(filepath) do |file|

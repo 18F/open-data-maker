@@ -172,7 +172,9 @@ eos
     end
 
     it "can get list of imported csv files" do
-      expect(DataMagic.files).to eq(["./spec/fixtures/import_all/cities100.csv"])
+      file_list = ["./spec/fixtures/import_all/cities50.csv",
+                   "./spec/fixtures/import_all/cities51-100.csv"]
+      expect(DataMagic.files).to eq(file_list)
     end
 
     it "can get index name from api endpoint" do
