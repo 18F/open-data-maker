@@ -15,4 +15,6 @@ global_mapping:
 
 files:
   cities50.csv:
+    add:
+      category: 'top50'
   cities51-100.csv:

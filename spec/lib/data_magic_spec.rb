@@ -184,13 +184,24 @@ eos
 
     it "indexes files with yaml mapping" do
       result = DataMagic.search({name: "Chicago"}, api: 'cities')
-      expected["results"] = [{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}]
+      expected["results"] = [
+        { "state"=>"IL", "name"=>"Chicago",
+          "population"=>"2695598",
+          "latitude"=>"41.837551", "longitude"=>"-87.681844",
+          "category"=>"top50"
+        }
+      ]
       expect(result).to eq(expected)
     end
 
     it "indexes rows from all the files" do
       result = DataMagic.search({}, api: 'cities')
       expect(result["total"]).to eq(100)
+    end
+
+    it "adds column with additional field data" do
+      result = DataMagic.search({category: "top50"}, api: 'cities')
+      expect(result["total"]).to eq(50)
     end
 
   end

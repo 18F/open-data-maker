@@ -45,7 +45,11 @@ describe 'api' do
 				  "page"  => 0,
 				  "per_page" => 10,
 				  "results" => [
-							{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}
+							{ "state"=>"IL", "name"=>"Chicago",
+								"population"=>"2695598",
+								"latitude"=>"41.837551", "longitude"=>"-87.681844",
+								"category"=>"top50"
+							}
 						]
 				}
 				expect(result).to eq(expected)

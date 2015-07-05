@@ -130,8 +130,10 @@ class DataMagic
   end
 
   def self.import_csv(index_name, datafile, options={})
-    additional_fields ||= options[:override_global_mapping]
+    additional_fields = options[:override_global_mapping]
     additional_fields ||= @global_mapping
+    additional_data = options[:add_data]
+    puts "additional_data: #{additional_data.inspect}"
     unless datafile.respond_to?(:read)
       raise ArgumentError, "can't read datafile #{datafile.inspect}"
     end
@@ -164,6 +166,7 @@ class DataMagic
         fields ||= row.headers
         row = row.to_hash
         row = map_field_names(row, new_field_names) unless new_field_names.empty?
+        row = row.merge(additional_data) if additional_data
         row = NestedHash.new.add(row)
         #puts "indexing: #{row.inspect}"
         client.index index:index_name, type:'document', body: row
@@ -189,7 +192,7 @@ class DataMagic
     files.each do |filepath|
       fname = filepath.split('/').last
       puts "indexing #{fname} config:#{config['files'][fname].inspect}"
-      options[:fields] = config['files'][fname]['fields']
+      options[:add_data] = config['files'][fname]['add']
       begin
         puts "reading #{filepath}"
         File.open(filepath) do |file|
