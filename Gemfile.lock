@@ -29,6 +29,7 @@ GEM
     excon (0.45.3)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
+    hashie (3.4.2)
     http_router (0.11.1)
       rack (>= 1.0.0)
       url_mount (~> 0.2.1)
@@ -140,6 +141,7 @@ PLATFORMS
 DEPENDENCIES
   cf-app-utils
   elasticsearch
+  hashie
   liquid (= 3.0.3)
   liquify
   padrino (= 0.12.5)

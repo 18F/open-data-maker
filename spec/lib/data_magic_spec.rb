@@ -3,6 +3,17 @@ require 'data_magic'
 require 'fixtures/data.rb'
 
 describe DataMagic do
+  let (:expected) { {
+            "total" => 1,
+            "page" => 0,
+            "per_page" => 10,
+            "results" => 	[]
+          } }
+
+  it "has default page size" do
+    expect(DataMagic.page_size).to eq(10)
+  end
+
   describe "#import_csv" do
     describe "with errors" do
       it "throws error if datafile doesn't respond to read" do
@@ -55,6 +66,7 @@ eos
   end
 
   describe "#search" do
+
     describe "with terms" do
       describe "default" do
         before (:all) do
@@ -67,13 +79,29 @@ eos
 
         it "can find an attribute from an imported file" do
           result = DataMagic.search({name: "Marilyn"}, index: 'people')
-          expect(result).to eq([{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Burbank"}])
+          expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Burbank"}]
+          expect(result).to eq(expected)
         end
 
         it "can find based on multiple attributes from an imported file" do
           result = DataMagic.search({name: "Paul", city:"Liverpool"}, index: 'people')
-          expect(result).to eq([{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}])
+          expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
+          expect(result).to eq(expected)
         end
+
+        it "supports pagination" do
+          result = DataMagic.search({address: "Lane", page:1, per_page: 3}, index: 'people')
+          expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
+          expected = {"total"=>4, "page"=>1, "per_page"=>3,
+              "results"=>[{"name"=>"Marilyn", "address"=>"1313 Mockingbird Lane", "city"=>"Burbank"},
+                          {"name"=>"Peter", "address"=>"66 Parker Lane", "city"=>"New York"},
+                          {"name"=>"Paul", "address"=>"15 Penny Lane", "city"=>"Liverpool"}]}
+
+          expect(result["per_page"]).to eq(3)
+          expect(result["page"]).to eq(1)
+          expect(result["results"].length).to eq(3)
+        end
+
 
       end
       describe "with mapping" do
@@ -90,7 +118,8 @@ eos
 
         it "can find an attribute from an imported file" do
           result = DataMagic.search({person_name: "Marilyn" }, index: 'people')
-          expect(result).to eq([{"person_name" => "Marilyn", "street" => "1313 Mockingbird Lane"}])
+          expected["results"] = [{"person_name" => "Marilyn", "street" => "1313 Mockingbird Lane"}]
+          expect(result).to eq(expected)
         end
 
 
@@ -111,30 +140,17 @@ eos
         DataMagic.delete_index('places')
       end
 
-      it "#geo_search can find an attribute" do
-        sfo_location = { lat: 37.615223, lon:-122.389977 }
-        puts "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
-        distance = "100mi"
-        result = DataMagic.geo_search(sfo_location, distance, index:'places')
-        result = result.sort_by { |k| k["city"] }
-        expected = [
-          {"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},
-          {"city"=>"San Jose",        "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
-        ]
-        expect(result).to eq(expected)
-      end
-
       it "#search can find an attribute" do
         sfo_location = { lat: 37.615223, lon:-122.389977 }
         puts "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
         search_terms = {distance:"100mi", zip:"94102"}
         result = DataMagic.search(search_terms, index:'places')
-        result = result.sort_by { |k| k["city"] }
-
-        expected = [
+        result["results"] = result["results"].sort_by { |k| k["city"] }
+        expected["results"] = [
           {"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},
-          {"city"=>"San Jose",        "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
+          {"city" => "San Jose",      "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
         ]
+        expected["total"] = expected["results"].length
         expect(result).to eq(expected)
       end
 
@@ -165,7 +181,8 @@ eos
 
     it "indexes files with yaml mapping" do
       result = DataMagic.search({name: "Chicago"}, api: 'cities')
-      expect(result).to eq([{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}])
+      expected["results"] = [{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}]
+      expect(result).to eq(expected)
     end
 
   end
