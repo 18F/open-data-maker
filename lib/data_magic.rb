@@ -130,7 +130,8 @@ class DataMagic
   end
 
   def self.import_csv(index_name, datafile, options={})
-    load_config_if_needed
+    additional_fields ||= options[:override_global_mapping]
+    additional_fields ||= @global_mapping
     unless datafile.respond_to?(:read)
       raise ArgumentError, "can't read datafile #{datafile.inspect}"
     end
@@ -156,7 +157,7 @@ class DataMagic
 
     fields = nil
     new_field_names = options[:fields] || {}
-    new_field_names = new_field_names.merge(@global_mapping)
+    new_field_names = new_field_names.merge(additional_fields)
     num_rows = 0
     begin
       CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
