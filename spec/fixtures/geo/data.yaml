@@ -7,9 +7,9 @@
 # head -n 101 results.txt > cities100.txt
 # then convertes to csv and removed " city" from after each city name
 index: place-data
+api: places
 files:
   places.csv:
-    api: places
     fields:
       city: city
       lat: location.lat

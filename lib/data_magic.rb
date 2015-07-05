@@ -66,12 +66,13 @@ class DataMagic
     @files = []
     config = YAML.load_file("#{directory_path}/data.yaml")
     index = config['index'] || 'general'
+    endpoint = config['api'] || 'data'
+    @api_endpoints[endpoint] = {index: index}
+
     mapping[index] = config['files']
     files = config["files"].keys
     files.each do |fname|
       file_config = mapping[index][fname] ||= {}  # initialize to empty hash if not given
-      endpoint = file_config['api'] || 'data'
-      @api_endpoints[endpoint] = {index: index}
       @files << File.join(directory_path, fname)
     end
     index
