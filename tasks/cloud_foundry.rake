@@ -8,6 +8,7 @@ namespace :cf do
       puts "--"*40
       puts "    on_first_instance #{ENV['VCAP_APPLICATION']}"
       puts "--"*40
+
       begin
        app_data = JSON.parse(ENV['VCAP_APPLICATION'])
        puts "app_data: #{app_data.inspect}"
@@ -25,15 +26,14 @@ namespace :cf do
       puts "     index "
       puts "--"*40
       begin
-        data_filepath = File.join(DataMagic.data_path, "data.yaml")
-        config = YAML.load_file(data_filepath)
+        config = DataMagic.config
         puts "config #{config}"
         prior_version = ENV['DATA_VERSION']
         puts "DATA_VERSION: #{ENV['DATA_VERSION'].inspect}"
         if prior_version != config['version']
           puts "new data version found, indexing..."
           DataMagic.delete_all
-          DataMagic.import_all(DataMagic.data_path)
+          DataMagic.import_all
           ENV['DATA_VERSION'] = config['version']
           puts "DATA_VERSION:#{ENV['DATA_VERSION'].inspect} config.version:#{config['version']}"
         end

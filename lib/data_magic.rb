@@ -187,7 +187,8 @@ class DataMagic
     return [num_rows, fields ]
   end
 
-  def self.import_all(directory_path, options = {})
+  def self.import_all(options = {})
+    directory_path = options[:data_path] || DataMagic.data_path
     index = load_config(directory_path)
     files.each do |filepath|
       fname = filepath.split('/').last
