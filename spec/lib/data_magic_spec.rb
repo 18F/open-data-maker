@@ -57,7 +57,7 @@ a,b
 3,4
 eos
       data = StringIO.new(data_str)
-      num_rows, fields = DataMagic.import_csv('my-index', data)
+      num_rows, fields = DataMagic.import_csv('my-index', data, override_global_mapping:{})
       expect(num_rows).to be(2)
       expect(fields).to eq( [:a,:b] )
 
@@ -70,7 +70,7 @@ eos
     describe "with terms" do
       describe "default" do
         before (:all) do
-          num_rows, fields = DataMagic.import_csv('people', address_data)
+          num_rows, fields = DataMagic.import_csv('people', address_data, override_global_mapping:{})
         end
 
         after(:all) do
@@ -108,6 +108,7 @@ eos
         before (:all) do
           options = {}
           options[:fields] = {name: 'person_name', address: 'street'}
+          options[:override_global_mapping] = {}
           num_rows, fields = DataMagic.import_csv('people', address_data, options)
           expect(fields.sort).to eq(options[:fields].values.sort)
         end
@@ -172,7 +173,9 @@ eos
     end
 
     it "can get list of imported csv files" do
-      expect(DataMagic.files).to eq(["./spec/fixtures/import_all/cities100.csv"])
+      file_list = ["./spec/fixtures/import_all/cities50.csv",
+                   "./spec/fixtures/import_all/cities51-100.csv"]
+      expect(DataMagic.files).to eq(file_list)
     end
 
     it "can get index name from api endpoint" do
@@ -181,8 +184,24 @@ eos
 
     it "indexes files with yaml mapping" do
       result = DataMagic.search({name: "Chicago"}, api: 'cities')
-      expected["results"] = [{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598", "latitude"=>"41.837551", "longitude"=>"-87.681844"}]
+      expected["results"] = [
+        { "state"=>"IL", "name"=>"Chicago",
+          "population"=>"2695598",
+          "latitude"=>"41.837551", "longitude"=>"-87.681844",
+          "category"=>"top50"
+        }
+      ]
       expect(result).to eq(expected)
+    end
+
+    it "indexes rows from all the files" do
+      result = DataMagic.search({}, api: 'cities')
+      expect(result["total"]).to eq(100)
+    end
+
+    it "adds column with additional field data" do
+      result = DataMagic.search({category: "top50"}, api: 'cities')
+      expect(result["total"]).to eq(50)
     end
 
   end

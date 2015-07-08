@@ -1,5 +1,3 @@
-
-
 # cities100.txt
 # National Places Gazetteer Files, from US Census 2010
 # https://www.census.gov/geo/maps-data/data/gazetteer2010.html
@@ -7,12 +5,16 @@
 # head -n 101 results.txt > cities100.txt
 # then convertes to csv and removed " city" from after each city name
 index: city-data
+api: cities
+global_mapping:
+  USPS: state
+  NAME: name
+  POP10: population
+  INTPTLAT: latitude
+  INTPTLONG: longitude
+
 files:
-  cities100.csv:
-    api: cities
-    fields:
-      USPS: state
-      NAME: name
-      POP10: population
-      INTPTLAT: latitude
-      INTPTLONG: longitude
+  cities50.csv:
+    add:
+      category: 'top50'
+  cities51-100.csv:

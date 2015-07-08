@@ -11,10 +11,10 @@ class DataMagic
     # note these are different from class variables
     # where value is shared by class and all subclasses
     attr_accessor :page_size, :client
-    attr_reader :files, :mapping
+    attr_reader :files, :config
   end
   @files = []
-  @mapping = {}
+  @config = {}
   @api_endpoints = {}
   @page_size = 10
 
@@ -40,7 +40,7 @@ class DataMagic
     puts "eservice: #{eservice.inspect}"
     service_uri = eservice['url']
     puts "service_uri: #{service_uri}"
-    self.client = Elasticsearch::Client.new host: service_uri, log: true
+    self.client = Elasticsearch::Client.new host: service_uri  #, log: true
   else
     puts "default elasticsearch connection"
     self.client = Elasticsearch::Client.new #log: true
@@ -64,22 +64,29 @@ class DataMagic
     end
     puts "load config #{directory_path.inspect}"
     @files = []
-    config = YAML.load_file("#{directory_path}/data.yaml")
+    @config = YAML.load_file("#{directory_path}/data.yaml")
     index = config['index'] || 'general'
-    mapping[index] = config['files']
-    files = config["files"].keys
-    files.each do |fname|
-      file_config = mapping[index][fname] ||= {}  # initialize to empty hash if not given
-      endpoint = file_config['api'] || 'data'
-      @api_endpoints[endpoint] = {index: index}
-      @files << File.join(directory_path, fname)
+    endpoint = config['api'] || 'data'
+    @global_mapping = config['global_mapping'] || {}
+    @api_endpoints[endpoint] = {index: index}
+
+    file_config = config['files']
+    puts "file_config: #{file_config.inspect}"
+    if file_config.nil?
+      puts "no files found"
+    else
+      files = config["files"].keys
+      files.each do |fname|
+        config["files"][fname] ||= {}
+        @files << File.join(directory_path, fname)
+      end
     end
     index
   end
 
   def self.init_config
     @files = []
-    @mapping = {}
+    @config = {}
     @api_endpoints = {}
   end
 
@@ -123,21 +130,26 @@ class DataMagic
   end
 
   def self.import_csv(index_name, datafile, options={})
-    load_config_if_needed
+    additional_fields = options[:override_global_mapping]
+    additional_fields ||= @global_mapping
+    additional_data = options[:add_data]
+    puts "additional_data: #{additional_data.inspect}"
     unless datafile.respond_to?(:read)
       raise ArgumentError, "can't read datafile #{datafile.inspect}"
     end
     index_name = scoped_index_name(index_name)
     puts "index:#{index_name}"
-    client.indices.create index: index_name, body: {
-      mappings: {
-        document: {    # for now type 'document' is always used
-          properties: {
-           location: { type: 'geo_point' }
+    unless client.indices.exists? index: index_name
+      client.indices.create index: index_name, body: {
+        mappings: {
+          document: {    # for now type 'document' is always used
+            properties: {
+             location: { type: 'geo_point' }
+            }
           }
         }
       }
-    }
+    end
 
     data = datafile.read
 
@@ -146,17 +158,22 @@ class DataMagic
     end
 
     fields = nil
-    new_field_names = options[:fields]
+    new_field_names = options[:fields] || {}
+    new_field_names = new_field_names.merge(additional_fields)
     num_rows = 0
     begin
       CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
         fields ||= row.headers
         row = row.to_hash
-        row = map_field_names(row, new_field_names) if new_field_names
+        row = map_field_names(row, new_field_names) unless new_field_names.empty?
+        row = row.merge(additional_data) if additional_data
         row = NestedHash.new.add(row)
         #puts "indexing: #{row.inspect}"
         client.index index:index_name, type:'document', body: row
         num_rows += 1
+        if num_rows % 500 == 0
+          print "#{num_rows}..."; $stdout.flush
+        end
       end
     rescue Exception => e
       puts "row #{num_rows}: #{e.message}"
@@ -164,7 +181,7 @@ class DataMagic
 
     raise InvalidData, "invalid file format or zero rows" if num_rows == 0
 
-    fields = new_field_names.values if new_field_names
+    fields = new_field_names.values unless new_field_names.empty?
     client.indices.refresh index: index_name if num_rows > 0
 
     return [num_rows, fields ]
@@ -174,9 +191,8 @@ class DataMagic
     index = load_config(directory_path)
     files.each do |filepath|
       fname = filepath.split('/').last
-      file_config = mapping[index][fname]
-      #puts "indexing #{fname} config:#{file_config}"
-      options[:fields] = file_config['fields']
+      puts "indexing #{fname} config:#{config['files'][fname].inspect}"
+      options[:add_data] = config['files'][fname]['add']
       begin
         puts "reading #{filepath}"
         File.open(filepath) do |file|
