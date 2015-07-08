@@ -40,7 +40,7 @@ class DataMagic
     puts "eservice: #{eservice.inspect}"
     service_uri = eservice['url']
     puts "service_uri: #{service_uri}"
-    self.client = Elasticsearch::Client.new host: service_uri, log: true
+    self.client = Elasticsearch::Client.new host: service_uri  #, log: true
   else
     puts "default elasticsearch connection"
     self.client = Elasticsearch::Client.new #log: true
