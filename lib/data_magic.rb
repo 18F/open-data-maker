@@ -4,6 +4,8 @@ require 'csv'
 require 'stretchy'
 require 'hashie'
 require './lib/nested_hash'
+require 'aws-sdk'
+require 'uri'
 
 class DataMagic
   class << self
@@ -58,13 +60,54 @@ class DataMagic
     path
   end
 
+  def self.s3
+    if @s3.nil?
+      if ENV['VCAP_APPLICATION']
+        s3cred = CF::App::Credentials.find_by_service_name('s3-sb-ed-college-choice')
+      else
+        s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
+        puts "s3cred = #{s3cred.inspect}"
+      end
+      Aws.config[:credentials] = Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
+      Aws.config[:region] = 'us-east-1'
+      @s3 = Aws::S3::Client.new
+      puts "@s3 = #{@s3.inspect}"
+    end
+    @s3
+  #  puts "response: #{response.inspect}"
+  end
+
+  # path follows URI pattern
+  # could be
+  #   s3://username:password@bucket_name/path
+  #   s3://bucket_name/path
+  #   s3://bucket_name
+  #   a local path like: './data'
+  def self.read_path(path)
+    uri = URI(path)
+    scheme = uri.scheme
+    case scheme
+      when nil
+        File.read(uri.path)
+      when "s3"
+        key = uri.path
+        key[0] = ''  # remove initial /
+        response = s3.get_object(bucket: uri.hostname, key: key)
+        response.body.read
+      else
+        raise ArgumentError, "unexpected scheme: #{scheme}"
+    end
+  end
+
   def self.load_config(directory_path = nil)
     if directory_path.nil? or directory_path.empty?
       directory_path = data_path
     end
     puts "load config #{directory_path.inspect}"
     @files = []
-    @config = YAML.load_file("#{directory_path}/data.yaml")
+    config_data = read_path("#{directory_path}/data.yaml")
+    @config = YAML.load(config_data)
+    puts "config: #{config.inspect}"
     index = config['index'] || 'general'
     endpoint = config['api'] || 'data'
     @global_mapping = config['global_mapping'] || {}
@@ -129,14 +172,15 @@ class DataMagic
     # TODO: remove some entries from @@files
   end
 
-  def self.import_csv(index_name, datafile, options={})
+  # data could be a String or an io stream
+  def self.import_csv(index_name, data, options={})
     additional_fields = options[:override_global_mapping]
     additional_fields ||= @global_mapping
     additional_data = options[:add_data]
     puts "additional_data: #{additional_data.inspect}"
-    unless datafile.respond_to?(:read)
-      raise ArgumentError, "can't read datafile #{datafile.inspect}"
-    end
+
+    data = data.read if data.respond_to?(:read)
+
     index_name = scoped_index_name(index_name)
     puts "index:#{index_name}"
     unless client.indices.exists? index: index_name
@@ -150,8 +194,6 @@ class DataMagic
         }
       }
     end
-
-    data = datafile.read
 
     if options[:force_utf8]
       data = data.encode('UTF-8', invalid: :replace, replace: '')
@@ -196,11 +238,9 @@ class DataMagic
       options[:add_data] = config['files'][fname]['add']
       begin
         puts "reading #{filepath}"
-        File.open(filepath) do |file|
-          #puts "index: #{index}"
-          rows, fields = DataMagic.import_csv(index, file, options)
-          puts "imported #{rows} rows"
-        end
+        data = read_path(filepath)
+        rows, fields = DataMagic.import_csv(index, data, options)
+        puts "imported #{rows} rows"
       rescue Exception => e
         puts "Error: skipping #{filepath}, #{e.message}"
       end

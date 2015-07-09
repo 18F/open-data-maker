@@ -15,17 +15,14 @@ describe DataMagic do
   end
 
   describe "#import_csv" do
-    describe "with errors" do
-      it "throws error if datafile doesn't respond to read" do
-        expect{DataMagic.import_csv('test-index', nil)}.to raise_error(ArgumentError)
-      end
-      describe "while reading" do
+    describe "arguments" do
+      describe "error while reading" do
         after(:each) do
           DataMagic.delete_index('test-index')
         end
 
         it "throws errors for bad format" do
-          data = StringIO.new("not a csv file")
+          data = StringIO.new("not csv format")
           expect{DataMagic.import_csv('test-index', data)}.to raise_error(DataMagic::InvalidData)
         end
 

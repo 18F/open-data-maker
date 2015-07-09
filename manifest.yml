@@ -1,3 +1,5 @@
 ---
 applications:
--  command: bundle exec rake cf:on_first_instance cf:index && bundle exec unicorn -p $PORT -c ./config/unicorn.rb 
+-  command: bundle exec rake cf:on_first_instance cf:index && bundle exec unicorn -p $PORT -c ./config/unicorn.rb
+   services:
+   - s3-sb-ed-college-choice
