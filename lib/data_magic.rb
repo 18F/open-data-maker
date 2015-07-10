@@ -31,22 +31,6 @@ class DataMagic
   class InvalidData < StandardError
   end
 
-  puts "--"*40
-  puts "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
-  puts "--"*40
-  if ENV['VCAP_APPLICATION']
-    # Cloud Foundry
-    puts "connect to Cloud Foundry elasticsearch service"
-    require 'cf-app-utils'
-    eservice = CF::App::Credentials.find_by_service_name('eservice')
-    puts "eservice: #{eservice.inspect}"
-    service_uri = eservice['url']
-    puts "service_uri: #{service_uri}"
-    self.client = Elasticsearch::Client.new host: service_uri  #, log: true
-  else
-    puts "default elasticsearch connection"
-    self.client = Elasticsearch::Client.new #log: true
-  end
 
   #========================================================================
   #    Setup
@@ -180,20 +164,7 @@ class DataMagic
     puts "additional_data: #{additional_data.inspect}"
 
     data = data.read if data.respond_to?(:read)
-
-    index_name = scoped_index_name(index_name)
-    puts "index:#{index_name}"
-    unless client.indices.exists? index: index_name
-      client.indices.create index: index_name, body: {
-        mappings: {
-          document: {    # for now type 'document' is always used
-            properties: {
-             location: { type: 'geo_point' }
-            }
-          }
-        }
-      }
-    end
+    index_name = create_index_if_needed(index_name)
 
     if options[:force_utf8]
       data = data.encode('UTF-8', invalid: :replace, replace: '')
@@ -227,6 +198,33 @@ class DataMagic
     client.indices.refresh index: index_name if num_rows > 0
 
     return [num_rows, fields ]
+  end
+
+  # update current configuration document in the index, if needed
+  # return whether the current config was new and required an update
+  def self.new_config?(external_index_name)
+    updated = false
+    old_config = nil
+    index_name = scoped_index_name(external_index_name)
+    if client.indices.exists? index: index_name
+      begin
+        response = client.get index: index_name, type: 'config', id: 1
+        old_config = response["_source"]
+      rescue Elasticsearch::Transport::Transport::Errors::NotFound
+        puts "no prior index configuration"
+      end
+    else
+      puts "creating index"
+      create_index(index_name)
+    end
+    puts "old_config: #{old_config.inspect}"
+    puts "old_config: #{config.inspect}"
+    if old_config.nil? || old_config["version"] != config["version"]
+      puts "--------> adding config to index: #{config.inspect}"
+      client.index index: index_name, type:'config', id: 1, body: config
+      updated = true
+    end
+    updated
   end
 
   def self.import_all(options = {})
@@ -297,6 +295,27 @@ class DataMagic
   end
 
 private
+def self.create_index(scoped_index_name)
+  client.indices.create index: scoped_index_name, body: {
+    mappings: {
+      document: {    # for now type 'document' is always used
+        properties: {
+         location: { type: 'geo_point' }
+        }
+      }
+    }
+  }
+end
+
+# takes a external index name, returns scoped index name
+def self.create_index_if_needed(external_index_name)
+  index_name = scoped_index_name(external_index_name)
+  puts "index:#{index_name}"
+  unless client.indices.exists? index: index_name
+    create_index index_name
+  end
+  index_name
+end
 
 # row: a hash  (keys may be strings or symbols)
 # new_fields: hash current_name : new_name
@@ -341,5 +360,41 @@ def self.load_config_if_needed
   load_config if needs_loading?
 end
 
+def self.index_data_if_needed
+  directory_path = DataMagic.data_path
+  index = load_config(directory_path)
+  if new_config?(index)
+    puts "new config detected... hitting the big RESET button"
+    Thread.new do
+      self.delete_all
+      puts "deleted all indices, re-indexing..."
+      self.import_all
+    end
+    puts "indexing on a thread"
+  end
+end
+
+
+
+puts "--"*40
+puts "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
+puts "--"*40
+
+Aws.eager_autoload!       # see https://github.com/aws/aws-sdk-ruby/issues/833
+
+if ENV['VCAP_APPLICATION']
+  # Cloud Foundry
+  puts "connect to Cloud Foundry elasticsearch service"
+  require 'cf-app-utils'
+  eservice = CF::App::Credentials.find_by_service_name('eservice')
+  puts "eservice: #{eservice.inspect}"
+  service_uri = eservice['url']
+  puts "service_uri: #{service_uri}"
+  self.client = Elasticsearch::Client.new host: service_uri  #, log: true
+  self.index_data_if_needed
+else
+  puts "default elasticsearch connection"
+  self.client = Elasticsearch::Client.new #log: true
+end
 
 end
