@@ -60,7 +60,4 @@ fi
 gem install bundler --conservative
 bundle check || bundle install
 
-echo 'Importing sample data...'
-rake import
-
 echo "All done!"
