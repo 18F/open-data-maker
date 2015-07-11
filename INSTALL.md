@@ -1,36 +1,53 @@
-## Get Started
+# Running Open Data Maker on your computer
 
-install
-* ruby 2.2.2 (slightly older versions probably work)
-* [elasticsearch], On OSX: ```brew install elasticsearch```
+## Install Prerequisites
+
+Before you can run Open Data Maker, you'll need to have the following software
+installed on your computer: [Git], [Ruby] 2.2+, [RVM][RVM] (or rbenv),
+[Elasticsearch], and [Homebrew][Homebrew] (for Mac users only).
+
+If you already have all of the prerequisites installed, you can skip
+to the [Open Data Maker Installation](#install-open-data-maker).
+
+The easiest way to install everything on a Mac is to use the 18F [laptop]
+script.
+
+[laptop]: https://github.com/18F/laptop
+
+## Install Open Data Maker
+
+### Clone the repo to your machine
+If you're an 18F employee, you can clone the repo directly:
 
 ```
-cd open-data-maker
-gem install bundler && bundle install
+git clone https://github.com/18F/open-data-maker.git && cd open-data-maker
 ```
 
-## Run the App
+Otherwise, you'll need to [fork](http://help.github.com/fork-a-repo/) the repo
+first, then clone your fork.
 
-Make sure elasticsearch is running.  If you installed with brew:
 ```
-elasticsearch --config=/usr/local/opt/elasticsearch/config/elasticsearch.yml
+git clone https://github.com/<your GitHub username>/open-data-maker.git && cd open-data-maker
 ```
 
-Run the web app:
+### Install the dependencies
+
+```
+script/bootstrap
+```
+
+### Run the App
+
 ```
 padrino start
 ```
-go to: http://127.0.0.1:3000/
+Go to: http://127.0.0.1:3000/
 
-and you should see the text `Welcome to Open Data Maker`. Next, it's time to load
-some data
+and you should see the text `Welcome to Open Data Maker`.
 
-## Load a Dataset
-
-Of course, there is nothing to see here yet until we load some data. We can start
-by loading the sample `cities` dataset with the command `rake import`. After this
-completes, the query http://127.0.0.1:3000/cities?name=Cleveland should return
-something like
+The installation script also imported some sample data for you.
+You can verify that the import was successful by visiting
+http://127.0.0.1:3000/cities?name=Cleveland. You should see something like:
 
 ```json
 {
@@ -61,5 +78,8 @@ DATA_PATH=presidents rake import
 
 See [Contribution Guide](CONTRIBUTING.md)
 
-
-[elasticsearch]: https://www.elastic.co/products/elasticsearch
+[Elasticsearch]: https://www.elastic.co/products/elasticsearch
+[Homebrew]: http://brew.sh/
+[RVM]: https://github.com/wayneeseguin/rvm
+[Ruby]: https://www.ruby-lang.org/en/
+[Git]: https://git-scm.com/
