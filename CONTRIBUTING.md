@@ -15,8 +15,9 @@ with this waiver of copyright interest.
 
 ## Communication
 
-We're just getting started, so no regular standups or mailing lists -- if
-you think an email list would be helpful, [file an issue](https://github.com/18F/open-data-maker/issues).
+There are two ways to communicate with the development team, for general
+questions and discussion, we have a [Google Group](https://groups.google.com/d/forum/open-data-maker).
+For bug reports, please [file an issue](https://github.com/18F/open-data-maker/issues).
 
 ## Development Process
 
@@ -146,3 +147,18 @@ from the main (upstream) repository:
     ```shell
     git pull --ff upstream master
     ```
+
+### Reviewing Pull Requests
+
+We often have only one developer working on this project, so we will frequently
+merge pull requests without peer review.  However, all commits should happen
+via pull request, and a great way to contribute is to take a look at the open
+pull requests and review or comment.  In the near term, we're focused on a
+specific use case, so we won't necessarily address every comment, but it is
+always great to see feedback.
+
+Anyone who reviews a pull request should leave a note to let others know that
+someone has looked at it. For larger commits, we like to have a +1 from someone
+else on the core team and/or from other contributor(s). Please note if you
+reviewed the code or tested locally -- a +1 by itself will typically be
+interpreted as your thinking its a good idea, but not having reviewed in detail.
