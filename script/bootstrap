@@ -1,0 +1,66 @@
+#!/bin/sh
+
+set -e
+
+fancy_echo() {
+  local fmt="$1"; shift
+
+  # shellcheck disable=SC2059
+  printf "\n$fmt\n" "$@"
+}
+
+brew_install_or_upgrade() {
+  if brew_is_installed "$1"; then
+    if brew_is_upgradable "$1"; then
+      fancy_echo "Upgrading %s ..." "$1"
+      brew upgrade "$@"
+    else
+      fancy_echo "Already using the latest version of %s. Skipping ..." "$1"
+    fi
+  else
+    fancy_echo "Installing %s ..." "$1"
+    brew install "$@"
+  fi
+}
+
+brew_is_installed() {
+  brew list -1 | grep -Fqx "$1"
+}
+
+brew_is_upgradable() {
+  ! brew outdated --quiet "$1" >/dev/null
+}
+
+brew_tap_is_installed() {
+  brew tap | grep -Fqx "$1"
+}
+
+brew_tap() {
+  if ! brew_tap_is_installed "$1"; then
+    fancy_echo "Tapping $1..."
+    brew tap "$1" 2> /dev/null
+  fi
+}
+
+echo 'Installing dependencies...'
+
+if command -v brew >/dev/null; then
+  brew update
+
+  brew_tap 'homebrew/services'
+
+  brew_install_or_upgrade 'elasticsearch'
+
+  brew services restart elasticsearch
+
+  # elasticsearch takes several seconds to load
+  sleep 10
+fi
+
+gem install bundler --conservative
+bundle check || bundle install
+
+echo 'Importing sample data...'
+rake import
+
+echo "All done!"

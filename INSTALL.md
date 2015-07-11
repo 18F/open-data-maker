@@ -1,36 +1,54 @@
-## Get Started
+# Running Open Data Maker on your computer
 
-install
-* ruby 2.2.2 (slightly older versions probably work)
-* [elasticsearch], On OSX: ```brew install elasticsearch```
+## Install Prerequisites
+
+Before you can run Open Data Maker, you'll need to have the following software
+installed on your computer:
+* [Elasticsearch]
+* [Ruby] 2.2+
+
+If you are contributing to development you will also need [Git].  
+
+Our install instructions are focused on the Mac platform, we recommend: [RVM][RVM] (or rbenv),
+and [Homebrew][Homebrew].
+
+If you already have all of the prerequisites installed, you can skip
+to the [Open Data Maker Installation](#install-open-data-maker).
+
+## Install Open Data Maker
+
+### Clone the repo to your machine
+
+For development, [fork](http://help.github.com/fork-a-repo/) the repo
+first, then clone your fork.
 
 ```
-cd open-data-maker
-gem install bundler && bundle install
+git clone https://github.com/<your GitHub username>/open-data-maker.git && cd open-data-maker
 ```
 
-## Run the App
+If you just want to install, then you can just download a [zip file]().
 
-Make sure elasticsearch is running.  If you installed with brew:
+### Install the dependencies
+
 ```
-elasticsearch --config=/usr/local/opt/elasticsearch/config/elasticsearch.yml
+script/bootstrap
 ```
 
-Run the web app:
+### Run the App
+
+Make sure you are running Elastic Search: ```brew services restart elasticsearch```
+if you installed with homebrew on OSX.
+
 ```
 padrino start
 ```
-go to: http://127.0.0.1:3000/
+Go to: http://127.0.0.1:3000/
 
-and you should see the text `Welcome to Open Data Maker`. Next, it's time to load
-some data
+and you should see the text `Welcome to Open Data Maker`.
 
-## Load a Dataset
-
-Of course, there is nothing to see here yet until we load some data. We can start
-by loading the sample `cities` dataset with the command `rake import`. After this
-completes, the query http://127.0.0.1:3000/cities?name=Cleveland should return
-something like
+The installation script also imported some sample data for you.
+You can verify that the import was successful by visiting
+http://127.0.0.1:3000/cities?name=Cleveland. You should see something like:
 
 ```json
 {
@@ -57,9 +75,17 @@ rake import
 DATA_PATH=presidents rake import
 ```
 
+to restart with new data (deleting all the indices):
+```
+rake delete:all
+```
+
 ## Want to help?
 
 See [Contribution Guide](CONTRIBUTING.md)
 
-
-[elasticsearch]: https://www.elastic.co/products/elasticsearch
+[Elasticsearch]: https://www.elastic.co/products/elasticsearch
+[Homebrew]: http://brew.sh/
+[RVM]: https://github.com/wayneeseguin/rvm
+[Ruby]: https://www.ruby-lang.org/en/
+[Git]: https://git-scm.com/
