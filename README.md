@@ -37,7 +37,7 @@ When you run the app (after ```rake import```), you can query the dataset via js
 To use your own data, you can set a different directory with
 
 ```
-export export DATA_PATH='./data'
+export DATA_PATH='./data'
 ```
 
 1. Put csv files into /data
