@@ -23,7 +23,7 @@ describe 'api' do
 			dir_path = './spec/fixtures/import_all'
 			@csv_files = Dir.glob("#{dir_path}/**/*.csv")
 														.select { |entry| File.file? entry }
-			DataMagic.import_all(dir_path)
+			DataMagic.import_all(data_path: dir_path)
 		end
 		after(:all) do
 			DataMagic.delete_index('city-data')
@@ -65,7 +65,7 @@ describe 'api' do
 				dir_path = './spec/fixtures/geo'
 				@csv_files = Dir.glob("#{dir_path}/**/*.csv")
 															.select { |entry| File.file? entry }
-				DataMagic.import_all(dir_path)
+				DataMagic.import_all(data_path: dir_path)
 			end
 			after(:all) do
 				DataMagic.delete_index('place-data')

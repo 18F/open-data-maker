@@ -4,6 +4,7 @@
 # (head -n 1 source.txt && tail -n +2 source.txt | LC_ALL=C sort -k7rn,7 -t$'\t' source.txt) > result.txt
 # head -n 101 results.txt > cities100.txt
 # then convertes to csv and removed " city" from after each city name
+version: fixture-import-all
 index: city-data
 api: cities
 global_mapping:
