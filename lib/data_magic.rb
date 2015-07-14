@@ -6,20 +6,16 @@ require 'hashie'
 require './lib/nested_hash'
 require 'aws-sdk'
 require 'uri'
+require 'data_magic/config'
+require 'data_magic/index'
 
-class DataMagic
+module DataMagic
+  extend DataMagic::Config
+  extend DataMagic::Index
+
   class << self
-    # class instance variables, which may be overridden by a subclass
-    # note these are different from class variables
-    # where value is shared by class and all subclasses
-    attr_accessor :page_size, :client
-    attr_reader :files, :config
+    attr_accessor :client
   end
-  @files = []
-  @config = {}
-  @api_endpoints = {}
-  @page_size = 10
-
 
   class IndifferentHash < Hash
     include Hashie::Extensions::MergeInitializer
@@ -31,18 +27,7 @@ class DataMagic
   class InvalidData < StandardError
   end
 
-
-  #========================================================================
-  #    Setup
-  #========================================================================
-
-  def self.data_path
-    path = ENV['DATA_PATH']
-    if path.nil? or path.empty?
-      path = DEFAULT_PATH
-    end
-    path
-  end
+  Config.init
 
   def self.s3
     if @s3.nil?
@@ -61,63 +46,6 @@ class DataMagic
   #  puts "response: #{response.inspect}"
   end
 
-  # path follows URI pattern
-  # could be
-  #   s3://username:password@bucket_name/path
-  #   s3://bucket_name/path
-  #   s3://bucket_name
-  #   a local path like: './data'
-  def self.read_path(path)
-    uri = URI(path)
-    scheme = uri.scheme
-    case scheme
-      when nil
-        File.read(uri.path)
-      when "s3"
-        key = uri.path
-        key[0] = ''  # remove initial /
-        response = s3.get_object(bucket: uri.hostname, key: key)
-        response.body.read
-      else
-        raise ArgumentError, "unexpected scheme: #{scheme}"
-    end
-  end
-
-  def self.load_config(directory_path = nil)
-    if directory_path.nil? or directory_path.empty?
-      directory_path = data_path
-    end
-    puts "load config #{directory_path.inspect}"
-    @files = []
-    config_data = read_path("#{directory_path}/data.yaml")
-    @config = YAML.load(config_data)
-    puts "config: #{config.inspect}"
-    index = config['index'] || 'general'
-    endpoint = config['api'] || 'data'
-    @global_mapping = config['global_mapping'] || {}
-    @api_endpoints[endpoint] = {index: index}
-
-    file_config = config['files']
-    puts "file_config: #{file_config.inspect}"
-    if file_config.nil?
-      puts "no files found"
-    else
-      files = config["files"].keys
-      files.each do |fname|
-        config["files"][fname] ||= {}
-        @files << File.join(directory_path, fname)
-      end
-    end
-    index
-  end
-
-  def self.init_config
-    @files = []
-    @config = {}
-    @api_endpoints = {}
-  end
-
-  self.init_config
 
   #========================================================================
   #   Public Class Methods
@@ -126,130 +54,27 @@ class DataMagic
   def self.delete_all
     client.indices.delete index: '_all'
     client.indices.clear_cache
-    init_config
-  end
-
-  def self.find_index_for(api)
-    load_config_if_needed
-    api_info = @api_endpoints[api] || {}
-    api_info[:index]
-  end
-
-  # returns an array of api_endpoints
-  # list of strings
-  def self.api_endpoint_names
-    load_config_if_needed
-    @api_endpoints.keys
+    Config.init
   end
 
   def self.scoped_index_name(index_name)
-    load_config_if_needed
+    Config.load_if_needed
     env = ENV['RACK_ENV']
     "#{env}-#{index_name}"
   end
 
   def self.delete_index(index_name)
-    load_config_if_needed
+    Config.load_if_needed
     index_name = scoped_index_name(index_name)
     client.indices.delete index: index_name
     client.indices.clear_cache
     # TODO: remove some entries from @@files
   end
 
-  # data could be a String or an io stream
-  def self.import_csv(index_name, data, options={})
-    additional_fields = options[:override_global_mapping]
-    additional_fields ||= @global_mapping
-    additional_data = options[:add_data]
-    puts "additional_data: #{additional_data.inspect}"
-
-    data = data.read if data.respond_to?(:read)
-    index_name = create_index_if_needed(index_name)
-
-    if options[:force_utf8]
-      data = data.encode('UTF-8', invalid: :replace, replace: '')
-    end
-
-    fields = nil
-    new_field_names = options[:fields] || {}
-    new_field_names = new_field_names.merge(additional_fields)
-    num_rows = 0
-    begin
-      CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
-        fields ||= row.headers
-        row = row.to_hash
-        row = map_field_names(row, new_field_names) unless new_field_names.empty?
-        row = row.merge(additional_data) if additional_data
-        row = NestedHash.new.add(row)
-        #puts "indexing: #{row.inspect}"
-        client.index index:index_name, type:'document', body: row
-        num_rows += 1
-        if num_rows % 500 == 0
-          print "#{num_rows}..."; $stdout.flush
-        end
-      end
-    rescue Exception => e
-      puts "row #{num_rows}: #{e.message}"
-    end
-
-    raise InvalidData, "invalid file format or zero rows" if num_rows == 0
-
-    fields = new_field_names.values unless new_field_names.empty?
-    client.indices.refresh index: index_name if num_rows > 0
-
-    return [num_rows, fields ]
-  end
-
-  # update current configuration document in the index, if needed
-  # return whether the current config was new and required an update
-  def self.new_config?(external_index_name)
-    updated = false
-    old_config = nil
-    index_name = scoped_index_name(external_index_name)
-    if client.indices.exists? index: index_name
-      begin
-        response = client.get index: index_name, type: 'config', id: 1
-        old_config = response["_source"]
-      rescue Elasticsearch::Transport::Transport::Errors::NotFound
-        puts "no prior index configuration"
-      end
-    else
-      puts "creating index"
-      create_index(index_name)
-    end
-    puts "old_config: #{old_config.inspect}"
-    puts "old_config: #{config.inspect}"
-    if old_config.nil? || old_config["version"] != config["version"]
-      puts "--------> adding config to index: #{config.inspect}"
-      client.index index: index_name, type:'config', id: 1, body: config
-      updated = true
-    end
-    updated
-  end
-
-  def self.import_all(options = {})
-    directory_path = options[:data_path] || DataMagic.data_path
-    index = load_config(directory_path)
-    files.each do |filepath|
-      fname = filepath.split('/').last
-      puts "indexing #{fname} config:#{config['files'][fname].inspect}"
-      options[:add_data] = config['files'][fname]['add']
-      begin
-        puts "reading #{filepath}"
-        data = read_path(filepath)
-        rows, fields = DataMagic.import_csv(index, data, options)
-        puts "imported #{rows} rows"
-      rescue Exception => e
-        puts "Error: skipping #{filepath}, #{e.message}"
-      end
-    end
-  end
-
-
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
-    load_config_if_needed
+    Config.load_if_needed
     index_name = index_name_from_options(options)
     # puts "===========> search terms:#{terms.inspect}"
     squery = Stretchy.query(type: 'document')
@@ -263,7 +88,7 @@ class DataMagic
     end
 
     page = terms[:page] || 0
-    per_page = terms[:per_page] || self.page_size
+    per_page = terms[:per_page] || Config.page_size
 
     terms.delete(:page)
     terms.delete(:per_page)
@@ -333,7 +158,6 @@ def self.map_field_names(row, new_fields)
   mapped
 end
 
-
 # get the real index name when given either
 # api: api endpoint configured in data.yaml
 # index: index name
@@ -342,7 +166,7 @@ def self.index_name_from_options(options)
   options[:index] = options['index'].to_sym if options['index']
   puts "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
   if options[:api]
-    index_name = find_index_for(options[:api])
+    index_name = Config.find_index_for(options[:api])
     if index_name.nil?
       raise ArgumentError, "no configuration found for '#{options[:api]}', available endpoints: #{api_endpoint_names.inspect}"
     end
@@ -352,18 +176,11 @@ def self.index_name_from_options(options)
   index_name = scoped_index_name(index_name)
 end
 
-def self.needs_loading?
-  @files.empty?
-end
-
-def self.load_config_if_needed
-  load_config if needs_loading?
-end
 
 def self.index_data_if_needed
   directory_path = DataMagic.data_path
   index = load_config(directory_path)
-  if new_config?(index)
+  if Config.new?(index)
     puts "new config detected... hitting the big RESET button"
     Thread.new do
       self.delete_all

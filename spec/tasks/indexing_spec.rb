@@ -19,7 +19,7 @@ describe 'elastic search index management tasks' do
       dir_path = './spec/fixtures/import_all'
       ENV['DATA_PATH'] = dir_path
       expect { Rake::Task['import'].invoke }.not_to raise_exception
-      expect(DataMagic.api_endpoint_names).to eq(['cities'])
+      expect(DataMagic::Config.api_endpoint_names).to eq(['cities'])
     end
 
   end

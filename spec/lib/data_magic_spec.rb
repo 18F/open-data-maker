@@ -11,24 +11,24 @@ describe DataMagic do
           } }
 
   it "has default page size" do
-    expect(DataMagic.page_size).to eq(10)
+    expect(DataMagic::Config.page_size).to eq(10)
   end
 
-  describe "#new_config?" do   #rename ... or do this in load_config or something
+  describe "Config.new?" do   #rename ... or do this in load_config or something
     it "should be true if config has never been (explicitly) loaded" do
       # config is loaded by default
-      expect(DataMagic.new_config?('city-data')).to be true
+      expect(DataMagic::Config.new?('city-data')).to be true
     end
     context "after loading config" do
       before do
-      DataMagic.load_config("./spec/fixtures/import_all")
+      DataMagic::Config.load("./spec/fixtures/import_all")
       end
       it "should be true" do
-        expect(DataMagic.new_config?('city-data')).to be true
+        expect(DataMagic::Config.new?('city-data')).to be true
       end
       it "twice should be false" do
-        DataMagic.new_config?('city-data')
-        expect(DataMagic.new_config?('city-data')).to be false
+        DataMagic::Config.new?('city-data')
+        expect(DataMagic::Config.new?('city-data')).to be false
       end
 
     end
@@ -194,11 +194,11 @@ eos
     it "can get list of imported csv files" do
       file_list = ["./spec/fixtures/import_all/cities50.csv",
                    "./spec/fixtures/import_all/cities51-100.csv"]
-      expect(DataMagic.files).to eq(file_list)
+      expect(DataMagic::Config.files).to eq(file_list)
     end
 
     it "can get index name from api endpoint" do
-      expect(DataMagic.find_index_for('cities')).to eq('city-data')
+      expect(DataMagic::Config.find_index_for('cities')).to eq('city-data')
     end
 
     it "indexes files with yaml mapping" do
