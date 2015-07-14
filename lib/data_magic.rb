@@ -6,8 +6,8 @@ require 'hashie'
 require './lib/nested_hash'
 require 'aws-sdk'
 require 'uri'
-require 'data_magic/config'
-require 'data_magic/index'
+require_relative 'data_magic/config'
+require_relative 'data_magic/index'
 
 module DataMagic
   extend DataMagic::Config
