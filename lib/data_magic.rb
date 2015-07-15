@@ -211,10 +211,10 @@ if ENV['VCAP_APPLICATION']
   service_uri = eservice['url']
   puts "service_uri: #{service_uri}"
   self.client = ::Elasticsearch::Client.new host: service_uri  #, log: true
-  self.index_data_if_needed
 else
   puts "default elasticsearch connection"
   self.client = ::Elasticsearch::Client.new #log: true
 end
+self.index_data_if_needed
 
 end
