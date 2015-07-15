@@ -25,6 +25,7 @@ describe 'api' do
 														.select { |entry| File.file? entry }
 			DataMagic.import_all(data_path: dir_path)
 		end
+		
 		after(:all) do
 			DataMagic.delete_index('city-data')
 		end
@@ -33,7 +34,9 @@ describe 'api' do
 			before do
 				get '/cities?name=Chicago'
 			end
+			
 			it_behaves_like "api request"
+			
 			it "responds with json" do
 			  expect(last_response).to be_ok
 				expect(last_response.content_type).to eq('application/json')
@@ -73,7 +76,7 @@ describe 'api' do
 
 			it "can find an attribute from an imported file" do
 				expect(last_response).to be_ok
-				puts "last_response.body: #{last_response.body.inspect}"
+				DataMagic.logger.debug "last_response.body: #{last_response.body.inspect}"
 				result = JSON.parse(last_response.body)
 				result["results"] = result["results"].sort_by { |k| k["city"] }
 

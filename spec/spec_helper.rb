@@ -1,5 +1,6 @@
-RACK_ENV = 'test' unless defined?(RACK_ENV)
-ENV['DATA_PATH'] = nil
+ENV['DATA_PATH']  = nil
+ENV['RACK_ENV'] ||= 'test'
+RACK_ENV          = ENV['RACK_ENV'] unless defined?(RACK_ENV)
 
 require File.expand_path(File.dirname(__FILE__) + "/../config/boot")
 Dir[File.expand_path(File.dirname(__FILE__) + "/../app/helpers/**/*.rb")].each(&method(:require))

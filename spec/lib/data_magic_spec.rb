@@ -162,7 +162,7 @@ eos
 
       it "#search can find an attribute" do
         sfo_location = { lat: 37.615223, lon:-122.389977 }
-        puts "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
+        DataMagic.logger.debug "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
         search_terms = {distance:"100mi", zip:"94102"}
         result = DataMagic.search(search_terms, index:'places')
         result["results"] = result["results"].sort_by { |k| k["city"] }
