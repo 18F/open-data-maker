@@ -8,6 +8,7 @@ require 'aws-sdk'
 require 'uri'
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
+require_relative 'data_magic/query_builder'
 
 module DataMagic
   extend DataMagic::Config
@@ -73,51 +74,32 @@ module DataMagic
 
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
-    terms = IndifferentHash.new(terms)
-    Config.load_if_needed
-    index_name = index_name_from_options(options)
-    # puts "===========> search terms:#{terms.inspect}"
-    squery = Stretchy.query(type: 'document')
-
-    distance = terms[:distance]
-    if distance && !distance.empty?
-      location = { lat: 37.615223, lon:-122.389977 } #sfo
-      squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
-      terms.delete(:distance)
-      terms.delete(:zip)
+    Stretchy.configure do |c|
+      c.index_name = 'development-city-data'
     end
 
-    page = terms[:page] || 0
-    per_page = terms[:per_page] || Config.page_size
+    terms = IndifferentHash.new(terms)
+    Config.load_if_needed
+    
+    full_query = QueryBuilder.from_params(terms)
 
-    terms.delete(:page)
-    terms.delete(:per_page)
+    puts "===========> full_query:#{full_query.to_search.inspect}"
 
-    # puts "--> terms: #{terms.inspect}"
-    squery = squery.where(terms) unless terms.empty?
-
-    full_query = {index: index_name, body: {
-        from: page,
-        size: per_page,
-        query: squery.to_search
-      }
-    }
-
-    puts "===========> full_query:#{full_query.inspect}"
-
-    result = client.search full_query
-    puts "result: #{result.inspect}"
-    hits = result["hits"]
-    total = hits["total"]
-    hits["hits"].map {|hit| hit["_source"]}
-    results = hits["hits"].map {|hit| hit["_source"]}
-    {
-      "total" => total,
-      "page" => page,
-      "per_page" => per_page,
-      "results" => 	results
-    }
+    # result = client.search full_query
+    result = full_query.results
+    # puts "result: #{result.inspect}"
+    # hits = result["hits"]
+    # total = hits["total"]
+    # hits["hits"].map {|hit| hit["_source"]}
+    # results = hits["hits"].map {|hit| hit["_source"]}
+    # {
+    #   "total" => total,
+    #   "page" => page,
+    #   "per_page" => per_page,
+    #   "results" => 	results
+    # }
   end
+
 
 private
 def self.create_index(scoped_index_name)
