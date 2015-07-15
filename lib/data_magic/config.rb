@@ -1,5 +1,6 @@
 module DataMagic
   module Config
+
     def self.files
       @files
     end
@@ -52,7 +53,7 @@ module DataMagic
         when "s3"
           key = uri.path
           key[0] = ''  # remove initial /
-          response = s3.get_object(bucket: uri.hostname, key: key)
+          response = @s3.get_object(bucket: uri.hostname, key: key)
           response.body.read
         else
           raise ArgumentError, "unexpected scheme: #{scheme}"
@@ -138,10 +139,11 @@ module DataMagic
       Config.load if needs_loading?
     end
 
-    def self.init
+    def self.init(s3)
       @files = []
       @config = {}
       @api_endpoints = {}
+      @s3 = s3
     end
 
   end

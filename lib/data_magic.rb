@@ -6,6 +6,8 @@ require 'hashie'
 require './lib/nested_hash'
 require 'aws-sdk'
 require 'uri'
+require 'cf-app-utils'
+
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
 
@@ -27,24 +29,26 @@ module DataMagic
   class InvalidData < StandardError
   end
 
-  Config.init
-
   def self.s3
     if @s3.nil?
       if ENV['VCAP_APPLICATION']
-        s3cred = CF::App::Credentials.find_by_service_name('s3-sb-ed-college-choice')
+        s3cred = ::CF::App::Credentials.find_by_service_name('s3-sb-ed-college-choice')
       else
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
         puts "s3cred = #{s3cred.inspect}"
       end
-      Aws.config[:credentials] = Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
-      Aws.config[:region] = 'us-east-1'
-      @s3 = Aws::S3::Client.new
+      ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
+      ::Aws.config[:region] = 'us-east-1'
+      @s3 = ::Aws::S3::Client.new
       puts "@s3 = #{@s3.inspect}"
     end
     @s3
   #  puts "response: #{response.inspect}"
   end
+
+
+  Config.init(self.s3)
+
 
 
   #========================================================================
@@ -178,8 +182,8 @@ end
 
 
 def self.index_data_if_needed
-  directory_path = DataMagic.data_path
-  index = load_config(directory_path)
+  directory_path = DataMagic::Config.data_path
+  index = DataMagic::Config.load(directory_path)
   if Config.new?(index)
     puts "new config detected... hitting the big RESET button"
     Thread.new do
@@ -197,21 +201,20 @@ puts "--"*40
 puts "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
 puts "--"*40
 
-Aws.eager_autoload!       # see https://github.com/aws/aws-sdk-ruby/issues/833
+::Aws.eager_autoload!       # see https://github.com/aws/aws-sdk-ruby/issues/833
 
 if ENV['VCAP_APPLICATION']
   # Cloud Foundry
   puts "connect to Cloud Foundry elasticsearch service"
-  require 'cf-app-utils'
-  eservice = CF::App::Credentials.find_by_service_name('eservice')
+  eservice = ::CF::App::Credentials.find_by_service_name('eservice')
   puts "eservice: #{eservice.inspect}"
   service_uri = eservice['url']
   puts "service_uri: #{service_uri}"
-  self.client = Elasticsearch::Client.new host: service_uri  #, log: true
+  self.client = ::Elasticsearch::Client.new host: service_uri  #, log: true
   self.index_data_if_needed
 else
   puts "default elasticsearch connection"
-  self.client = Elasticsearch::Client.new #log: true
+  self.client = ::Elasticsearch::Client.new #log: true
 end
 
 end
