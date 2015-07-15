@@ -9,6 +9,7 @@ module DataMagic
     end
 
     def self.data
+      self.load if @data.empty?
       @data
     end
 
