@@ -31,9 +31,8 @@ module OpenDataMaker
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
-      puts params.inspect
-      endpoint = params['endpoint']
-      params.delete('endpoint')
+      DataMagic.logger.debug params.inspect
+      endpoint = params.delete('endpoint')
       result = DataMagic.search(params, api:endpoint)
 
       result.to_json

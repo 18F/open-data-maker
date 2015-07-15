@@ -1,6 +1,10 @@
 module DataMagic
   module Config
 
+    def self.logger
+      @logger ||= Logger.new("log/#{ENV['RACK_ENV'] || 'development'}.log")
+    end
+
     def self.files
       @files
     end
@@ -61,24 +65,24 @@ module DataMagic
     end
 
     def self.load(directory_path = nil)
-      puts "---- Config.load -----"
+      logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
         directory_path = Config.data_path
       end
-      puts "load config #{directory_path.inspect}"
+      logger.debug "load config #{directory_path.inspect}"
       @files = []
       config_data = Config.read_path("#{directory_path}/data.yaml")
       @data = YAML.load(config_data)
-      puts "config: #{@data.inspect}"
+      logger.debug "config: #{@data.inspect}"
       index = @data['index'] || 'general'
       endpoint = @data['api'] || 'data'
       @global_mapping = @data['global_mapping'] || {}
       @api_endpoints[endpoint] = {index: index}
 
       file_config = @data['files']
-      puts "file_config: #{file_config.inspect}"
+      logger.debug "file_config: #{file_config.inspect}"
       if file_config.nil?
-        puts "no files found"
+        logger.debug "no files found"
       else
         fnames = @data["files"].keys
 
@@ -116,16 +120,16 @@ module DataMagic
           response = DataMagic.client.get index: index_name, type: 'config', id: 1
           old_config = response["_source"]
         rescue Elasticsearch::Transport::Transport::Errors::NotFound
-          puts "no prior index configuration"
+          logger.debug "no prior index configuration"
         end
       else
-        puts "creating index"
+        logger.debug "creating index"
         DataMagic.create_index(index_name)
       end
-      puts "old_config: #{old_config.inspect}"
-      puts "old_config: #{@data.inspect}"
+      logger.debug "old_config: #{old_config.inspect}"
+      logger.debug "old_config: #{@data.inspect}"
       if old_config.nil? || old_config["version"] != @data["version"]
-        puts "--------> adding config to index: #{@data.inspect}"
+        logger.debug "--------> adding config to index: #{@data.inspect}"
         DataMagic.client.index index: index_name, type:'config', id: 1, body: @data
         updated = true
       end
