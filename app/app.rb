@@ -22,10 +22,12 @@ module OpenDataMaker
     end
 
     get :index do
+      category = Category.new('Test', 'Descrip', ['field1', 'field2'])
       render :home, layout: true, locals: {
         'title' => 'Open Data Maker',
         'endpoints' => DataMagic.config.api_endpoint_names,
-        'examples' => DataMagic.config.examples
+        'examples' => DataMagic.config.examples,
+        'category' => CategoryDrop.new(category)
       }
     end
 
