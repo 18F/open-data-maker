@@ -20,9 +20,10 @@ module OpenDataMaker
     else
       DataMagic.init   # loads in background
     end
-
+    
     get :index do
-      render :home, locals: {'title' => 'Open Data Maker'}
+      category = Category.new('Test', 'Descrip', ['field1', 'field2'])
+      render :home, locals: {'title' => 'Open Data Maker', category: CategoryDrop.new(category)}
     end
 
     get :endpoints do
