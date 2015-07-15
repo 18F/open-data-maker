@@ -1,24 +1,21 @@
 require 'spec_helper'
-require 'bundler/setup'
-require 'padrino-core/cli/rake'
 
 describe 'elastic search index management tasks' do
-  before do
-    PadrinoTasks.init
-  end
-
-  it { expect { Rake::Task['delete:all'].invoke }.not_to raise_exception }
 
   context "imports" do
+    before do
+      DataMagic.delete_index('cities')
+      DataMagic.delete_index('places')
+    end
+
     it "default sample-data" do
-      expect { Rake::Task['import'].invoke }.not_to raise_exception
-      DataMagic.delete_all
+      expect { DataMagic.import_all }.not_to raise_exception
     end
 
     it "correct configuration" do
       dir_path = './spec/fixtures/import_all'
       ENV['DATA_PATH'] = dir_path
-      expect { Rake::Task['import'].invoke }.not_to raise_exception
+      expect { DataMagic.import_all }.not_to raise_exception
       expect(DataMagic::Config.api_endpoint_names).to eq(['cities'])
     end
 
