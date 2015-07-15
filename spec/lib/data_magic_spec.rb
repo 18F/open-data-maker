@@ -10,6 +10,11 @@ describe DataMagic do
             "results" => 	[]
           } }
 
+  it "has config data" do
+    default_config = {"version"=>"cities100-2010", "index"=>"city-data", "api"=>"cities", "global_mapping"=>{"USPS"=>"state", "NAME"=>"name", "POP10"=>"population", "INTPTLAT"=>"location.lat", "INTPTLONG"=>"location.lon"}, "files"=>{"cities100.csv"=>{}}}
+    expect(DataMagic::Config.data).to eq(default_config)
+  end
+
   it "has default page size" do
     expect(DataMagic::Config.page_size).to eq(10)
   end

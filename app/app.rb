@@ -17,6 +17,15 @@ module OpenDataMaker
         render :home, locals: {'title' => 'Open Data Maker'}
     end
 
+    get '/data.json' do
+      content_type :json
+      headers 'Access-Control-Allow-Origin' => '*',
+               'Access-Control-Allow-Methods' => ['GET']
+
+      data = DataMagic::Config.data
+      data.to_json
+    end
+
     get '/:endpoint' do
       content_type :json
       headers 'Access-Control-Allow-Origin' => '*',

@@ -8,6 +8,11 @@ module DataMagic
       @global_mapping
     end
 
+    def self.data
+      self.load if @data.empty?
+      @data
+    end
+
     def self.page_size
       @page_size
     end
