@@ -17,3 +17,38 @@
 {% endfor %}
 </ul>
 {% endif %}
+
+<style>
+  ul {
+    list-style-type: none;
+  }
+
+  .data-dictionary .data-dictionary__field {
+    clear: both;
+  }
+
+  .data-dictionary .data-dictionary__field-item {
+    float:left;
+    margin-right: 10px;
+  }
+
+  .data-dictionary .data-dictionary__field-name {
+    font-weight: bold;
+  }
+</style>
+
+<h1>Data Details</h1>
+<ul class="data-dictionary">
+  <li class="data-dictionary__category">
+    <h2> {{ category.name }} </h2>
+    <div> {{ category.description }} </div>
+    <ul>
+      {% for field in category.fields %}
+        <li class="data-dictionary__field">
+          <div class="data-dictionary__field-item data-dictionary__field-name"> {{ field }} </div>
+          <div class="data-dictionary__field-item"> lorem ipsum... (field description placeholder) </div>
+        </li> 
+      {% endfor %}
+    </ul>
+  </li>
+</ul>
