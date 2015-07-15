@@ -8,6 +8,10 @@ module DataMagic
       @global_mapping
     end
 
+    def self.data
+      @data
+    end
+
     def self.page_size
       @page_size
     end
