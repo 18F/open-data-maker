@@ -9,36 +9,40 @@ describe DataMagic do
             "per_page" => 10,
             "results" => 	[]
           } }
-
-  it "has config data" do
-    default_config = {"version"=>"cities100-2010", "index"=>"city-data", "api"=>"cities", "global_mapping"=>{"USPS"=>"state", "NAME"=>"name", "POP10"=>"population", "INTPTLAT"=>"location.lat", "INTPTLONG"=>"location.lon"}, "files"=>{"cities100.csv"=>{}}}
-    expect(DataMagic::Config.data).to eq(default_config)
-  end
-
-  it "has default page size" do
-    expect(DataMagic::Config.page_size).to eq(10)
-  end
-
-  describe "Config.new?" do   #rename ... or do this in load_config or something
-    it "should be true if config has never been (explicitly) loaded" do
-      # config is loaded by default
-      expect(DataMagic::Config.new?('city-data')).to be true
+  context "config" do
+    before do
+      DataMagic::Config.init
     end
-    context "after loading config" do
-      before do
-      DataMagic::Config.load("./spec/fixtures/import_all")
-      end
-      it "should be true" do
+
+    it "has config data" do
+      default_config = {"version"=>"cities100-2010", "index"=>"city-data", "api"=>"cities", "global_mapping"=>{"USPS"=>"state", "NAME"=>"name", "POP10"=>"population", "INTPTLAT"=>"location.lat", "INTPTLONG"=>"location.lon"}, "files"=>{"cities100.csv"=>{}}}
+      expect(DataMagic::Config.data).to eq(default_config)
+    end
+
+    it "has default page size" do
+      expect(DataMagic::Config.page_size).to eq(10)
+    end
+
+    describe "Config.new?" do   #rename ... or do this in load_config or something
+      it "should be true if config has never been (explicitly) loaded" do
+        # config is loaded by default
         expect(DataMagic::Config.new?('city-data')).to be true
       end
-      it "twice should be false" do
-        DataMagic::Config.new?('city-data')
-        expect(DataMagic::Config.new?('city-data')).to be false
-      end
+      context "after loading config" do
+        before do
+        DataMagic::Config.load("./spec/fixtures/import_all")
+        end
+        it "should be true" do
+          expect(DataMagic::Config.new?('city-data')).to be true
+        end
+        it "twice should be false" do
+          DataMagic::Config.new?('city-data')
+          expect(DataMagic::Config.new?('city-data')).to be false
+        end
 
+      end
     end
   end
-
 
 
   describe "#import_csv" do

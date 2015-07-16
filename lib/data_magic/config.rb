@@ -114,7 +114,7 @@ module DataMagic
       updated = false
       old_config = nil
       index_name = DataMagic.scoped_index_name(external_index_name)
-      puts "looking for: #{index_name}"
+      logger.info "looking for: #{index_name}"
       if DataMagic.client.indices.exists? index: index_name
         begin
           response = DataMagic.client.get index: index_name, type: 'config', id: 1
@@ -149,6 +149,7 @@ module DataMagic
       @config = {}
       @api_endpoints = {}
       @s3 = s3
+      @data = {}
     end
 
   end
