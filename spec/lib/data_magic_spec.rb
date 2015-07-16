@@ -14,6 +14,10 @@ describe DataMagic do
       DataMagic::Config.init
     end
 
+    after do
+      DataMagic.delete_index('city-data')
+    end
+
     it "has config data" do
       default_config = {"version"=>"cities100-2010", "index"=>"city-data", "api"=>"cities", "global_mapping"=>{"USPS"=>"state", "NAME"=>"name", "POP10"=>"population", "INTPTLAT"=>"location.lat", "INTPTLONG"=>"location.lon"}, "files"=>{"cities100.csv"=>{}}}
       expect(DataMagic::Config.data).to eq(default_config)
@@ -223,7 +227,7 @@ eos
     end
 
     # fails with rake spec (101 rows), succeeds in isolation
-    xit "indexes rows from all the files" do
+    it "indexes rows from all the files" do
       result = DataMagic.search({}, api: 'cities')
       expect(result["total"]).to eq(100)
     end
