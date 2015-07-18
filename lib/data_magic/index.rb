@@ -1,4 +1,4 @@
-require 'data_magic/config'
+require_relative 'config'
 
 module DataMagic
   module Index
@@ -67,5 +67,13 @@ module DataMagic
       end
     end
 
-  end
-end
+    def self.delete(index_name)
+      Config.load_if_needed
+      index_name = DataMagic.scoped_index_name(index_name)
+      Stretchy.delete index_name
+      DataMagic.client.indices.clear_cache
+      # TODO: remove some entries from @@files
+    end
+
+  end # module Index
+end # module DataMagic

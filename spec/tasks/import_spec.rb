@@ -12,7 +12,7 @@ describe 'elastic search index management rake task' do
     it "default sample-data" do
       ENV['DATA_PATH'] = nil
       expect { Rake::Task['import'].invoke }.not_to raise_exception
-      DataMagic.delete_index('city-data')
+      DataMagic::Index.delete('city-data')
     end
 
     it "correct configuration" do
@@ -20,7 +20,7 @@ describe 'elastic search index management rake task' do
       ENV['DATA_PATH'] = dir_path
       expect { Rake::Task['import'].invoke }.not_to raise_exception
       expect(DataMagic::Config.api_endpoint_names).to eq(['cities'])
-      DataMagic.delete_index('city-data')
+      DataMagic::Index.delete('city-data')
     end
 
   end

@@ -15,7 +15,7 @@ describe DataMagic do
     end
 
     after do
-      DataMagic.delete_index('city-data')
+      DataMagic::Index.delete('city-data')
     end
 
     it "has config data" do
@@ -53,7 +53,7 @@ describe DataMagic do
     describe "arguments" do
       describe "error while reading" do
         after(:each) do
-          DataMagic.delete_index('test-index')
+          DataMagic::Index.delete('test-index')
         end
 
         it "throws errors for bad format" do
@@ -93,7 +93,7 @@ eos
       expect(num_rows).to be(2)
       expect(fields).to eq( [:a,:b] )
 
-      DataMagic.delete_index('my-index')
+      DataMagic::Index.delete('my-index')
     end
   end
 
@@ -106,7 +106,7 @@ eos
         end
 
         after(:all) do
-          DataMagic.delete_index('people')
+          DataMagic::Index.delete('people')
         end
 
         it "can find an attribute from an imported file" do
@@ -146,7 +146,7 @@ eos
         end
 
         after(:all) do
-          DataMagic.delete_index('people')
+          DataMagic::Index.delete('people')
         end
 
         it "can find an attribute from an imported file" do
@@ -170,7 +170,7 @@ eos
       end
 
       after(:all) do
-        DataMagic.delete_index('places')
+        DataMagic::Index.delete('places')
       end
 
       it "#search can find an attribute" do
@@ -201,7 +201,7 @@ eos
       DataMagic.import_all(data_path: dir_path)
     end
     after(:all) do
-      DataMagic.delete_index('city-data')
+      DataMagic::Index.delete('city-data')
     end
 
     it "can get list of imported csv files" do

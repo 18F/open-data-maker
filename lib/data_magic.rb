@@ -66,14 +66,6 @@ module DataMagic
     "#{env}-#{index_name}"
   end
 
-  def self.delete_index(index_name)
-    Config.load_if_needed
-    index_name = scoped_index_name(index_name)
-    Stretchy.delete index_name
-    client.indices.clear_cache
-    # TODO: remove some entries from @@files
-  end
-
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
