@@ -6,6 +6,6 @@ task :import, [:encoding] => :environment do |t, args|
   if args[:encoding] == "force"
     options[:force_utf8] = true
   end
-  DataMagic.import_all(options)
+  DataMagic.import_with_dictionary(options)
 
 end

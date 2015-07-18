@@ -13,6 +13,14 @@ module OpenDataMaker
       end
     end
 
+    ## app setup
+    DataMagic.logger.info "loading app.rb"
+    if ENV['RACK_ENV'] == 'test'
+      DataMagic.init(load_now: true)
+    else
+      DataMagic.init   # loads in background
+    end
+
     get '/' do
         render :home, locals: {'title' => 'Open Data Maker'}
     end
@@ -31,7 +39,7 @@ module OpenDataMaker
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
-      DataMagic.logger.debug params.inspect
+      DataMagic.logger.debug "-----> APP GET #{params.inspect}"
       endpoint = params.delete('endpoint')
       result = DataMagic.search(params, api:endpoint)
 
