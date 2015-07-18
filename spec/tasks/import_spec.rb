@@ -2,12 +2,12 @@ require 'spec_helper'
 require 'bundler/setup'
 require 'padrino-core/cli/rake'
 
-describe 'elastic search index management rake tasks' do
+describe 'elastic search index management rake task' do
   before do
     PadrinoTasks.init
     DataMagic::Config.init
   end
-  
+
   context "imports" do
     it "default sample-data" do
       ENV['DATA_PATH'] = nil
