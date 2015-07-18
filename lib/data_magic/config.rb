@@ -145,6 +145,7 @@ module DataMagic
     end
 
     def self.init(s3 = nil)
+      logger.info "Config.init #{s3.inspect}"
       @files = []
       @config = {}
       @api_endpoints = {}
