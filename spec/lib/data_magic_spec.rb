@@ -226,7 +226,6 @@ eos
       expect(result).to eq(expected)
     end
 
-    # fails with rake spec (101 rows), succeeds in isolation
     it "indexes rows from all the files" do
       result = DataMagic.search({}, api: 'cities')
       expect(result["total"]).to eq(100)
