@@ -26,6 +26,7 @@ gem 'rake'
 gem 'sass'
 gem 'liquify'
 gem 'liquid', '= 3.0.3'
+gem 'erubis'
 
 # Test requirements
 gem 'rspec', :group => 'test'
