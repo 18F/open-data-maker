@@ -13,6 +13,14 @@ module OpenDataMaker
       end
     end
 
+    ## app setup
+    DataMagic.logger.info "loading app.rb"
+    if ENV['RACK_ENV'] == 'test'
+      DataMagic.init(load_now: true)
+    else
+      DataMagic.init   # loads in background
+    end
+
     get '/' do
         render :home, locals: {'title' => 'Open Data Maker'}
     end
@@ -31,11 +39,14 @@ module OpenDataMaker
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
-      puts params.inspect
-      endpoint = params['endpoint']
-      params.delete('endpoint')
-      result = DataMagic.search(params, api:endpoint)
-
+      DataMagic.logger.debug "-----> APP GET #{params.inspect}"
+      endpoint = params.delete('endpoint')
+      if DataMagic.config.api_endpoints.keys.include? endpoint
+        result = DataMagic.search(params, api:endpoint)
+      else
+        result = { error: 404,
+                    message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"}
+      end
       result.to_json
     end
 

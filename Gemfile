@@ -26,6 +26,7 @@ gem 'rake'
 gem 'sass'
 gem 'liquify'
 gem 'liquid', '= 3.0.3'
+gem 'erubis'
 
 # Test requirements
 gem 'rspec', :group => 'test'
@@ -33,6 +34,8 @@ gem 'rack-test', :require => 'rack/test', :group => 'test'
 
 # Padrino Stable Gem
 gem 'padrino', '0.12.5'
+
+gem 'pry', :group => 'development'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
