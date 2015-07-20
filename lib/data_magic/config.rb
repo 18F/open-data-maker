@@ -1,6 +1,6 @@
 module DataMagic
   class Config
-    attr_reader :data_path, :data, :global_mapping, :files, :s3
+    attr_reader :data_path, :data, :global_mapping, :files, :s3, :api_endpoints
     attr_accessor :page_size
 
     def initialize(options = {})

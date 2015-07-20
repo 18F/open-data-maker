@@ -41,8 +41,12 @@ module OpenDataMaker
 
       DataMagic.logger.debug "-----> APP GET #{params.inspect}"
       endpoint = params.delete('endpoint')
-      result = DataMagic.search(params, api:endpoint)
-
+      if DataMagic.config.api_endpoints.keys.include? endpoint
+        result = DataMagic.search(params, api:endpoint)
+      else
+        result = { error: 404,
+                    message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"}
+      end
       result.to_json
     end
 
