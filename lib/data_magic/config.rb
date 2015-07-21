@@ -33,6 +33,10 @@ module DataMagic
       end
     end
 
+    def self.logger=(new_logger)
+      @logger = new_logger
+    end
+    
     def self.logger
       @logger ||= Logger.new("log/#{ENV['RACK_ENV'] || 'development'}.log")
     end

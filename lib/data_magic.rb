@@ -34,7 +34,7 @@ module DataMagic
   def self.s3
     if @s3.nil?
       if ENV['VCAP_APPLICATION']
-        s3cred = ::CF::App::Credentials.find_by_service_name('s3-sb-ed-college-choice')
+        s3cred = ::CF::App::Credentials.find_by_service_name('bservice')
       else
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
         logger.info "s3cred = #{s3cred.inspect}"
@@ -185,6 +185,9 @@ module DataMagic
           service_uri = eservice['url'] || eservice['uri']
           logger.info "service_uri: #{service_uri}"
           @client = ::Elasticsearch::Client.new host: service_uri  #, log: true
+          Stretchy.configure do |c|
+            c.client     = @client                       # use a custom client
+          end
         else
           logger.info "default local elasticsearch connection"
           @client = ::Elasticsearch::Client.new #log: true
