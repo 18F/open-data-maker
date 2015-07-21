@@ -45,11 +45,15 @@ module DataMagic
     return [num_rows, fields ]
   end
 
-  # we need to delete prior index or fix #14
   def self.import_with_dictionary(options = {})
     Config.logger.debug "--- import_with_dictionary --"
     options[:mapping] = self.config.global_mapping
     es_index_name = self.config.load_datayaml(options[:data_path])
+    logger.info "deleting old index #{es_index_name}"   # TO DO: fix #14
+    Stretchy.delete es_index_name
+    logger.info "creating #{es_index_name}"   # TO DO: fix #14
+    self.create_index es_index_name
+    logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
       Config.logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"

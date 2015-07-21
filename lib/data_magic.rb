@@ -103,8 +103,7 @@ module DataMagic
 
   private
     def self.create_index(es_index_name)
-      logger.info "delete/create_index #{es_index_name}"
-      Stretchy.delete es_index_name
+      logger.info "create_index #{es_index_name}"
       client.indices.create index: es_index_name, body: {
         mappings: {
           document: {    # for now type 'document' is always used
@@ -169,6 +168,7 @@ module DataMagic
           logger.info "new config detected... hitting the big RESET button"
           @index_thread = Thread.new do
             logger.info "re-indexing..."
+
             self.import_with_dictionary
             logger.info "indexing on a thread"
           end
