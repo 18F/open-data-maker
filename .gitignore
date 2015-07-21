@@ -9,4 +9,4 @@ db/*.db
 .env
 
 # expect people to put their own data in /data
-data/*
+data
