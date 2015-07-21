@@ -6,6 +6,7 @@ vendor/gems/*
 .sass-cache/*
 db/*.db
 .*.sw*
+.env
 
 # expect people to put their own data in /data
 data/*
