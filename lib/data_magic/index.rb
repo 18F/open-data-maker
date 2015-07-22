@@ -47,7 +47,7 @@ module DataMagic
 
   def self.import_with_dictionary(options = {})
     Config.logger.debug "--- import_with_dictionary --"
-    options[:mapping] = self.config.global_mapping
+    options[:mapping] = self.config.dictionary
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "deleting old index #{es_index_name}"   # TO DO: fix #14
     Stretchy.delete es_index_name

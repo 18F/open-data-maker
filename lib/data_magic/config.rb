@@ -1,12 +1,12 @@
 module DataMagic
   class Config
-    attr_reader :data_path, :data, :global_mapping, :files, :s3, :api_endpoints
+    attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints
     attr_accessor :page_size
 
     def initialize(options = {})
       @api_endpoints = {}
       @files = []
-      @global_mapping = {}
+      @dictionary = {}
       @page_size = DataMagic::DEFAULT_PAGE_SIZE
       @s3 = options[:s3]
 
@@ -136,7 +136,7 @@ module DataMagic
         logger.debug "config: #{@data.inspect}"
         index = @data['index'] || 'general'
         endpoint = @data['api'] || 'data'
-        @global_mapping = @data['global_mapping'] || {}
+        @dictionary = @data['dictionary'] || {}
         @api_endpoints[endpoint] = {index: index}
 
         file_config = @data['files']

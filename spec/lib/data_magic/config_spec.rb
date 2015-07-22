@@ -29,7 +29,7 @@ describe DataMagic::Config do
     end
     it "has config data" do
       default_config = {"version"=>"cities100-2010", "index"=>"city-data", "api"=>"cities",
-        "global_mapping"=>{"USPS"=>"state", "NAME"=>"name", "POP10"=>"population",
+        "dictionary"=>{"USPS"=>"state", "NAME"=>"name", "POP10"=>"population",
                            "INTPTLAT"=>"location.lat", "INTPTLONG"=>"location.lon"},
         "files"=>{"cities100.csv"=>{}},
         "data_path"=>"./sample-data"}
