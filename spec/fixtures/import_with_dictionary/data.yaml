@@ -8,11 +8,11 @@ version: fixture-import-all
 index: city-data
 api: cities
 dictionary:
-  USPS: state
-  NAME: name
-  POP10: population
-  INTPTLAT: latitude
-  INTPTLONG: longitude
+  state: USPS
+  name: NAME
+  population: POP10
+  latitude: INTPTLAT
+  longitude: INTPTLONG
 
 files:
   cities50.csv:

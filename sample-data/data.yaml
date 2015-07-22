@@ -8,11 +8,11 @@ version: cities100-2010
 index: city-data
 api: cities
 dictionary:
-  USPS: state
-  NAME: name
-  POP10: population
-  INTPTLAT: location.lat
-  INTPTLONG: location.lon
+  state: USPS
+  name: NAME
+  population: POP10
+  location.lat: INTPTLAT
+  location.lon: INTPTLONG
 
 files:
   cities100.csv:

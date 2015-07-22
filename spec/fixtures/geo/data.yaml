@@ -8,8 +8,8 @@
 # then convertes to csv and removed " city" from after each city name
 dictionary:
   city: city
-  lat: location.lat
-  lon: location.lon
+  location.lat: lat
+  location.lon: lon
 
 index: place-data
 api: places
