@@ -13,6 +13,9 @@ dictionary:
   population: POP10
   location.lat: INTPTLAT
   location.lon: INTPTLONG
+  land_area:
+    source: ALAND_SQMI
+    type: float
 
 files:
   cities100.csv:
