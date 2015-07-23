@@ -119,6 +119,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.3.0)
     rspec-support (3.3.0)
+    safe_yaml (1.0.4)
     sass (3.4.14)
     sinatra (1.4.6)
       rack (~> 1.4)
@@ -168,6 +169,7 @@ DEPENDENCIES
   rake
   rspec
   rspec-mocks
+  safe_yaml
   sass
   stretchy
   unicorn
