@@ -1,5 +1,5 @@
 require 'elasticsearch'
-require 'yaml'
+require 'safe_yaml'
 require 'csv'
 require 'stretchy'
 require 'hashie'
