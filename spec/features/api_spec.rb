@@ -26,6 +26,18 @@ describe 'api' do
 		#expect(DataMagic.client.indices.get(index: '_all')).to be_empty
 	end
 
+	describe "data description" do
+		before do
+			get '/data.json'
+		end
+
+		it_behaves_like "api request"
+
+		it "responds with json" do
+			expect(last_response).to be_ok
+			expect(last_response.content_type).to eq('application/json')
+		end
+	end
 	describe "query" do
 		describe "with terms" do
 			before do

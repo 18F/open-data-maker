@@ -30,7 +30,7 @@ module OpenDataMaker
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
-      data = DataMagic::Config.data
+      data = DataMagic.config.data
       data.to_json
     end
 
