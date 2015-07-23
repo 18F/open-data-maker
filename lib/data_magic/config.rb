@@ -36,7 +36,7 @@ module DataMagic
     def self.logger=(new_logger)
       @logger = new_logger
     end
-    
+
     def self.logger
       @logger ||= Logger.new("log/#{ENV['RACK_ENV'] || 'development'}.log")
     end
@@ -119,6 +119,14 @@ module DataMagic
       end
     end
 
+    def load_yaml(path = nil)
+      file = ['data.yml', 'data.yaml'].map { |name|
+        File.join(path, name)
+      }.find { |file|
+        File.exists?(file)
+      }
+      file ? YAML.load_file(file) : {}
+    end
 
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
@@ -131,8 +139,7 @@ module DataMagic
       else
         logger.debug "load config #{directory_path.inspect}"
         @files = []
-        config_text = read_path("#{directory_path}/data.yaml")
-        @data = YAML.load(config_text)
+        @data = load_yaml(directory_path)
         logger.debug "config: #{@data.inspect}"
         index = @data['index'] || 'general'
         endpoint = @data['api'] || 'data'

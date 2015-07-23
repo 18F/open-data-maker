@@ -2,6 +2,16 @@ require 'spec_helper'
 
 describe DataMagic::Config do
 
+  before(:all) do
+    ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
+  end
+
+  it "detects data.yml files" do
+    ENV['DATA_PATH'] = './spec/fixtures/cities_with_yml'
+    config = DataMagic::Config.new
+    expect(config.data["api"]).to eq("cities")
+  end
+
   context "create" do
     it "works with zero args" do
       expect(DataMagic::Config.new).to_not be_nil
