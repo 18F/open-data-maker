@@ -37,6 +37,7 @@ gem 'rack-test', :require => 'rack/test', :group => 'test'
 gem 'padrino', '0.12.5'
 
 gem 'pry', :group => 'development'
+gem 'pry-byebug', :group => 'development'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

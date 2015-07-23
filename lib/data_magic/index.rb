@@ -3,7 +3,7 @@ require_relative 'config'
 module DataMagic
   # data could be a String or an io stream
   def self.import_csv(data, options={})
-    es_index_name = self.create_index_if_needed
+    es_index_name = self.create_index
     Config.logger.debug "Indexing data -- index_name: #{es_index_name}, options: #{options}"
     additional_fields = options[:mapping] || {}
     additional_data = options[:add_data]

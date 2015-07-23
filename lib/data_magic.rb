@@ -102,27 +102,23 @@ module DataMagic
   end
 
   private
-    def self.create_index(es_index_name)
+    def self.create_index(es_index_name = nil)
+      es_index_name ||= self.config.scoped_index_name
       logger.info "create_index #{es_index_name}"
-      client.indices.create index: es_index_name, body: {
-        mappings: {
-          document: {    # for now type 'document' is always used
-            properties: {
-             location: { type: 'geo_point' }
+      begin
+        client.indices.create index: es_index_name, body: {
+          mappings: {
+            document: {    # for now type 'document' is always used
+              properties: {
+              location: { type: 'geo_point' }
+              }
             }
           }
         }
-      }
-    end
-
-    # takes a external index name, returns scoped index name
-    def self.create_index_if_needed(es_index_name = nil)
-      index_name = es_index_name || self.config.scoped_index_name
-      unless client.indices.exists?(index: index_name)
-        logger.info "creating index: #{index_name}"
-        create_index(index_name)
+      rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
+        logger.error error.to_s
       end
-      index_name
+      es_index_name
     end
 
     # row: a hash  (keys may be strings or symbols)
