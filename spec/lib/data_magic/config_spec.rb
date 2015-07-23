@@ -6,6 +6,12 @@ describe DataMagic::Config do
     ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
   end
 
+  it "detects data.yml files" do
+    ENV['DATA_PATH'] = './spec/fixtures/cities_with_yml'
+    config = DataMagic::Config.new
+    expect(config.data["api"]).to eq("cities")
+  end
+
   context "s3" do
     it "detects data.yaml" do
 
