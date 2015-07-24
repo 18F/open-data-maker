@@ -10,6 +10,7 @@ module DataMagic
       @files = []
       @dictionary = {}
       @page_size = DataMagic::DEFAULT_PAGE_SIZE
+      @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
 
       @data_path = options[:data_path] || ENV['DATA_PATH']
@@ -47,7 +48,7 @@ module DataMagic
     end
 
     def additional_data_for_file(fname)
-      @data['files'][fname]['add']
+      @data.fetch('files', {}).fetch(fname, {}).fetch('add', nil)
     end
 
     def scoped_index_name(index_name = nil)
@@ -142,6 +143,22 @@ module DataMagic
       YAML.load(raw)
     end
 
+    def list_files(path)
+      Dir["#{path}/*"].select { |file|
+        @extensions.include? File.extname(file)
+      }.map { |file|
+        File.basename file
+      }
+    end
+
+    def parse_files(files, path)
+      meta = files || {}
+      names = files.nil? ? list_files(path) : files.keys
+      paths = names.map { |name| File.join(path, name) }
+      meta = Hash[names.map { |name| [name, meta[name] || {}] }]
+      return paths, meta
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -152,28 +169,16 @@ module DataMagic
         logger.debug "already loaded, nothing to do!"
       else
         logger.debug "load config #{directory_path.inspect}"
-        @files = []
         @data = load_yaml(directory_path)
         logger.debug "config: #{@data.inspect}"
-        index = @data['index'] || 'general'
+        index = @data['index'] = @data['index'] || 'general'
         endpoint = @data['api'] || 'data'
         @dictionary = @data['dictionary'] || {}
         @api_endpoints[endpoint] = {index: index}
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
+        @files, @data['files'] = parse_files(data['files'], directory_path)
 
-        file_config = @data['files']
-        logger.debug "file_config: #{file_config.inspect}"
-        if file_config.nil?
-          logger.debug "no files found"
-        else
-          fnames = @data["files"].keys
-
-          fnames.each do |fname|
-            @data["files"][fname] ||= {}
-            @files << File.join(directory_path, fname)
-          end
-        end
         # keep track of where we loaded our data, so we can avoid loading again
         @data['data_path'] = directory_path
         @data_path = directory_path  # make sure this is set, in case it changed

@@ -29,6 +29,7 @@ module DataMagic
   end
 
   DEFAULT_PAGE_SIZE = 20
+  DEFAULT_EXTENSIONS = ['.csv']
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
@@ -79,7 +80,6 @@ module DataMagic
     terms.delete(:per_page)
 
     # logger.info "--> terms: #{terms.inspect}"
-    # binding.pry
     squery = squery.where(terms) unless terms.empty?
 
     full_query = {
