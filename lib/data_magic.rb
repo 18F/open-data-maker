@@ -102,14 +102,15 @@ module DataMagic
   end
 
   private
-    def self.create_index(es_index_name)
-      logger.info "create_index #{es_index_name}"
+    def self.create_index(es_index_name, field_types={})
+      field_types = field_types.merge({
+       location: { type: 'geo_point' }
+      })
+      logger.info "create_index #{es_index_name} #{field_types}"
       client.indices.create index: es_index_name, body: {
         mappings: {
           document: {    # for now type 'document' is always used
-            properties: {
-             location: { type: 'geo_point' }
-            }
+            properties: field_types
           }
         }
       }
