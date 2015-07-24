@@ -52,7 +52,7 @@ describe "DataMagic #search" do
         DataMagic.init(load_now: false)
         options = {}
         options[:fields] = {name: 'person_name', address: 'street'}
-        options[:override_global_mapping] = {}
+        options[:override_dictionary] = {}
         num_rows, fields = DataMagic.import_csv(address_data, options)
         expect(fields.sort).to eq(options[:fields].values.sort)
       end
