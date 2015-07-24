@@ -21,11 +21,18 @@ module OpenDataMaker
       DataMagic.init   # loads in background
     end
 
-    get '/' do
-        render :home, locals: {'title' => 'Open Data Maker'}
+    get :index do
+      content_type :json
+      endpoints = DataMagic.config.api_endpoints.keys.map { |key|
+        {
+          name: key,
+          url: url_for(:index, :endpoint => key),
+        }
+      }
+      return {endpoints: endpoints}.to_json
     end
 
-    get '/data.json' do
+    get :'data.json' do
       content_type :json
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
@@ -34,22 +41,21 @@ module OpenDataMaker
       data.to_json
     end
 
-    get '/:endpoint' do
+    get :index, :with => :endpoint do
       content_type :json
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
       DataMagic.logger.debug "-----> APP GET #{params.inspect}"
       endpoint = params.delete('endpoint')
-      if DataMagic.config.api_endpoints.keys.include? endpoint
-        result = DataMagic.search(params, api:endpoint)
-      else
-        result = { error: 404,
-                    message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"}
+      if not DataMagic.config.api_endpoints.keys.include? endpoint
+        halt 404, {
+          error: 404,
+          message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
+        }.to_json
       end
-      result.to_json
+      DataMagic.search(params, api:endpoint).to_json
     end
-
 
     ##
     # Caching support.
