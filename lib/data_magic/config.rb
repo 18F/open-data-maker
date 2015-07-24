@@ -126,6 +126,9 @@ module DataMagic
       }.find { |file|
         File.exists?(file)
       }
+      if file.nil? and not ENV['ALLOW_MISSING_YML']
+        logger.warn "No data.y?ml found; using default options"
+      end
       file ? YAML.load_file(file) : {}
     end
 
