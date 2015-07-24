@@ -1,21 +1,21 @@
+version: cities100-2010
 # cities100.txt
 # National Places Gazetteer Files, from US Census 2010
 # https://www.census.gov/geo/maps-data/data/gazetteer2010.html
 # (head -n 1 source.txt && tail -n +2 source.txt | LC_ALL=C sort -k7rn,7 -t$'\t' source.txt) > result.txt
 # head -n 101 results.txt > cities100.txt
 # then convertes to csv and removed " city" from after each city name
-version: fixture-import-all
 index: city-data
 api: cities
 dictionary:
   state: USPS
   name: NAME
   population: POP10
-  latitude: INTPTLAT
-  longitude: INTPTLONG
+  location.lat: INTPTLAT
+  location.lon: INTPTLONG
+  land_area:
+    source: ALAND_SQMI
+    type: float
 
 files:
-  cities50.csv:
-    add:
-      category: 'top50'
-  cities51-100.csv:
+  cities100.csv:

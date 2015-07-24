@@ -47,7 +47,25 @@ module DataMagic
 
   def self.import_with_dictionary(options = {})
     Config.logger.debug "--- import_with_dictionary --"
-    options[:mapping] = self.config.global_mapping
+    field_mapping = {}
+
+    # field_name: name we want as the json key
+    # field_mapping[column_name] = field_name
+    self.config.dictionary.each do |field_name, info|
+      case info
+        when String
+          field_mapping[info] = field_name
+        when Hash
+          column_name = info['source']
+          field_mapping[column_name] = field_name
+        else
+          Config.logger.warn("unexpected dictionary field info " +
+            "for #{field_name}: #{info.inspect} -- expected String or Hash")
+      end
+    end
+    Config.logger.debug("field_mapping: #{field_mapping.inspect}")
+    options[:mapping] = field_mapping
+
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "deleting old index #{es_index_name}"   # TO DO: fix #14
     Stretchy.delete es_index_name
