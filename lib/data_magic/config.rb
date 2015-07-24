@@ -139,6 +139,10 @@ module DataMagic
 
     def load_yaml(path = nil)
       file = data_file_name(path)
+      if file.nil? and not ENV['ALLOW_MISSING_YML']
+        logger.warn "No data.y?ml found; using default options"
+      end
+
       raw = file ? read_path(File.join(path, file)) : '{}'
       YAML.load(raw)
     end
