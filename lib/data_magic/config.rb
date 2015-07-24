@@ -145,6 +145,10 @@ module DataMagic
       return paths, meta
     end
 
+    def clean_index(path)
+      File.basename(path).gsub(/[^0-9a-z]+/, '-')
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -157,10 +161,10 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @data = load_yaml(directory_path)
         logger.debug "config: #{@data.inspect}"
-        index = @data['index'] = @data['index'] || 'general'
-        endpoint = @data['api'] || 'data'
+        @data['index'] ||= clean_index(@data_path)
+        endpoint = @data['api'] || clean_index(@data_path)
         @dictionary = @data['dictionary'] || {}
-        @api_endpoints[endpoint] = {index: index}
+        @api_endpoints[endpoint] = {index: @data['index']}
         @files, @data['files'] = parse_files(data['files'], directory_path)
 
         # keep track of where we loaded our data, so we can avoid loading again

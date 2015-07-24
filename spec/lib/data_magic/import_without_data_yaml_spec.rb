@@ -29,11 +29,11 @@ describe "DataMagic #import_without_data_yaml" do
   end
 
   it "can get index name from api endpoint" do
-    expect(DataMagic.config.find_index_for('data')).to eq('general')
+    expect(DataMagic.config.find_index_for('cities-without-yml')).to eq('cities-without-yml')
   end
 
   it "indexes files with yaml mapping" do
-    result = DataMagic.search({NAME: "Chicago"}, api: 'data')
+    result = DataMagic.search({NAME: "Chicago"}, api: 'cities-without-yml')
     expected["results"] = [
       {
         "USPS"=>"IL",
