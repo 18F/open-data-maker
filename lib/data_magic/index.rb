@@ -6,18 +6,31 @@ module DataMagic
     config.data['unique'].empty? ? nil : search_id(index, row)
   end
 
+  def self.unique_query(row)
+    terms = config.data['unique'].map { |unique| ["_unique.#{unique}", row[unique]] }
+    query = Hashie::Mash.new
+    query.filtered!.query!.match_all = {}
+    query.filtered!.filter!.nested!.path = '_unique'
+    query.filtered!.filter!.nested!.filter!.bool!.must = [{term: Hash[terms]}]
+    query.to_hash
+  end
+
   def self.search_id(index, row)
-    terms = config.data['unique'].map { |unique| [unique, row[unique]] }
-    query = Stretchy.query(type: 'document').where.terms(Hash[terms])
+    query = unique_query(row)
     doc = {
       index: index,
       body: {
-        query: query.to_search,
+        query: query,
         size: 1,
       },
     }
     hits = client.search(doc)['hits']
     hits['total'] > 0 ? hits['hits'][0]['_id'] : nil
+  end
+
+  def self.get_unique(row)
+    pairs = config.data['unique'].map { |unique| [unique, row[unique]] }
+    Hash[pairs]
   end
 
   # data could be a String or an io stream
@@ -44,6 +57,7 @@ module DataMagic
         row = row.to_hash
         row = map_field_names(row, new_field_names) unless new_field_names.empty?
         row = row.merge(additional_data) if additional_data
+        row['_unique'] = get_unique(row)
         row = NestedHash.new.add(row)
         #logger.debug "indexing: #{row.inspect}"
         client.index({

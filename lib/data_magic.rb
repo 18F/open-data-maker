@@ -83,7 +83,10 @@ module DataMagic
       body: {
         from: page,
         size: per_page,
-        query: squery.to_search
+        query: squery.to_search,
+        _source: {
+          exclude: ['_unique'],
+        },
       }
     }
 
@@ -108,17 +111,20 @@ module DataMagic
       field_types = field_types.merge({
         location: {type: 'geo_point'}
       })
-      if not config.nil?
-        props = config.data['unique'].map { |unique|
-          [unique, {type: 'string', index: 'not_analyzed'}]
-        }
-        field_types = field_types.merge(Hash[props])
-      end
+      field_types['_unique'] = {type: 'nested'}
       logger.info "create_index #{es_index_name} #{field_types}"
       client.indices.create index: es_index_name, body: {
         mappings: {
           document: {    # for now type 'document' is always used
-            properties: field_types
+            properties: field_types,
+            dynamic_templates: [
+              {
+                template: {
+                  path_match: '_unique.*',
+                  mapping: {index: 'not_analyzed'},
+                }
+              }
+            ]
           }
         }
       }

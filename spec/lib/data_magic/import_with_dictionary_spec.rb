@@ -11,6 +11,13 @@ describe "unique key(s)" do
     DataMagic.destroy
   end
 
+  it "duplicates records with no unique keys" do
+    DataMagic.config = DataMagic::Config.new
+    2.times { DataMagic.import_with_dictionary }
+    result = DataMagic.search({})
+    expect(result['total']).to eq(200)
+  end
+
   it "loads records once by state" do
     DataMagic.config = DataMagic::Config.new
     DataMagic.config.data['unique'] = ['state']
@@ -25,13 +32,6 @@ describe "unique key(s)" do
     2.times { DataMagic.import_with_dictionary }
     result = DataMagic.search({})
     expect(result['total']).to eq(100)
-  end
-
-  it "duplicates records with no unique keys" do
-    DataMagic.config = DataMagic::Config.new
-    2.times { DataMagic.import_with_dictionary }
-    result = DataMagic.search({})
-    expect(result['total']).to eq(200)
   end
 
 end
