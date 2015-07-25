@@ -80,7 +80,10 @@ module DataMagic
     # binding.pry
     squery = squery.where(terms) unless terms.empty?
 
-    full_query = {index: index_name, body: {
+    full_query = {
+      index: index_name,
+      type: 'document',
+      body: {
         from: page,
         size: per_page,
         query: squery.to_search
