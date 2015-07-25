@@ -133,6 +133,7 @@ module DataMagic
         @files = []
         config_text = read_path("#{directory_path}/data.yaml")
         @data = YAML.load(config_text)
+        @data['unique'] ||= []
         logger.debug "config: #{@data.inspect}"
         index = @data['index'] || 'general'
         endpoint = @data['api'] || 'data'
