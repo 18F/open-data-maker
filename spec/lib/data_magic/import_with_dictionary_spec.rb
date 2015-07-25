@@ -42,8 +42,6 @@ describe "DataMagic #import_with_dictionary" do
   end
 
   it "indexes rows from all the files" do
-    # currently fails with 101 rows, one has blank name
-    # perhaps it is reading a blank line at the end of one of the files?
     result = DataMagic.search({}, api: 'cities')
     expect(result["total"]).to eq(100)
   end
