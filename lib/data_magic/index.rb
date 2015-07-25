@@ -8,7 +8,7 @@ module DataMagic
 
   def self.search_id(index, row)
     terms = config.data['unique'].map { |unique| [unique, row[unique]] }
-    query = Stretchy.query(type: 'document').where(Hash[terms])
+    query = Stretchy.query(type: 'document').where.terms(Hash[terms])
     doc = {
       index: index,
       body: {
@@ -46,7 +46,13 @@ module DataMagic
         row = row.merge(additional_data) if additional_data
         row = NestedHash.new.add(row)
         #logger.debug "indexing: #{row.inspect}"
-        client.index index: es_index_name, type:'document', body: row, id: get_id(es_index_name, row)
+        client.index({
+          index: es_index_name,
+          id: get_id(es_index_name, row),
+          type: 'document',
+          refresh: true,
+          body: row,
+        })
         num_rows += 1
         if num_rows % 500 == 0
           print "#{num_rows}..."; $stdout.flush
@@ -61,7 +67,7 @@ module DataMagic
     fields = new_field_names.values unless new_field_names.empty?
     client.indices.refresh index: es_index_name if num_rows > 0
 
-    return [num_rows, fields ]
+    return [num_rows, fields]
   end
 
   def self.import_with_dictionary(options = {})

@@ -75,7 +75,6 @@ module DataMagic
     terms.delete(:per_page)
 
     # logger.info "--> terms: #{terms.inspect}"
-    # binding.pry
     squery = squery.where(terms) unless terms.empty?
 
     full_query = {
@@ -107,8 +106,14 @@ module DataMagic
   private
     def self.create_index(es_index_name, field_types={})
       field_types = field_types.merge({
-       location: { type: 'geo_point' }
+        location: {type: 'geo_point'}
       })
+      if not config.nil?
+        props = config.data['unique'].map { |unique|
+          [unique, {type: 'string', index: 'not_analyzed'}]
+        }
+        field_types = field_types.merge(Hash[props])
+      end
       logger.info "create_index #{es_index_name} #{field_types}"
       client.indices.create index: es_index_name, body: {
         mappings: {
