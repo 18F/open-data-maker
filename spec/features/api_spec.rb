@@ -69,7 +69,7 @@ describe 'api', type: 'feature' do
 	end
 
 	describe "query" do
-		describe "with terms" do
+		describe "with one term" do
 			before do
 				get '/cities?name=Chicago'
 			end
@@ -94,6 +94,24 @@ describe 'api', type: 'feature' do
 				expect(result).to eq(expected)
 
 			end
+		end
+		describe "with options" do
+			it "can return a subset of fields" do
+				get '/cities?state=MA&fields=name,population'
+
+				expect(last_response).to be_ok
+				result = JSON.parse(last_response.body)
+
+				expected = {
+					"total" => 1,
+					"page"  => 0,
+					"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+					"results" => [{"name"=>"Boston", "population"=>"617594"}]
+				}
+				expect(result).to eq(expected)
+
+			end
+
 		end
 
 		describe "with float" do

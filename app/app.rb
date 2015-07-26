@@ -58,7 +58,9 @@ module OpenDataMaker
           message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
         }.to_json
       end
-      DataMagic.search(params, api:endpoint).to_json
+      fields = params.delete('fields') || ""
+      fields = fields.split(',')
+      DataMagic.search(params, api:endpoint, fields:fields).to_json
     end
 
     ##
