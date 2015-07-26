@@ -10,7 +10,9 @@ api: cities
 dictionary:
   state: USPS
   name: NAME
-  population: POP10
+  population:
+    source: POP10
+    type: integer
   location.lat: INTPTLAT
   location.lon: INTPTLONG
   land_area:

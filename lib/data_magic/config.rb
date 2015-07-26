@@ -69,6 +69,26 @@ module DataMagic
       api_info[:index]
     end
 
+    def dictionary=(yaml_hash = {})
+      @dictionary = IndifferentHash.new(yaml_hash)
+      @dictionary.each do |key, info|
+        if info === String
+          @dictionary[key] = {source: info}
+        end
+      end
+    end
+
+    def field_types
+      if @field_types.nil?
+        @field_types = {}
+        dictionary.each do |field_name, info|
+          type = info['type']
+          @field_types[field_name] = type unless type.nil?
+        end
+      end
+      @field_types
+    end
+
     # update current configuration document in the index, if needed
     # return whether the current config was new and required an update
     def update_indexed_config
@@ -85,7 +105,7 @@ module DataMagic
         end
       else
         logger.debug "creating index"
-        DataMagic.create_index(index_name)  ## DataMagic::Index.create ?
+        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
       end
       logger.debug "old_config (from es): #{old_config.inspect}"
       logger.debug "new_config (just loaded from data.yaml): #{@data.inspect}"

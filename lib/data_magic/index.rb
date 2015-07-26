@@ -4,28 +4,10 @@ include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (loggin
 
 module DataMagic
 
-  # row: a hash  (keys may be strings or symbols)
-  # new_fields: hash current_name : new_name
-  # returns a hash (which may be a subset of row) where keys are new_name
-  #         with value of corresponding row[current_name]
-  def self.map_field_names(row, new_fields, options={})
-    mapped = {}
-    row.each do |key, value|
-      new_key = new_fields[key.to_sym] || new_fields[key.to_s]
-      if new_key
-        value = value.to_f if new_key.include? "location"
-        mapped[new_key] = value
-      elsif options[:import] == 'all'
-        mapped[key] = value
-      end
-    end
-    mapped
-  end
-
-
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
     row = map_field_names(row, fields, options) unless fields.empty?
+    map_field_types(row, config.field_types) unless config.field_types.empty?
     row = row.merge(additional) if additional
     row = NestedHash.new.add(row)
     row
@@ -60,7 +42,7 @@ module DataMagic
         data,
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
-      ) do|row|
+      ) do |row|
         row = parse_row(row, new_field_names, options, additional_data)
         headers ||= row.keys.map(&:to_s)
         client.index({
@@ -108,22 +90,59 @@ module DataMagic
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    self.create_index es_index_name
+    self.create_index es_index_name, config.field_types
     logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
       logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"
       options[:add_data] = self.config.additional_data_for_file(fname)
-      #begin
+      begin
         logger.debug "reading #{filepath}"
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
         logger.debug "imported #{rows} rows"
-      #rescue Exception => e
-      #  Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
-      #end
+      rescue Exception => e
+       Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
+      end
     end
     logger.debug "indexing complete: #{distance_of_time_in_words(Time.now, start_time)}"
   end # import_with_dictionary
+
+private
+  # row: a hash  (keys may be strings or symbols)
+  # new_fields: hash current_name : new_name
+  # returns a hash (which may be a subset of row) where keys are new_name
+  #         with value of corresponding row[current_name]
+  def self.map_field_names(row, new_fields, options={})
+    mapped = {}
+    row.each do |key, value|
+      new_key = new_fields[key.to_sym] || new_fields[key.to_s]
+      if new_key
+        value = value.to_f if new_key.include? "location"
+        mapped[new_key] = value
+      elsif options[:import] == 'all'
+        mapped[key] = value
+      end
+    end
+    mapped
+  end
+
+  # row: a hash  (keys may be strings or symbols)
+  # field_types: hash field_name : type (float, integer, string)
+  # returns a hash where values have been coerced to the new type
+  def self.map_field_types(row, field_types = {})
+    row.each do |key, value|
+      type = field_types[key.to_sym] || field_types[key.to_s]
+      case type
+        when "float"
+          row[key] = value.to_f
+        when "integer"
+          row[key] = value.to_i
+        when "string"
+          row[key] = value.to_s
+      end
+    end
+    row
+  end
 
 end # module DataMagic

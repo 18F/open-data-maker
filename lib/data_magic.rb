@@ -131,15 +131,21 @@ module DataMagic
   private
     def self.create_index(es_index_name = nil, field_types={})
       es_index_name ||= self.config.scoped_index_name
-      field_types = field_types.merge({
-       location: { type: 'geo_point' }
-      })
-      logger.info "create_index #{es_index_name} #{field_types}"
+      logger.debug "======== create_index #{es_index_name} ======="
+      field_types['location'] = 'geo_point'
+      es_types = {}
+      field_types.each do |key, type|
+        es_types[key] = { type: type }
+      end
+      # field_types = field_types.merge({
+      #  location: { type: 'geo_point' }
+      # })
+      logger.info "es type mapping #{es_types.inspect}"
       begin
         client.indices.create index: es_index_name, body: {
-            mappings: {
-              document: {    # for now type 'document' is always used
-                properties: field_types
+          mappings: {
+            document: {    # type 'document' is always used for external indexed docs
+              properties: es_types
             }
           }
         }
@@ -148,6 +154,7 @@ module DataMagic
       end
       es_index_name
     end
+
 
     # get the real index name when given either
     # api: api endpoint configured in data.yaml
