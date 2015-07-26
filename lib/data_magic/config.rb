@@ -16,8 +16,6 @@ module DataMagic
       if @data_path.nil? or @data_path.empty?
         @data_path = DEFAULT_PATH
       end
-      @contents = read_contents(@data_path)
-
       load_datayaml
     end
 
@@ -122,7 +120,7 @@ module DataMagic
       end
     end
 
-    def read_contents(path)
+    def file_list(path)
       uri = URI(path)
       scheme = uri.scheme
       case scheme
@@ -131,11 +129,15 @@ module DataMagic
         when "s3"
           response = @s3.list_objects(bucket: uri.hostname)
           response.contents.map { |item| item.key }
-        end
+      end
+    end
+
+    def data_file_name(path)
+      ['data.yml', 'data.yaml'].find { |file| file_list(path).include? file }
     end
 
     def load_yaml(path = nil)
-      file = ['data.yml', 'data.yaml'].find { |file| @contents.include? file }
+      file = data_file_name(path)
       raw = file ? read_path(File.join(path, file)) : '{}'
       YAML.load(raw)
     end
