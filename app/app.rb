@@ -46,21 +46,37 @@ module OpenDataMaker
     end
 
     get :index, :with => :endpoint do
-      content_type :json
+      DataMagic.logger.debug "> APP GET #{params.inspect}"
+      original_endpoint = params.delete('endpoint')
+      endpoint, request_type = original_endpoint.split('.')
+      request_type ||= :json
+      request_type = request_type.to_sym
+      if not DataMagic::DOCUMENT_TYPES.include? request_type
+        halt 404, {
+          error: 404,
+          message: "You requested #{original_endpoint}," +
+                   " but we don't know how to make a '#{request_type}'." +
+                   " We were looking for one of these: #{DataMagic::DOCUMENT_TYPES.join(', ')}."
+        }.to_json
+      end
+
+      content_type request_type
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
-      DataMagic.logger.debug "-----> APP GET #{params.inspect}"
-      endpoint = params.delete('endpoint')
       if not DataMagic.config.api_endpoints.keys.include? endpoint
         halt 404, {
           error: 404,
           message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
         }.to_json
       end
+
       fields = params.delete('fields') || ""
       fields = fields.split(',')
-      DataMagic.search(params, api:endpoint, fields:fields).to_json
+      options = {api:endpoint, fields:fields, doc_type: request_type}
+      options[:per_page] = params.delete(:per_page)
+      options[:page] = params.delete(:page)
+      DataMagic.search(params, options)
     end
 
     ##
