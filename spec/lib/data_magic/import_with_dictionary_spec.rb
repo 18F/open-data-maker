@@ -1,6 +1,41 @@
 require 'spec_helper'
 require 'data_magic'
 
+describe "unique key(s)" do
+
+  before :example do
+    DataMagic.destroy
+    ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
+  end
+  after :example do
+    DataMagic.destroy
+  end
+
+  it "duplicates records with no unique keys" do
+    DataMagic.config = DataMagic::Config.new
+    2.times { DataMagic.import_with_dictionary }
+    result = DataMagic.search({})
+    expect(result['total']).to eq(200)
+  end
+
+  it "loads records once by state" do
+    DataMagic.config = DataMagic::Config.new
+    DataMagic.config.data['unique'] = ['state']
+    2.times { DataMagic.import_with_dictionary }
+    result = DataMagic.search({})
+    expect(result['total']).to eq(35)
+  end
+
+  it "loads records once by city" do
+    DataMagic.config = DataMagic::Config.new
+    DataMagic.config.data['unique'] = ['name']
+    2.times { DataMagic.import_with_dictionary }
+    result = DataMagic.search({})
+    expect(result['total']).to eq(100)
+  end
+
+end
+
 describe "DataMagic #import_with_dictionary" do
   let (:expected) { {
             "total" => 1,
@@ -42,8 +77,6 @@ describe "DataMagic #import_with_dictionary" do
   end
 
   it "indexes rows from all the files" do
-    # currently fails with 101 rows, one has blank name
-    # perhaps it is reading a blank line at the end of one of the files?
     result = DataMagic.search({}, api: 'cities')
     expect(result["total"]).to eq(100)
   end

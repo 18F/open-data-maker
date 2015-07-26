@@ -75,13 +75,18 @@ module DataMagic
     terms.delete(:per_page)
 
     # logger.info "--> terms: #{terms.inspect}"
-    # binding.pry
     squery = squery.where(terms) unless terms.empty?
 
-    full_query = {index: index_name, body: {
+    full_query = {
+      index: index_name,
+      type: 'document',
+      body: {
         from: page,
         size: per_page,
-        query: squery.to_search
+        query: squery.to_search,
+        _source: {
+          exclude: ['_unique'],
+        },
       }
     }
 
@@ -104,13 +109,22 @@ module DataMagic
   private
     def self.create_index(es_index_name, field_types={})
       field_types = field_types.merge({
-       location: { type: 'geo_point' }
+        location: {type: 'geo_point'}
       })
+      field_types['_unique'] = {type: 'nested'}
       logger.info "create_index #{es_index_name} #{field_types}"
       client.indices.create index: es_index_name, body: {
         mappings: {
           document: {    # for now type 'document' is always used
-            properties: field_types
+            properties: field_types,
+            dynamic_templates: [
+              {
+                template: {
+                  path_match: '_unique.*',
+                  mapping: {index: 'not_analyzed'},
+                }
+              }
+            ]
           }
         }
       }
