@@ -1,5 +1,5 @@
 require 'elasticsearch'
-require 'yaml'
+require 'safe_yaml'
 require 'csv'
 require 'stretchy'
 require 'hashie'
@@ -11,6 +11,8 @@ require 'logger'
 
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
+
+SafeYAML::OPTIONS[:default_mode] = :safe
 
 module DataMagic
 

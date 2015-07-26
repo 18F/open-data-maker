@@ -17,6 +17,7 @@ gem 'stretchy'
 gem 'hashie'
 gem 'cf-app-utils'
 gem 'unicorn'
+gem 'safe_yaml'
 gem 'aws-sdk', '~> 2'
 
 # Project requirements

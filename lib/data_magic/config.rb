@@ -14,6 +14,7 @@ module DataMagic
       if @data_path.nil? or @data_path.empty?
         @data_path = DEFAULT_PATH
       end
+      @contents = read_contents(@data_path)
 
       load_datayaml
     end
@@ -36,7 +37,7 @@ module DataMagic
     def self.logger=(new_logger)
       @logger = new_logger
     end
-    
+
     def self.logger
       @logger ||= Logger.new("log/#{ENV['RACK_ENV'] || 'development'}.log")
     end
@@ -119,6 +120,23 @@ module DataMagic
       end
     end
 
+    def read_contents(path)
+      uri = URI(path)
+      scheme = uri.scheme
+      case scheme
+        when nil
+          Dir.glob("#{path}/*").map { |file| File.basename file }
+        when "s3"
+          response = @s3.list_objects(bucket: uri.hostname)
+          response.contents.map { |item| item.key }
+        end
+    end
+
+    def load_yaml(path = nil)
+      file = ['data.yml', 'data.yaml'].find { |file| @contents.include? file }
+      raw = file ? read_path(File.join(path, file)) : '{}'
+      YAML.load(raw)
+    end
 
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
@@ -131,8 +149,7 @@ module DataMagic
       else
         logger.debug "load config #{directory_path.inspect}"
         @files = []
-        config_text = read_path("#{directory_path}/data.yaml")
-        @data = YAML.load(config_text)
+        @data = load_yaml(directory_path)
         logger.debug "config: #{@data.inspect}"
         index = @data['index'] || 'general'
         endpoint = @data['api'] || 'data'
