@@ -26,6 +26,35 @@ describe 'api' do
 		#expect(DataMagic.client.indices.get(index: '_all')).to be_empty
 	end
 
+  it "loads the endpoint list" do
+    get "/endpoints"
+
+    expect(last_response).to be_ok
+    expect(last_response.content_type).to eq('application/json')
+
+    result = JSON.parse(last_response.body)
+    expected = {
+      'endpoints'=>[
+        'name'=>'cities',
+        'url'=>'/cities',
+      ]
+    }
+    expect(result).to eq expected
+  end
+
+  it "raises a 404 on missing endpoints" do
+    get "/missing"
+    expect(last_response.status).to eq(404)
+    expect(last_response.content_type).to eq('application/json')
+
+    result = JSON.parse(last_response.body)
+    expected = {
+      "error"=>404,
+      "message"=>"missing not found. Available endpoints: cities",
+    }
+    expect(result).to eq(expected)
+  end
+
 	describe "data description" do
 		before do
 			get '/data.json'
@@ -38,6 +67,7 @@ describe 'api' do
 			expect(last_response.content_type).to eq('application/json')
 		end
 	end
+
 	describe "query" do
 		describe "with terms" do
 			before do
