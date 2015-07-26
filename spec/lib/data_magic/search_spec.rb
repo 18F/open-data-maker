@@ -11,7 +11,7 @@ describe "DataMagic #search" do
           } }
 
   describe "with terms" do
-    describe "default" do
+    describe "as strings" do
       before (:all) do
         DataMagic.init(load_now: false)
         num_rows, fields = DataMagic.import_csv(address_data)
@@ -20,23 +20,47 @@ describe "DataMagic #search" do
         DataMagic.destroy
       end
 
-      it "can find an attribute from an imported file" do
+      it "can find document with one attribute" do
         result = DataMagic.search({name: "Marilyn"})
-        expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Burbank"}]
+        expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"}]
         expect(result).to eq(expected)
       end
 
-      it "can find based on multiple attributes from an imported file" do
+      it "can find document with multiple search terms" do
         result = DataMagic.search({name: "Paul", city:"Liverpool"})
         expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
         expect(result).to eq(expected)
       end
 
+      it "can return a single attribute" do
+        result = DataMagic.search({city: "Springfield"}, fields:[:address])
+        expected["results"] = [
+          {"address" => "1313 Mockingbird Lane"},
+          {"address"=>"742 Evergreen Terrace"},
+        ]
+        expected["total"] = 2
+        DataMagic.logger.info "======= EXPECTED: #{expected.inspect}"
+        result["results"] = result["results"].sort_by { |k| k["address"] }
+        expect(result).to eq(expected)
+      end
+
+      it "can return a subset of attributes" do
+        result = DataMagic.search({city: "Springfield"}, fields:[:address, :city])
+        expected["results"] = [
+          {"city"=>"Springfield", "address"=>"1313 Mockingbird Lane"},
+          {"city"=>"Springfield", "address"=>"742 Evergreen Terrace"},
+        ]
+        result["results"] = result["results"].sort_by { |k| k["address"] }
+        expected["total"] = 2
+        expect(result).to eq(expected)
+      end
+
+
       it "supports pagination" do
         result = DataMagic.search({address: "Lane", page:1, per_page: 3})
         expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
         expected = {"total"=>4, "page"=>1, "per_page"=>3,
-            "results"=>[{"name"=>"Marilyn", "address"=>"1313 Mockingbird Lane", "city"=>"Burbank"},
+            "results"=>[{"name"=>"Marilyn", "address"=>"1313 Mockingbird Lane", "city"=>"Springfield"},
                         {"name"=>"Peter", "address"=>"66 Parker Lane", "city"=>"New York"},
                         {"name"=>"Paul", "address"=>"15 Penny Lane", "city"=>"Liverpool"}]}
 

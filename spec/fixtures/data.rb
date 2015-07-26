@@ -5,7 +5,7 @@ def address_data
 name,address,city
 Paul,15 Penny Lane,Liverpool
 Michelle,600 Pennsylvania Avenue,Washington
-Marilyn,1313 Mockingbird Lane,Burbank
+Marilyn,1313 Mockingbird Lane,Springfield
 Sherlock,221B Baker Street,London
 Clark,66 Lois Lane,Smallville
 Bart,742 Evergreen Terrace,Springfield
