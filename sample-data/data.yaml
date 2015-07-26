@@ -8,14 +8,34 @@ version: cities100-2010
 index: city-data
 api: cities
 dictionary:
-  state: USPS
+  id: GEOID
+  code: ANSICODE
   name: NAME
-  population: POP10
+  state:
+    source: USPS
+    description: "two letter state abbreviation"
+  population:
+    source: POP10
+    description: "city population from 2010 Census data"
   location.lat: INTPTLAT
   location.lon: INTPTLONG
   land_area:
     source: ALAND_SQMI
     type: float
+  water_area:
+    source: AWATER_SQMI
+    type: float
+
+categories:
+  general:
+    title: General
+    description: general information about the city, including standard identifiers
+#    fields: [id, code, name, state, population]
+  geographic:
+    title: Geographic
+    description: geographic characteristics of the land and water
+#    fields: [location, land_area, water_area]
+
 
 files:
   cities100.csv:
