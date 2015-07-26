@@ -34,6 +34,11 @@ By default, data will be loaded from /sample-data
 
 When you run the app, you can query the dataset via json API, like: /cities?name=Chicago
 
+* http://localhost:3000/cities?name=Chicago
+* http://localhost:3000/cities?name=Chicago&state=IL
+* http://localhost:3000/cities?state=NY,MA
+* http://localhost:3000/cities?state=CA&fields=name,size
+
 To use your own data, you can set a different directory, for example:
 
 ```
