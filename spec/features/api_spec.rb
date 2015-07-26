@@ -17,7 +17,7 @@ shared_examples_for "api request" do
 end
 
 
-describe 'api' do
+describe 'api', type: 'feature' do
 	# app starts up in advance of before :all so for now testing only
 	# with ./sample-data
 

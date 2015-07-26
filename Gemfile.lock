@@ -167,6 +167,7 @@ DEPENDENCIES
   rack-test
   rake
   rspec
+  rspec-mocks
   sass
   stretchy
   unicorn

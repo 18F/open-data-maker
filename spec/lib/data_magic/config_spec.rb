@@ -2,6 +2,32 @@ require 'spec_helper'
 
 describe DataMagic::Config do
 
+  before(:all) do
+    ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
+  end
+
+  context "s3" do
+    it "detects data.yaml" do
+
+      DataMagic::Config.logger.info "="*40
+      DataMagic::Config.logger.info "="*40
+      ENV['DATA_PATH'] = 's3://mybucket/data.yaml'
+      fake_s3 = class_spy("Fake Aws::S3::Client")
+      fake_response = double("S3 response",
+        body: StringIO.new(
+          {'index'=> 'fake-index'}.to_yaml
+        ))
+      DataMagic::Config.logger.info(fake_response.body.inspect)
+      allow(fake_s3).to receive(:get_object) do |options|
+        DataMagic::Config.logger.info "==== get_object"
+        fake_response
+      end
+      config = DataMagic::Config.new(s3: fake_s3)
+      expect(config.s3).to eq(fake_s3)
+      expect(config.data["index"]).to eq("fake-index")
+    end
+  end
+
   context "create" do
     it "works with zero args" do
       expect(DataMagic::Config.new).to_not be_nil

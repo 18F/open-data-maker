@@ -1,3 +1,5 @@
+require_relative '../data_magic.rb'
+
 module DataMagic
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints
