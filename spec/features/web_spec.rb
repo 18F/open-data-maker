@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'app' do
+describe 'app', type: 'feature' do
 	before do
 		DataMagic.init(load_now: true)
 	end

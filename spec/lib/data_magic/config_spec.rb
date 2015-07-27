@@ -12,6 +12,32 @@ describe DataMagic::Config do
     expect(config.data["api"]).to eq("cities")
   end
 
+  context "s3" do
+    it "detects data.yaml" do
+
+      DataMagic::Config.logger.info "="*40
+      DataMagic::Config.logger.info "="*40
+      ENV['DATA_PATH'] = 's3://mybucket'
+      fake_s3 = class_spy("Fake Aws::S3::Client")
+      fake_get_object_response = double("S3 response",
+        body: StringIO.new(
+          {'index'=> 'fake-index'}.to_yaml
+        ))
+      fake_list_objects_response = double("S3 response",
+          contents: [double("item", key:"data.yaml")])
+
+      allow(fake_s3).to receive(:get_object)
+        .with(bucket: 'mybucket', key: 'data.yaml')
+        .and_return(fake_get_object_response)
+      allow(fake_s3).to receive(:list_objects)
+                    .with(bucket: 'mybucket')
+                    .and_return(fake_list_objects_response)
+      config = DataMagic::Config.new(s3: fake_s3)
+      expect(config.s3).to eq(fake_s3)
+      expect(config.data["index"]).to eq("fake-index")
+    end
+  end
+
   context "create" do
     it "works with zero args" do
       expect(DataMagic::Config.new).to_not be_nil

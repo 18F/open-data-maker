@@ -1,3 +1,5 @@
+require_relative '../data_magic.rb'
+
 module DataMagic
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints
@@ -15,7 +17,7 @@ module DataMagic
       if @data_path.nil? or @data_path.empty?
         @data_path = DEFAULT_PATH
       end
-      @contents = read_contents(@data_path)
+      @contents = file_list(@data_path)
 
       load_datayaml
     end
@@ -121,10 +123,9 @@ module DataMagic
       end
     end
 
-    def read_contents(path)
+    def file_list(path)
       uri = URI(path)
-      scheme = uri.scheme
-      case scheme
+      case uri.scheme
         when nil
           Dir.glob("#{path}/*").map { |file| File.basename file }
         when "s3"
@@ -134,9 +135,8 @@ module DataMagic
     end
 
     def load_yaml(path = nil)
-      file = ['data.yml', 'data.yaml'].find { |file| @contents.include? file }
       if file.nil? and not ENV['ALLOW_MISSING_YML']
-        logger.warn 'No data.y?ml found; using default options'
+        logger.warn 'Could not find data.yml or data.yaml; using default options'
       end
       raw = file ? read_path(File.join(path, file)) : '{}'
       YAML.load(raw)
@@ -162,6 +162,12 @@ module DataMagic
       File.basename(path).gsub(/[^0-9a-z]+/, '-')
     end
 
+    def load_yaml(path = nil)
+      file = ['data.yml', 'data.yaml'].find { |file| @contents.include? file }
+      raw = file ? read_path(File.join(path, file)) : '{}'
+      YAML.load(raw)
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -172,6 +178,7 @@ module DataMagic
         logger.debug "already loaded, nothing to do!"
       else
         logger.debug "load config #{directory_path.inspect}"
+        @files = []
         @data = load_yaml(directory_path)
         logger.debug "config: #{@data.inspect}"
         @data['index'] ||= clean_index(@data_path)

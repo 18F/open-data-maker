@@ -30,9 +30,11 @@ gem 'liquid', '= 3.0.3'
 gem 'erubis'
 
 # Test requirements
-gem 'rspec', :group => 'test'
-gem 'rack-test', :require => 'rack/test', :group => 'test'
-
+group :test do
+  gem 'rspec'
+  gem 'rspec-mocks'
+  gem 'rack-test', :require => 'rack/test'
+end
 # Padrino Stable Gem
 gem 'padrino', '0.12.5'
 

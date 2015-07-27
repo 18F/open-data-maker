@@ -17,7 +17,7 @@ shared_examples_for "api request" do
 end
 
 
-describe 'api' do
+describe 'api', type: 'feature' do
 	# app starts up in advance of before :all so for now testing only
 	# with ./sample-data
 
@@ -25,6 +25,35 @@ describe 'api' do
 		Stretchy.delete 'test-city-data'
 		#expect(DataMagic.client.indices.get(index: '_all')).to be_empty
 	end
+
+  it "loads the endpoint list" do
+    get "/endpoints"
+
+    expect(last_response).to be_ok
+    expect(last_response.content_type).to eq('application/json')
+
+    result = JSON.parse(last_response.body)
+    expected = {
+      'endpoints'=>[
+        'name'=>'cities',
+        'url'=>'/cities',
+      ]
+    }
+    expect(result).to eq expected
+  end
+
+  it "raises a 404 on missing endpoints" do
+    get "/missing"
+    expect(last_response.status).to eq(404)
+    expect(last_response.content_type).to eq('application/json')
+
+    result = JSON.parse(last_response.body)
+    expected = {
+      "error"=>404,
+      "message"=>"missing not found. Available endpoints: cities",
+    }
+    expect(result).to eq(expected)
+  end
 
 	describe "data description" do
 		before do
@@ -38,8 +67,9 @@ describe 'api' do
 			expect(last_response.content_type).to eq('application/json')
 		end
 	end
+
 	describe "query" do
-		describe "with terms" do
+		describe "with one term" do
 			before do
 				get '/cities?name=Chicago'
 			end
@@ -64,6 +94,24 @@ describe 'api' do
 				expect(result).to eq(expected)
 
 			end
+		end
+		describe "with options" do
+			it "can return a subset of fields" do
+				get '/cities?state=MA&fields=name,population'
+
+				expect(last_response).to be_ok
+				result = JSON.parse(last_response.body)
+
+				expected = {
+					"total" => 1,
+					"page"  => 0,
+					"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+					"results" => [{"name"=>"Boston", "population"=>"617594"}]
+				}
+				expect(result).to eq(expected)
+
+			end
+
 		end
 
 		describe "with float" do

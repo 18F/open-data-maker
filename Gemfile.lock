@@ -175,6 +175,7 @@ DEPENDENCIES
   rack-test
   rake
   rspec
+  rspec-mocks
   safe_yaml
   sass
   stretchy
