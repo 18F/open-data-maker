@@ -164,7 +164,8 @@ module DataMagic
     end
 
     def clean_index(path)
-      File.basename(path).gsub(/[^0-9a-z]+/, '-')
+      uri = URI(path)
+      File.basename(uri.hostname || uri.path).gsub(/[^0-9a-z]+/, '-')
     end
 
     def load_datayaml(directory_path = nil)

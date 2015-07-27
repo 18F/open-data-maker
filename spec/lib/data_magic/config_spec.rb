@@ -12,6 +12,20 @@ describe DataMagic::Config do
     expect(config.data["api"]).to eq("cities")
   end
 
+  describe 'slugification' do
+    it 'slugifies local paths' do
+      config = DataMagic::Config.new
+      slugified = config.clean_index('path/to/my_directory')
+      expect(slugified).to eq('my-directory')
+    end
+
+    it 'slugifes s3 bucket names' do
+      config = DataMagic::Config.new
+      slugified = config.clean_index('s3://user:pass@my_bucket')
+      expect(slugified).to eq('my-bucket')
+    end
+  end
+
   context "s3" do
     it "detects data.yaml" do
 
