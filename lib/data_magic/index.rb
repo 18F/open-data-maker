@@ -23,7 +23,7 @@ module DataMagic
       CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
         fields ||= row.headers
         row = row.to_hash
-        row = map_field_names(row, new_field_names) unless new_field_names.empty?
+        row = map_field_names(row, new_field_names, options) unless new_field_names.empty?
         row = row.merge(additional_data) if additional_data
         row = NestedHash.new.add(row)
         #logger.debug "indexing: #{row.inspect}"
@@ -65,6 +65,7 @@ module DataMagic
     end
     Config.logger.debug("field_mapping: #{field_mapping.inspect}")
     options[:mapping] = field_mapping
+    options = options.merge(config.data['options'])
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "deleting old index #{es_index_name}"   # TO DO: fix #14

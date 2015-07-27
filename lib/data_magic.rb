@@ -157,13 +157,16 @@ module DataMagic
     # new_fields: hash current_name : new_name
     # returns a hash (which may be a subset of row) where keys are new_name
     #         with value of corresponding row[current_name]
-    def self.map_field_names(row, new_fields)
+    def self.map_field_names(row, new_fields, options={})
+      logger.debug("map_field_names options:#{options.inspect}")
       mapped = {}
       row.each do |key, value|
         new_key = new_fields[key.to_sym] || new_fields[key.to_s]
         if new_key
           value = value.to_f if new_key.include? "location"
           mapped[new_key] = value
+        elsif options[:import] == 'all'
+          mapped[key] = value
         end
       end
       mapped
