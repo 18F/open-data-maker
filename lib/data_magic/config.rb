@@ -159,6 +159,8 @@ module DataMagic
         endpoint = @data['api'] || 'data'
         @dictionary = @data['dictionary'] || {}
         @api_endpoints[endpoint] = {index: index}
+        @data['options'] ||= {}
+        Hashie.symbolize_keys! @data['options']
 
         file_config = @data['files']
         logger.debug "file_config: #{file_config.inspect}"

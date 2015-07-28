@@ -7,6 +7,10 @@ vendor/gems/*
 db/*.db
 .*.sw*
 .env
+.cfignore
 
 # expect people to put their own data in /data
 data
+
+# another commonly used data directory
+real-data

@@ -19,6 +19,7 @@ gem 'cf-app-utils'
 gem 'unicorn'
 gem 'safe_yaml'
 gem 'aws-sdk', '~> 2'
+gem 'actionview'
 
 # Project requirements
 gem 'rake'
