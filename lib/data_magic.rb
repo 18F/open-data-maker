@@ -158,7 +158,6 @@ module DataMagic
     # returns a hash (which may be a subset of row) where keys are new_name
     #         with value of corresponding row[current_name]
     def self.map_field_names(row, new_fields, options={})
-      logger.debug("map_field_names options:#{options.inspect}")
       mapped = {}
       row.each do |key, value|
         new_key = new_fields[key.to_sym] || new_fields[key.to_s]
