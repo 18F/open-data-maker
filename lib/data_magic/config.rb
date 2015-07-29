@@ -188,6 +188,9 @@ module DataMagic
         @api_endpoints[endpoint] = {index: @data['index']}
         @files, @data['files'] = parse_files(data['files'], directory_path)
 
+        logger.debug "file_config: #{@data['files']}"
+        logger.debug "no files found" if @data['files'].empty?
+
         # keep track of where we loaded our data, so we can avoid loading again
         @data['data_path'] = directory_path
         @data_path = directory_path  # make sure this is set, in case it changed
