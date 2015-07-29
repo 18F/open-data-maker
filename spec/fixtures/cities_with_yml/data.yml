@@ -7,3 +7,18 @@
 version: fixture-import-all
 index: city-data
 api: cities
+dictionary:
+  state: USPS
+  name: NAME
+  population: POP10
+  location.lat: INTPTLAT
+  location.lon: INTPTLONG
+  land_area:
+    source: ALAND_SQMI
+    type: float
+
+files:
+  cities50.csv:
+    add:
+      category: 'top50'
+  cities51-100.csv:

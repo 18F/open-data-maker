@@ -24,10 +24,13 @@ GEM
       ice_nine (~> 0.11.0)
       thread_safe (~> 0.3, >= 0.3.1)
     builder (3.2.2)
+    byebug (5.0.0)
+      columnize (= 0.9.0)
     cf-app-utils (0.4)
     coderay (1.1.0)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
+    columnize (0.9.0)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     diff-lcs (1.2.5)
@@ -111,6 +114,9 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    pry-byebug (3.2.0)
+      byebug (~> 5.0)
+      pry (~> 0.10)
     rack (1.5.3)
     rack-protection (1.5.3)
       rack
@@ -186,6 +192,7 @@ DEPENDENCIES
   liquify
   padrino (= 0.12.5)
   pry
+  pry-byebug
   rack-test
   rake
   rspec

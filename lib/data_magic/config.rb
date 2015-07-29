@@ -10,12 +10,15 @@ module DataMagic
       @files = []
       @dictionary = {}
       @page_size = DataMagic::DEFAULT_PAGE_SIZE
+      @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
 
       @data_path = options[:data_path] || ENV['DATA_PATH']
       if @data_path.nil? or @data_path.empty?
         @data_path = DEFAULT_PATH
       end
+      @contents = file_list(@data_path)
+
       load_datayaml
     end
 
@@ -47,7 +50,7 @@ module DataMagic
     end
 
     def additional_data_for_file(fname)
-      @data['files'][fname]['add']
+      @data.fetch('files', {}).fetch(fname, {}).fetch('add', nil)
     end
 
     def scoped_index_name(index_name = nil)
@@ -122,22 +125,46 @@ module DataMagic
 
     def file_list(path)
       uri = URI(path)
-      scheme = uri.scheme
-      case scheme
+      case uri.scheme
         when nil
           Dir.glob("#{path}/*").map { |file| File.basename file }
         when "s3"
           response = @s3.list_objects(bucket: uri.hostname)
           response.contents.map { |item| item.key }
-      end
-    end
-
-    def data_file_name(path)
-      ['data.yml', 'data.yaml'].find { |file| file_list(path).include? file }
+        end
     end
 
     def load_yaml(path = nil)
-      file = data_file_name(path)
+      if file.nil? and not ENV['ALLOW_MISSING_YML']
+        logger.warn 'Could not find data.yml or data.yaml; using default options'
+      end
+      raw = file ? read_path(File.join(path, file)) : '{}'
+      YAML.load(raw)
+    end
+
+    def list_files(path)
+      @contents.select { |file|
+        @extensions.include? File.extname(file)
+      }.map { |file|
+        File.basename file
+      }
+    end
+
+    def parse_files(files, path)
+      meta = files || {}
+      names = files.nil? ? list_files(path) : files.keys
+      paths = names.map { |name| File.join(path, name) }
+      meta = Hash[names.map { |name| [name, meta[name] || {}] }]
+      return paths, meta
+    end
+
+    def clean_index(path)
+      uri = URI(path)
+      File.basename(uri.hostname || uri.path).gsub(/[^0-9a-z]+/, '-')
+    end
+
+    def load_yaml(path = nil)
+      file = ['data.yml', 'data.yaml'].find { |file| @contents.include? file }
       raw = file ? read_path(File.join(path, file)) : '{}'
       YAML.load(raw)
     end
@@ -155,25 +182,17 @@ module DataMagic
         @files = []
         @data = load_yaml(directory_path)
         logger.debug "config: #{@data.inspect}"
-        index = @data['index'] || 'general'
-        endpoint = @data['api'] || 'data'
+        @data['index'] ||= clean_index(@data_path)
+        endpoint = @data['api'] || clean_index(@data_path)
         @dictionary = @data['dictionary'] || {}
-        @api_endpoints[endpoint] = {index: index}
+        @api_endpoints[endpoint] = {index: @data['index']}
+        @files, @data['files'] = parse_files(data['files'], directory_path)
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
 
-        file_config = @data['files']
-        logger.debug "file_config: #{file_config.inspect}"
-        if file_config.nil?
-          logger.debug "no files found"
-        else
-          fnames = @data["files"].keys
+        logger.debug "file_config: #{@data['files']}"
+        logger.debug "no files found" if @data['files'].empty?
 
-          fnames.each do |fname|
-            @data["files"][fname] ||= {}
-            @files << File.join(directory_path, fname)
-          end
-        end
         # keep track of where we loaded our data, so we can avoid loading again
         @data['data_path'] = directory_path
         @data_path = directory_path  # make sure this is set, in case it changed
