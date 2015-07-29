@@ -1,5 +1,3 @@
-
-
 # Open Data Maker
 [![Build Status](https://travis-ci.org/18F/open-data-maker.svg?branch=master)](https://travis-ci.org/18F/open-data-maker)
 
@@ -42,8 +40,9 @@ export DATA_PATH='./data'
 
 1. Put csv files into /data
 1. Import files from /data: ```rake import```
-   1.1 there can be multiple files (must end in .csv)
-   1.1 optional data.yaml file that specifies column -> field mapping, index and API endpoint
+   1. There can be multiple files (must end in .csv)
+   1. Optional data.yaml file that specifies column -> field mapping, index and API endpoint
+        1. If not provided, all fields and fields will be imported; see NOTES.md for details
 1. api endpoint to get the data /api?name=value
 
 ## Help Wanted
