@@ -1,0 +1,15 @@
+version: fixture-import-options
+index: city-data
+api: cities
+options:
+  import: all
+
+dictionary:
+  state: USPS
+  name: NAME
+  population: POP10
+
+files:
+  cities4.csv:
+    add:
+      year: 2010

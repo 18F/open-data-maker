@@ -1,6 +1,9 @@
 require_relative 'config'
+require 'action_view'  # for distance_of_time_in_words (logging time)
+include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
 
 module DataMagic
+
   # data could be a String or an io stream
   def self.import_csv(data, options={})
     es_index_name = self.create_index
@@ -23,7 +26,7 @@ module DataMagic
       CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
         fields ||= row.headers
         row = row.to_hash
-        row = map_field_names(row, new_field_names) unless new_field_names.empty?
+        row = map_field_names(row, new_field_names, options) unless new_field_names.empty?
         row = row.merge(additional_data) if additional_data
         row = NestedHash.new.add(row)
         #logger.debug "indexing: #{row.inspect}"
@@ -46,7 +49,8 @@ module DataMagic
   end
 
   def self.import_with_dictionary(options = {})
-    Config.logger.debug "--- import_with_dictionary --"
+    start_time = Time.now
+    Config.logger.debug "--- import_with_dictionary, starting at #{start_time}"
     field_mapping = {}
 
     # field_name: name we want as the json key
@@ -63,8 +67,9 @@ module DataMagic
             "for #{field_name}: #{info.inspect} -- expected String or Hash")
       end
     end
-    Config.logger.debug("field_mapping: #{field_mapping.inspect}")
+    logger.debug("field_mapping: #{field_mapping.inspect}")
     options[:mapping] = field_mapping
+    options = options.merge(config.data['options'])
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "deleting old index #{es_index_name}"   # TO DO: fix #14
@@ -74,16 +79,18 @@ module DataMagic
     logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
-      Config.logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"
+      logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"
       options[:add_data] = self.config.additional_data_for_file(fname)
       #begin
-        Config.logger.debug "reading #{filepath}"
+        logger.debug "reading #{filepath}"
         data = config.read_path(filepath)
         rows, fields = DataMagic.import_csv(data, options)
-        Config.logger.debug "imported #{rows} rows"
+        logger.debug "imported #{rows} rows"
       #rescue Exception => e
       #  Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
       #end
     end
-  end
+    logger.debug "indexing complete: #{distance_of_time_in_words(Time.now, start_time)}"
+  end # import_with_dictionary
+
 end # module DataMagic

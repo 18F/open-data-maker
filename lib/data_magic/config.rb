@@ -187,6 +187,11 @@ module DataMagic
         @dictionary = @data['dictionary'] || {}
         @api_endpoints[endpoint] = {index: @data['index']}
         @files, @data['files'] = parse_files(data['files'], directory_path)
+        @data['options'] ||= {}
+        Hashie.symbolize_keys! @data['options']
+
+        logger.debug "file_config: #{@data['files']}"
+        logger.debug "no files found" if @data['files'].nil?
 
         # keep track of where we loaded our data, so we can avoid loading again
         @data['data_path'] = directory_path

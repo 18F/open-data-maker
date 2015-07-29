@@ -1,6 +1,12 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    actionview (4.2.1)
+      activesupport (= 4.2.1)
+      builder (~> 3.1)
+      erubis (~> 2.7.0)
+      rails-dom-testing (~> 1.0, >= 1.0.5)
+      rails-html-sanitizer (~> 1.0, >= 1.0.1)
     activesupport (4.2.1)
       i18n (~> 0.7)
       json (~> 1.7, >= 1.7.7)
@@ -17,6 +23,7 @@ GEM
       descendants_tracker (~> 0.0.4)
       ice_nine (~> 0.11.0)
       thread_safe (~> 0.3, >= 0.3.1)
+    builder (3.2.2)
     byebug (5.0.0)
       columnize (= 0.9.0)
     cf-app-utils (0.4)
@@ -53,15 +60,20 @@ GEM
     liquid (3.0.3)
     liquify (0.2.7)
       liquid (>= 2.2.2)
+    loofah (2.0.2)
+      nokogiri (>= 1.5.9)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
     method_source (0.8.2)
     mime-types (1.25.1)
+    mini_portile (0.6.2)
     minitest (5.7.0)
     moneta (0.7.20)
     multi_json (1.11.1)
     multipart-post (2.0.0)
+    nokogiri (1.6.6.2)
+      mini_portile (~> 0.6.0)
     padrino (0.12.5)
       padrino-admin (= 0.12.5)
       padrino-cache (= 0.12.5)
@@ -110,6 +122,14 @@ GEM
       rack
     rack-test (0.6.3)
       rack (>= 1.0)
+    rails-deprecated_sanitizer (1.0.3)
+      activesupport (>= 4.2.0.alpha)
+    rails-dom-testing (1.0.6)
+      activesupport (>= 4.2.0.beta, < 5.0)
+      nokogiri (~> 1.6.0)
+      rails-deprecated_sanitizer (>= 1.0.1)
+    rails-html-sanitizer (1.0.2)
+      loofah (~> 2.0)
     raindrops (0.13.0)
     rake (10.4.2)
     rspec (3.3.0)
@@ -162,6 +182,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  actionview
   aws-sdk (~> 2)
   cf-app-utils
   elasticsearch
