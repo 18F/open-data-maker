@@ -191,7 +191,7 @@ module DataMagic
         Hashie.symbolize_keys! @data['options']
 
         logger.debug "file_config: #{@data['files']}"
-        logger.debug "no files found" if @data['files'].nil?
+        logger.debug "no files found" if @data['files'].empty?
 
         # keep track of where we loaded our data, so we can avoid loading again
         @data['data_path'] = directory_path
