@@ -68,6 +68,17 @@ describe 'api', type: 'feature' do
 		end
 	end
 
+	describe "csv" do
+		it "can return a csv" do
+			get '/cities.csv?state=PA&fields=name,population'
+			expect(last_response).to be_ok
+			expect(last_response.content_type).to include('text/csv')
+			csv_lines = last_response.body.lines
+			expect(csv_lines[0]).to eq("name,population\n")
+
+			expect(csv_lines[1..-1].sort).to eq(["Philadelphia,1526006\n","Pittsburgh,305704\n"])
+		end
+	end
 	describe "query" do
 		describe "with one term" do
 			before do

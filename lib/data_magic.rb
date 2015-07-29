@@ -29,6 +29,7 @@ module DataMagic
   end
 
   DEFAULT_PAGE_SIZE = 20
+  DOCUMENT_TYPES = [:json, :csv]
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
@@ -58,10 +59,13 @@ module DataMagic
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
-    options[:fields] ||= []
-    fields = options[:fields].map { |field| field.to_s }
-    index_name = index_name_from_options(options)
     logger.info "search terms:#{terms.inspect}"
+    options[:fields] ||= []
+    options[:fields] = options[:fields].map { |field| field.to_s }
+    options[:page] ||= 0
+    options[:per_page] ||= config.page_size
+    index_name = index_name_from_options(options)
+
     squery = Stretchy.query
 
     distance = terms[:distance]
@@ -72,12 +76,6 @@ module DataMagic
       terms.delete(:zip)
     end
 
-    page = terms[:page] || 0
-    per_page = terms[:per_page] || config.page_size
-
-    terms.delete(:page)
-    terms.delete(:per_page)
-
     # logger.info "--> terms: #{terms.inspect}"
     # binding.pry
     squery = squery.where(terms) unless terms.empty?
@@ -86,49 +84,73 @@ module DataMagic
       index: index_name,
       type: 'document',
       body: {
-        from: page,
-        size: per_page,
+        from: options[:page],
+        size: options[:per_page],
         query: squery.to_search
       }
     }
-    if not fields.empty?
-      full_query[:body][:fields] = fields
+    if not options[:fields].empty?
+      full_query[:body][:fields] = options[:fields]
     end
 
     logger.info "===========> full_query:#{full_query.inspect}"
 
     result = client.search full_query
     logger.info "result: #{result.inspect}"
-    hits = result["hits"]
-    total = hits["total"]
-    results = []
-    if fields.empty?
-      # we're getting the whole document and we can find in _source
-      results = hits["hits"].map {|hit| hit["_source"]}
-    else
-      # we're getting a subset of fields...
-      results = hits["hits"].map do |hit|
-        found = hit["fields"]
-        # each result looks like this:
-        # {"city"=>["Springfield"], "address"=>["742 Evergreen Terrace"]}
-
-        found.keys.each { |key| found[key] = found[key][0] }
-        # now it should look like this:
-        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace
-        found
-      end
-    end
-
-    # assemble a simpler json document to return
-    {
-      "total" => total,
-      "page" => page,
-      "per_page" => per_page,
-      "results" => 	results
-    }
+    format_result(result, options)
   end
 
   private
+    # formats an elasticsearch result into a simpler hash
+    # optionally :csv or :json, if options[:doc_type]
+    # also options[:fields] if we queried for subset of fields
+    def self.format_result(es_result, options)
+      logger.debug "format_result options: #{options.inspect}"
+      hits = es_result["hits"]
+      total = hits["total"]
+      fields = options[:fields]
+      results = []
+
+      if fields.empty?
+        # we're getting the whole document and we can find in _source
+        results = hits["hits"].map {|hit| hit["_source"]}
+      else
+        # we're getting a subset of fields...
+        results = hits["hits"].map do |hit|
+          found = hit["fields"]
+          # each result looks like this:
+          # {"city"=>["Springfield"], "address"=>["742 Evergreen Terrace"]}
+
+          found.keys.each { |key| found[key] = found[key][0] }
+          # now it should look like this:
+          # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace
+          found
+        end
+      end
+
+      # assemble a simpler document to return
+      response = {
+        "total" => total,
+        "page" => options[:page],
+        "per_page" => options[:per_page],
+        "results" => 	results
+      }
+      case options[:doc_type]
+        when :json
+          response = response.to_json
+        when :csv
+          CSV(csv = "") do |csv_str|
+            csv_str << results[0].keys
+            results.each do |doc|
+              csv_str << doc.values
+            end
+          end
+          response = csv
+        end
+      logger.debug "response: #{response.inspect}"
+      response
+    end
+
     def self.create_index(es_index_name, field_types={})
       field_types = field_types.merge({
        location: { type: 'geo_point' }
