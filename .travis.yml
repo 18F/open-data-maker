@@ -6,6 +6,7 @@ services:
 - elasticsearch
 before_script:
 - sleep 10
+sudo: required
 deploy:
   edge: true
   provider: cloudfoundry
