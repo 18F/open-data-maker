@@ -20,6 +20,7 @@ gem 'unicorn'
 gem 'safe_yaml'
 gem 'aws-sdk', '~> 2'
 gem 'actionview'
+gem 'dotenv'
 
 # Project requirements
 gem 'rake'
