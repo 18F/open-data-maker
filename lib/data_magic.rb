@@ -29,6 +29,7 @@ module DataMagic
   end
 
   DEFAULT_PAGE_SIZE = 20
+  DEFAULT_EXTENSIONS = ['.csv']
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
@@ -79,7 +80,6 @@ module DataMagic
     terms.delete(:per_page)
 
     # logger.info "--> terms: #{terms.inspect}"
-    # binding.pry
     squery = squery.where(terms) unless terms.empty?
 
     full_query = {
@@ -129,28 +129,24 @@ module DataMagic
   end
 
   private
-    def self.create_index(es_index_name, field_types={})
+    def self.create_index(es_index_name = nil, field_types={})
+      es_index_name ||= self.config.scoped_index_name
       field_types = field_types.merge({
        location: { type: 'geo_point' }
       })
       logger.info "create_index #{es_index_name} #{field_types}"
-      client.indices.create index: es_index_name, body: {
-        mappings: {
-          document: {    # for now type 'document' is always used
-            properties: field_types
+      begin
+        client.indices.create index: es_index_name, body: {
+            mappings: {
+              document: {    # for now type 'document' is always used
+                properties: field_types
+            }
           }
         }
-      }
-    end
-
-    # takes a external index name, returns scoped index name
-    def self.create_index_if_needed(es_index_name = nil)
-      index_name = es_index_name || self.config.scoped_index_name
-      unless client.indices.exists?(index: index_name)
-        logger.info "creating index: #{index_name}"
-        create_index(index_name)
+      rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
+        logger.error error.to_s
       end
-      index_name
+      es_index_name
     end
 
     # row: a hash  (keys may be strings or symbols)
