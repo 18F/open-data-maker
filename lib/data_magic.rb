@@ -39,8 +39,8 @@ module DataMagic
         s3cred = ::CF::App::Credentials.find_by_service_name('bservice')
       else
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
-        logger.info "s3cred = #{s3cred.inspect}"
       end
+      logger.info "s3cred = #{s3cred.inspect}"
       ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
       ::Aws.config[:region] = 'us-east-1'
       @s3 = ::Aws::S3::Client.new
