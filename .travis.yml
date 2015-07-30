@@ -1,12 +1,19 @@
 language: ruby
 rvm:
- - "2.2.2"
-# uncomment this line if your project needs to run something other than `rake`:
+- 2.2.2
 script: bundle exec rake spec
 services:
-  - elasticsearch
-
-# ElasticSearch may take few seconds to start and may not be available
-# when the script is executed, so we make Travis CI wait with the sleep command
+- elasticsearch
 before_script:
-  - sleep 10
+- sleep 10
+deploy:
+  edge: true
+  provider: cloudfoundry
+  username: ed-deployer
+  password:
+    secure: L+kkCrKCKgH1tllDwFADCsxWxVSZE6cdhkKax50ZVFp4lTwgDPZTAXJ8ggLeA9rCSyuQfVMCAs1r9UrVWsZ5hfuHgZ2YA8v4qZsDixz3u1rIAxdJcAgS0t9hxYd+qlyz61FBEsCXm8sxcnVJwCgP//rovJTCj9mAyHLRVGIyuQsZrpuJCIsLESdCr/eJA5183QflyLxHfdI/uLTfJgE53dzJsdB3WWVxpMw2XWLAVoX+a08owYSN7Y1kcSZxuoRgGUnH24Hwux30mSrudeMmFucLG+8OmCzoorZfq5EXMgxW6wGsk+i/dyYJ39RRr62B2L3dkiGdc0o9lQQu8UEMTwVNtKMkKXB+Zs9veoOF83WCuzbDwXxd1BtQacZshjwMVFkZ+y2A72/F6mExl4kc7S1dgP8WtOZmwG9fwgYRKhNWNbdYlMt8OPOQ8f7hsHTp1higvFwsMzVygUZnqYR1XmibE3LeeMjgewabM/pRb9IuNHiOM0DlUK71vSdNzSKkVFylE/+oY+uQL+NJO9Z4fR4yFkyptvuK02VZP7g1NkzJDCDniDZhUn9bs3pAb3m53kaRezdhUrqI/Wzef3AJ2yl8XujGyECQiDl/Y3zVmsWAzJNWK56WLEzbBz/wxM7rsPEZs4cghdpghyhBItUHObAOwgipLpC2MUKiTWhCQM4=
+  api: https://api.18f.gov
+  organization: ed
+  space: staging
+  on:
+    branch: staging
