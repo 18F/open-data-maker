@@ -154,6 +154,7 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @files = []
         @data = load_yaml(directory_path)
+        @data['unique'] ||= []
         logger.debug "config: #{@data.inspect}"
         index = @data['index'] || 'general'
         endpoint = @data['api'] || 'data'

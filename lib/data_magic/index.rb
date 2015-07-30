@@ -4,6 +4,29 @@ include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (loggin
 
 module DataMagic
 
+  def self.parse_rows(data, fields, options, additional)
+    parsed = CSV.parse(
+      data,
+      headers: true,
+      header_converters: lambda { |str| str.strip.to_sym }
+    )
+    parsed.map { |row| parse_row(row, fields, options, additional) }
+  end
+
+  def self.parse_row(row, fields, options, additional)
+    row = row.to_hash
+    row = map_field_names(row, fields, options) unless fields.empty?
+    row = row.merge(additional) if additional
+    row = NestedHash.new.add(row)
+    row
+  end
+
+  def self.get_id(row)
+    config.data['unique'].length > 0 ?
+      config.data['unique'].map { |field| row[field] }.join(':') :
+      nil
+  end
+
   # data could be a String or an io stream
   def self.import_csv(data, options={})
     es_index_name = self.create_index_if_needed
@@ -18,34 +41,28 @@ module DataMagic
       data = data.encode('UTF-8', invalid: :replace, replace: '')
     end
 
-    fields = nil
     new_field_names = options[:fields] || {}
     new_field_names = new_field_names.merge(additional_fields)
-    num_rows = 0
     begin
-      CSV.parse(data, headers:true, :header_converters=> lambda {|f| f.strip.to_sym }) do |row|
-        fields ||= row.headers
-        row = row.to_hash
-        row = map_field_names(row, new_field_names, options) unless new_field_names.empty?
-        row = row.merge(additional_data) if additional_data
-        row = NestedHash.new.add(row)
-        #logger.debug "indexing: #{row.inspect}"
-        client.index index: es_index_name, type:'document', body: row
-        num_rows += 1
-        if num_rows % 500 == 0
-          print "#{num_rows}..."; $stdout.flush
-        end
-      end
+      rows = parse_rows(data, new_field_names, options, additional_data)
     rescue Exception => e
-      Config.logger.error "row #{num_rows}: #{e.message}"
+      Config.logger.error e.message
+      rows = []
     end
+    rows.each { |row|
+      client.index({
+        index: es_index_name,
+        id: get_id(row),
+        type: 'document',
+        body: row,
+      })
+    }
 
-    raise InvalidData, "invalid file format or zero rows" if num_rows == 0
+    raise InvalidData, "invalid file format or zero rows" if rows.length == 0
+    client.indices.refresh index: es_index_name
 
-    fields = new_field_names.values unless new_field_names.empty?
-    client.indices.refresh index: es_index_name if num_rows > 0
-
-    return [num_rows, fields ]
+    fields = rows.map(&:keys).flatten.uniq
+    return [rows.length, fields]
   end
 
   def self.import_with_dictionary(options = {})
@@ -72,10 +89,8 @@ module DataMagic
     options = options.merge(config.data['options'])
 
     es_index_name = self.config.load_datayaml(options[:data_path])
-    logger.info "deleting old index #{es_index_name}"   # TO DO: fix #14
-    Stretchy.delete es_index_name
     logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    self.create_index es_index_name
+    self.create_index_if_needed es_index_name
     logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
@@ -84,7 +99,7 @@ module DataMagic
       #begin
         logger.debug "reading #{filepath}"
         data = config.read_path(filepath)
-        rows, fields = DataMagic.import_csv(data, options)
+        rows, _ = DataMagic.import_csv(data, options)
         logger.debug "imported #{rows} rows"
       #rescue Exception => e
       #  Config.logger.debug "Error: skipping #{filepath}, #{e.message}"

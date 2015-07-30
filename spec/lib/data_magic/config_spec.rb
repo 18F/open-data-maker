@@ -70,7 +70,8 @@ describe DataMagic::Config do
                        "location.lat"=>"INTPTLAT", "location.lon"=>"INTPTLONG",
                        "land_area"=>{"source"=>"ALAND_SQMI", "type"=>"float"}},
         "files"=>{"cities100.csv"=>{}}, "data_path"=>"./sample-data",
-        "options"=>{}
+        "options"=>{},
+        "unique"=>[],
     }
       expect(config.data).to eq(default_config)
     end

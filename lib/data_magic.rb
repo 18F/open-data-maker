@@ -79,7 +79,6 @@ module DataMagic
     terms.delete(:per_page)
 
     # logger.info "--> terms: #{terms.inspect}"
-    # binding.pry
     squery = squery.where(terms) unless terms.empty?
 
     full_query = {
