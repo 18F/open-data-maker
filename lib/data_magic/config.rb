@@ -128,7 +128,9 @@ module DataMagic
         when nil
           Dir.glob("#{path}/*").map { |file| File.basename file }
         when "s3"
+          logger.info "bucket: #{uri.hostname}"
           response = @s3.list_objects(bucket: uri.hostname)
+          logger.info "response: #{response.inspect}"
           response.contents.map { |item| item.key }
       end
     end
@@ -138,6 +140,7 @@ module DataMagic
     end
 
     def load_yaml(path = nil)
+      logger.info "load_yaml: #{path}"
       file = data_file_name(path)
       if file.nil? and not ENV['ALLOW_MISSING_YML']
         logger.warn "No data.y?ml found; using default options"
