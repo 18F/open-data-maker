@@ -1,9 +1,9 @@
 <h1>{{ title }}</h1>
 
-<p>API end points:</p>
+<h2>API endpoints</h2>
 
 <ul>
 {% for name in endpoints %}
-    <li>{{ name }}</li>
-  {% endfor %}
+  <li><a href="/{{ name }}">{{ name }}</a></li>
+{% endfor %}
 </ul>
