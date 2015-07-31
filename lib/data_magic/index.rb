@@ -90,7 +90,7 @@ module DataMagic
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    self.create_index_if_needed es_index_name
+    self.create_index es_index_name
     logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
