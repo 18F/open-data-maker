@@ -27,6 +27,20 @@ module DataMagic
       nil
   end
 
+  def self.insert(rows, index)
+    insert = rows.map { |row|
+      {
+        index: {
+          _index: index,
+          _type: 'document',
+          _id: get_id(row),
+          data: row,
+        }
+      }
+    }
+    client.bulk body: insert
+  end
+
   # data could be a String or an io stream
   def self.import_csv(data, options={})
     es_index_name = self.create_index
@@ -45,18 +59,11 @@ module DataMagic
     new_field_names = new_field_names.merge(additional_fields)
     begin
       rows = parse_rows(data, new_field_names, options, additional_data)
+      insert(rows, es_index_name)
     rescue Exception => e
       Config.logger.error e.message
       rows = []
     end
-    rows.each { |row|
-      client.index({
-        index: es_index_name,
-        id: get_id(row),
-        type: 'document',
-        body: row,
-      })
-    }
 
     raise InvalidData, "invalid file format or zero rows" if rows.length == 0
     client.indices.refresh index: es_index_name
@@ -90,7 +97,7 @@ module DataMagic
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    self.create_index_if_needed es_index_name
+    self.create_index es_index_name
     logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
