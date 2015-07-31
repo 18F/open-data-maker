@@ -22,7 +22,10 @@ module OpenDataMaker
     end
 
     get :index do
-      render :home, locals: {'title' => 'Open Data Maker'}
+      render :home, locals: {
+        'title' => 'Open Data Maker',
+        'endpoints' => DataMagic.config.api_endpoint_names
+      }
     end
 
     get :endpoints do
