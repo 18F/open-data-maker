@@ -4,14 +4,24 @@ include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (loggin
 
 module DataMagic
 
-  def self.parse_rows(data, fields, options, additional)
-    parsed = CSV.parse(
-      data,
-      headers: true,
-      header_converters: lambda { |str| str.strip.to_sym }
-    )
-    parsed.map { |row| parse_row(row, fields, options, additional) }
+  # row: a hash  (keys may be strings or symbols)
+  # new_fields: hash current_name : new_name
+  # returns a hash (which may be a subset of row) where keys are new_name
+  #         with value of corresponding row[current_name]
+  def self.map_field_names(row, new_fields, options={})
+    mapped = {}
+    row.each do |key, value|
+      new_key = new_fields[key.to_sym] || new_fields[key.to_s]
+      if new_key
+        value = value.to_f if new_key.include? "location"
+        mapped[new_key] = value
+      elsif options[:import] == 'all'
+        mapped[key] = value
+      end
+    end
+    mapped
   end
+
 
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
@@ -43,26 +53,34 @@ module DataMagic
 
     new_field_names = options[:fields] || {}
     new_field_names = new_field_names.merge(additional_fields)
+    num_rows = 0
+    headers = nil
     begin
-      rows = parse_rows(data, new_field_names, options, additional_data)
+      CSV.parse(
+        data,
+        headers: true,
+        header_converters: lambda { |str| str.strip.to_sym }
+      ) do|row|
+        row = parse_row(row, new_field_names, options, additional_data)
+        headers ||= row.keys.map(&:to_s)
+        client.index({
+          index: es_index_name,
+          id: get_id(row),
+          type: 'document',
+          body: row,
+        })
+        num_rows += 1
+      end
+
     rescue Exception => e
       Config.logger.error e.message
       rows = []
     end
-    rows.each { |row|
-      client.index({
-        index: es_index_name,
-        id: get_id(row),
-        type: 'document',
-        body: row,
-      })
-    }
 
-    raise InvalidData, "invalid file format or zero rows" if rows.length == 0
+    raise InvalidData, "invalid file format or zero rows" if num_rows == 0
     client.indices.refresh index: es_index_name
 
-    fields = rows.map(&:keys).flatten.uniq
-    return [rows.length, fields]
+    return [num_rows, headers]
   end
 
   def self.import_with_dictionary(options = {})
