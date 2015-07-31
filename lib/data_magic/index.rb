@@ -1,4 +1,5 @@
 require_relative 'config'
+require 'json'
 require 'action_view'  # for distance_of_time_in_words (logging time)
 include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
 
@@ -22,9 +23,9 @@ module DataMagic
   end
 
   def self.get_id(row)
-    config.data['unique'].length > 0 ?
-      config.data['unique'].map { |field| row[field] }.join(':') :
-      nil
+    return nil if config.data['unique'].empty?
+    pairs = config.data['unique'].map { |field| [field, row[field]] }
+    return JSON.dump Hash[pairs]
   end
 
   # data could be a String or an io stream
@@ -90,7 +91,7 @@ module DataMagic
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    self.create_index_if_needed es_index_name
+    self.create_index es_index_name
     logger.info "files: #{self.config.files}"
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
