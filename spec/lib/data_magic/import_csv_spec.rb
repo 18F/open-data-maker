@@ -46,7 +46,7 @@ eos
     data = StringIO.new(data_str)
     num_rows, fields = DataMagic.import_csv(data)
     expect(num_rows).to be(2)
-    expect(fields).to eq( [:a,:b] )
+    expect(fields).to eq(['a', 'b'])
   end
 
 end
