@@ -25,7 +25,7 @@ describe "DataMagic #import_without_data_yaml" do
       "./spec/fixtures/cities_without_yml/cities51-100.csv",
       "./spec/fixtures/cities_without_yml/more.csv",
     ]
-    expect(DataMagic.config.files).to eq(file_list)
+    expect(DataMagic.config.files.sort).to eq(file_list)
   end
 
   it "can get index name from api endpoint" do
