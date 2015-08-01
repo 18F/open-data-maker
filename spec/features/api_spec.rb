@@ -87,8 +87,8 @@ describe 'api', type: 'feature' do
 				  "page"  => 0,
 				  "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
 				  "results" => [
-						{"state"=>"IL", "name"=>"Chicago", "population"=>"2695598",
-						 "land_area"=>"227.635",   # later we'll make this a float
+						{"state"=>"IL", "name"=>"Chicago", "population"=>2695598,
+						 "land_area"=>227.635,   # later we'll make this a float
 						 "location"=>{"lat"=>41.837551, "lon"=>-87.681844}}						]
 				}
 				expect(result).to eq(expected)
@@ -106,7 +106,7 @@ describe 'api', type: 'feature' do
 					"total" => 1,
 					"page"  => 0,
 					"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-					"results" => [{"name"=>"Boston", "population"=>"617594"}]
+					"results" => [{"name"=>"Boston", "population"=>617594}]
 				}
 				expect(result).to eq(expected)
 
@@ -118,7 +118,8 @@ describe 'api', type: 'feature' do
 			before do
 				get '/cities?land_area=302.643'
 			end
-			xit "responds with json" do
+
+			it "responds with json" do
 			  expect(last_response).to be_ok
 				expect(last_response.content_type).to eq('application/json')
 
@@ -129,7 +130,7 @@ describe 'api', type: 'feature' do
 				  "page"  => 0,
 				  "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
 				  "results" => [{"state"=>"NY", "name"=>"New York",
-						"population"=>"8175133", "land_area"=>302.643,
+						"population"=>8175133, "land_area"=>302.643,
 						"location"=>{"lat"=>40.664274, "lon"=>-73.9385}}]
 					}
 				expect(result).to eq(expected)
@@ -155,8 +156,8 @@ describe 'api', type: 'feature' do
 				  "page"  => 0,
 				  "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
 				  "results" => [
-						{"state"=>"CA", "name"=>"Fremont", "population"=>"214089", "land_area"=>"77.459", "location"=>{"lat"=>37.494373, "lon"=>-121.941117}},
-						{"state"=>"CA", "name"=>"Oakland", "population"=>"390724", "land_area"=>"55.786", "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}]
+						{"state"=>"CA", "name"=>"Fremont", "population"=>214089, "land_area"=>77.459, "location"=>{"lat"=>37.494373, "lon"=>-121.941117}},
+						{"state"=>"CA", "name"=>"Oakland", "population"=>390724, "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}]
 				}
 				expect(result).to eq(expected)
 			end
