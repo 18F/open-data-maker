@@ -131,13 +131,11 @@ module DataMagic
   private
     def self.create_index(es_index_name = nil, field_types={})
       es_index_name ||= self.config.scoped_index_name
-      logger.debug "====> create_index #{es_index_name}"
       field_types['location'] = 'geo_point'
       es_types = {}
       field_types.each do |key, type|
         es_types[key] = { type: type }
       end
-      # logger.info "es type mapping #{es_types.inspect}"
       begin
         client.indices.create index: es_index_name, body: {
           mappings: {
@@ -146,7 +144,9 @@ module DataMagic
             }
           }
         }
+        logger.info "====> index created with es type mapping: #{es_types.inspect[0..255]}"
       rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
+        logger.debug "create_index attempt failed #{es_index_name} -- maybe it already exists"
         logger.error error.to_s
       end
       es_index_name
