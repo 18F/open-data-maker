@@ -15,9 +15,22 @@ with this waiver of copyright interest.
 
 ## Communication
 
-There are two ways to communicate with the development team, for general
-questions and discussion, we have a [Google Group](https://groups.google.com/d/forum/open-data-maker).
-For bug reports, please [file an issue](https://github.com/18F/open-data-maker/issues).
+There are a few ways to communicate with other folks working on this project:
+
+* For general questions, discussion and announcements, please join [Google Group]
+* For noisy, informal chatter, you can join us on the [open-data-maker-pub Slack Channel](https://chat.18f.gov).  Notifications from github are posted here.
+* For bug reports, please [file an issue](https://github.com/18F/open-data-maker/issues).
+
+## About the Tech
+
+This is a web app, written in Ruby, with Elasticsearch.
+
+Key Dependencies:
+
+* [Padrino](http://www.padrinorb.com/) - Ruby Web framework based on Sinatra
+* [Liquid](http://liquidmarkup.org/) view templates
+* [Elastic Search](https://www.elastic.co)
+
 
 ## Development Process
 
@@ -26,17 +39,21 @@ Fork the project and follow the instructions in the [Installation Guide](INSTALL
 All the tests should pass and new functionality or bug fixes should have a new
 test before submitting a pull request.
 
-Key Dependencies:
+The default branch is 'dev'.  All changes should be submitted as pull requests
+on the dev branch with a branch named dev-something (except for critical, urgent fixes, which may be branched off master or staging).
 
-* [Padrino](http://www.padrinorb.com/) - Ruby Web framework
-* [Liquid](http://liquidmarkup.org/) view templates
-* [Elastic Search](https://www.elastic.co)
+This project follows the [git flow](http://nvie.com/posts/a-successful-git-branching-model/) branching model of product development.  After we do integrated testing in dev, we merge to staging
+for review by our design and product folks, then to master.  
+
+This project is in alpha, so things are fast moving! We hope you consider it
+a fun time to get involved.  In the near term, we have a very specific focus for this app, but we expect it will be generally useful for other projects as well.  If you are thinking about deploying this app at your agency or organization, please let us know by introducing yourself in the [Google Group] and telling us a bit about your project or idea. 
 
 ### Testing
 
 For testing, we are using [rspec](http://rspec.info/).
 
 To run all the tests:
+
 ```rake spec```
 
 
@@ -89,7 +106,6 @@ Before you submit your pull request consider the following guidelines:
      ```
 
 * Create your patch, **including appropriate test cases**.
-* Follow our [Code Style](#code-style).
 * Run the full test suite ```rake spec``` and ensure that all tests pass.
 * Commit your changes using a descriptive commit message that follows our
   [commit message conventions](#commit-messages). Adherence to the [commit message conventions](#commit-messages)
@@ -121,31 +137,30 @@ That's it! Thank you for your contribution!
 
 #### After your pull request is merged
 
-After your pull request is merged, you can safely delete your branch and pull the changes
-from the main (upstream) repository:
+After your pull request is merged, you can safely delete your branch and pull the changes from the main (upstream) repository:
 
-* Delete the remote branch on GitHub either through the GitHub web UI or your local shell as follows:
-
-    ```shell
-    git push origin --delete my-fix-branch
-    ```
-
-* Check out the devel branch:
+* Check out the dev branch:
 
     ```shell
-    git checkout master -f
+    git checkout dev -f
     ```
 
 * Delete the local branch:
 
     ```shell
-    git branch -D my-fix-branch
+    git branch -D dev-my-fix
     ```
 
 * Update with the latest upstream version:
 
     ```shell
-    git pull --ff upstream master
+    git pull --ff upstream dev
+    ```
+
+* For folks with write access to the repo: delete the remote branch on GitHub either through the GitHub web UI or your local shell as follows:
+
+    ```shell
+    git push origin --dev-my-fix
     ```
 
 ### Reviewing Pull Requests
@@ -162,3 +177,5 @@ someone has looked at it. For larger commits, we like to have a +1 from someone
 else on the core team and/or from other contributor(s). Please note if you
 reviewed the code or tested locally -- a +1 by itself will typically be
 interpreted as your thinking its a good idea, but not having reviewed in detail.
+
+[Google Group]: https://groups.google.com/d/forum/open-data-maker
