@@ -46,18 +46,14 @@ script, you can restart it with this command:
 ```brew services restart elasticsearch```
 
 ### Start the app
+
 ```
 padrino start
 ```
 Go to: http://127.0.0.1:3000/
 
-and you should see the text `Welcome to Open Data Maker`.
-
-on the command-line you can import the sample data with:
-
-```
-rake import
-```
+and you should see the text `Welcome to Open Data Maker` with a link to
+the API created by the [sample data](sample-data).  
 
 You can verify that the import was successful by visiting
 http://127.0.0.1:3000/cities?name=Cleveland. You should see something like:
@@ -66,18 +62,29 @@ http://127.0.0.1:3000/cities?name=Cleveland. You should see something like:
 {
   "state": "OH",
   "name": "Cleveland",
-  "population": "396815",
-  "latitude": "41.478138",
-  "longitude": "-81.679486"
-}
+  "population": 396815,
+  "land_area": 77.697,
+  "location": {
+    "lat": 41.478138,
+    "lon": -81.679486
+  }
 ```
 
 ### Custom Datasets
-To load a custom dataset, you'll need to set the `DATA_PATH` environment
-variable to the path of your data directory and run `rake import` again. Your
-data directory should include a `data.yaml` (see [the sample
-one](sample-data/data.yaml) for its schema) that references one or more `.csv`
-files. For instance, if you had a `presidents/data.yaml` file, you would import
+
+If you set the `DATA_PATH` environment variable to reference a new dataset,
+it will be imported when the app starts up.  
+
+The data directory can optionally include a file called `data.yaml` (see [the sample one](sample-data/data.yaml) for its schema) that references one or more `.csv` files and specifies data types,
+field name mapping, and other.
+
+The app will check the version
+in that file and if it is new, the old index (of the same name) will be
+removed and re-created.
+
+### Importing Data Manually
+
+While the app is running (or anytime) you can run `rake import`. For instance, if you had a `presidents/data.yaml` file, you would import
 it with:
 
 ```sh
@@ -87,9 +94,17 @@ rake import
 DATA_PATH=presidents rake import
 ```
 
-to clear the data (deleting all the indices):
+to clear the data, assuming the data set  had an index named "president-data"
+
 ```
-rake delete:all
+rake es:delete[president-data]
+```
+
+you may alternatly delete all the indices (which could affect other apps if
+they are using your local elasticsearch)
+
+```
+rake es:delete[_all]
 ```
 
 ## Want to help?

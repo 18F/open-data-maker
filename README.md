@@ -26,20 +26,22 @@ By default, data will be loaded from /sample-data
 
 * [cities100.csv](sample-data/cities100.csv) - dataset of 100 most populous cities in the US
 * [data.yaml](sample-data/data.yaml) - configuration for
-  * how columns are mapped to fields in json output
   * index name *city-data*
   * api endpoint name *cities*
+  * how columns are mapped to fields in json output
+  * data types
+  * unique columns *name*  
 
-When you run the app (after ```rake import```), you can query the dataset via json API, like: /cities?name=Chicago
+When you run the app, you can query the dataset via json API, like: /cities?name=Chicago
 
-To use your own data, you can set a different directory with
+To use your own data, you can set a different directory, for example:
 
 ```
 export DATA_PATH='./data'
 ```
 
 1. Put csv files into /data
-1. Import files from /data: ```rake import```
+1. Import files from /data: ```rake import``` (or restart the app)
    1. There can be multiple files (must end in .csv)
    1. Optional [data.yaml](sample-data/data.yaml) file that specifies  index name, API endpoint, file list, and a dictionary of column -> field name mapping and types
         1. Optionally import all the columns, not just ones specified in dictionary (see example: [import: all](spec/fixtures/import_with_options/data.yaml))
