@@ -107,8 +107,8 @@ module DataMagic
         logger.debug "creating index"
         DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
       end
-      logger.debug "old_config (from es): #{old_config.inspect}"
-      logger.debug "new_config (just loaded from data.yaml): #{@data.inspect}"
+      logger.debug "old config version (from es): #{old_config['version'].inspect}"
+      logger.debug "new config version (from data.yaml): #{@data['version'].inspect}"
       if old_config.nil? || old_config["version"] != @data["version"]
         logger.debug "--------> adding config to index: #{@data.inspect}"
         DataMagic.client.index index: index_name, type:'config', id: 1, body: @data

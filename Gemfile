@@ -37,6 +37,10 @@ group :test do
   gem 'rspec-mocks'
   gem 'rack-test', :require => 'rack/test'
 end
+
+group 'dev' do
+  gem 'google_drive'
+end
 # Padrino Stable Gem
 gem 'padrino', '0.12.5'
 
