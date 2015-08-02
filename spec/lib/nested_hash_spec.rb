@@ -17,5 +17,15 @@ describe NestedHash do
     expect(result).to eq(symbol_keys_result)
   end
 
+  context "deeply nested" do
+    let(:input) { {"info.loc.x" => 0.11, "info.loc.y" => 0.222, "foo.a" => 10, "foo.b" => 20}}
+    let(:expected) { {"info" => {"loc" => {"x" => 0.11, "y" => 0.222}}, "foo" => {"a" => 10, "b" => 20}}}
+
+    it "creates nested hash elements for string keys with '.'" do
+      result = NestedHash.new.add(input)
+      expect(result).to eq(expected)
+    end
+
+  end
 
 end

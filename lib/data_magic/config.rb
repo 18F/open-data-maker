@@ -96,21 +96,22 @@ module DataMagic
       old_config = nil
       index_name = scoped_index_name
       logger.info "looking for: #{index_name}"
+      index_exists = false
       if DataMagic.client.indices.exists? index: index_name
+        index_exists = true
         begin
           response = DataMagic.client.get index: index_name, type: 'config', id: 1
           old_config = response["_source"]
         rescue Elasticsearch::Transport::Transport::Errors::NotFound
           logger.debug "no prior index configuration"
         end
-      else
-        logger.debug "creating index"
-        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
       end
       logger.debug "old config version (from es): #{(old_config.nil? ? old_config : old_config['version']).inspect}"
       logger.debug "new config version (from data.yaml): #{@data['version'].inspect}"
       if old_config.nil? || old_config["version"] != @data["version"]
-        logger.debug "--------> adding config to index: #{@data.inspect}"
+        logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
+        DataMagic.client.indices.delete index: index_name if index_exists
+        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
         DataMagic.client.index index: index_name, type:'config', id: 1, body: @data
         updated = true
       end
@@ -150,7 +151,7 @@ module DataMagic
         when "s3"
           logger.info "bucket: #{uri.hostname}"
           response = @s3.list_objects(bucket: uri.hostname)
-          logger.info "response: #{response.inspect}"
+          logger.info "response: #{response.inspect[0..255]}"
           response.contents.map { |item| item.key }
       end
     end
@@ -203,7 +204,7 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @data = load_yaml(directory_path)
         @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect}"
+        logger.debug "config: #{@data.inspect[0..255]}"
         @data['index'] ||= clean_index(@data_path)
         endpoint = @data['api'] || clean_index(@data_path)
         @dictionary = @data['dictionary'] || {}

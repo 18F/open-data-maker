@@ -22,7 +22,7 @@ module DataMagic
   # data could be a String or an io stream
   def self.import_csv(data, options={})
     es_index_name = self.create_index
-    Config.logger.debug "Indexing data -- index_name: #{es_index_name}, options: #{options}"
+    Config.logger.debug "Indexing data -- index_name: #{es_index_name}" #options: #{options}"
     additional_fields = options[:mapping] || {}
     additional_data = options[:add_data]
     Config.logger.debug "additional_data: #{additional_data.inspect}"
@@ -51,6 +51,9 @@ module DataMagic
           type: 'document',
           body: row,
         })
+        if num_rows % 500 == 0
+          logger.info "indexing rows: #{num_rows}..."
+        end
         num_rows += 1
       end
 
@@ -84,7 +87,7 @@ module DataMagic
             "for #{field_name}: #{info.inspect} -- expected String or Hash")
       end
     end
-    logger.debug("field_mapping: #{field_mapping.inspect}")
+    #logger.debug("field_mapping: #{field_mapping.inspect}")
     options[:mapping] = field_mapping
     options = options.merge(config.data['options'])
 
@@ -133,6 +136,7 @@ private
   def self.map_field_types(row, field_types = {})
     row.each do |key, value|
       type = field_types[key.to_sym] || field_types[key.to_s]
+      #logger.info "key: #{key} type: #{type}"
       case type
         when "float"
           row[key] = value.to_f
