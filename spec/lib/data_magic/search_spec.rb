@@ -13,6 +13,7 @@ describe "DataMagic #search" do
   describe "with terms" do
     describe "as strings" do
       before (:all) do
+        ENV['DATA_PATH'] = './no-data'
         DataMagic.init(load_now: false)
         num_rows, fields = DataMagic.import_csv(address_data)
       end
@@ -73,6 +74,7 @@ describe "DataMagic #search" do
     end
     describe "with mapping" do
       before (:all) do
+        ENV['DATA_PATH']="./no-data"
         DataMagic.init(load_now: false)
         options = {}
         options[:fields] = {name: 'person_name', address: 'street'}

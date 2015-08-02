@@ -7,6 +7,7 @@ version: cities100-2010
 # then convertes to csv and removed " city" from after each city name
 index: city-data
 api: cities
+unique: ['name']
 dictionary:
   state: USPS
   name: NAME

@@ -14,9 +14,17 @@ module DataMagic
   end
 
   def self.get_id(row)
-    config.data['unique'].length > 0 ?
-      config.data['unique'].map { |field| row[field] }.join(':') :
-      nil
+    if config.data['unique'].length > 0
+      result = config.data['unique'].map { |field| row[field] }.join(':')
+      if result.empty?
+        logger.warn "unexpected blank id for "+
+                    "unique: #{config.data['unique'].inspect} "+
+                    "in row: #{row.inspect[0..255]}"
+      end
+    else
+      result = nil
+    end
+    result
   end
 
   # data could be a String or an io stream
@@ -45,6 +53,10 @@ module DataMagic
       ) do |row|
         row = parse_row(row, new_field_names, options, additional_data)
         headers ||= row.keys.map(&:to_s)
+        if num_rows == 0
+          logger.info "first row: #{row.inspect[0..500]}"
+          logger.info "id: #{get_id(row).inspect}"
+        end
         client.index({
           index: es_index_name,
           id: get_id(row),

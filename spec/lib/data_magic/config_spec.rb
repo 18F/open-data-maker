@@ -88,7 +88,7 @@ describe DataMagic::Config do
         "files" => {"cities100.csv"=>{}},
         "data_path" => "./sample-data",
         "options"=>{},
-        "unique"=>[],
+        "unique"=>["name"],
       }
       expect(config.data).to eq(default_config)
     end
