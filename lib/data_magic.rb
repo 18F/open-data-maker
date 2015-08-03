@@ -29,6 +29,7 @@ module DataMagic
   end
 
   DEFAULT_PAGE_SIZE = 20
+  DEFAULT_CHUNK_SIZE = 500
   DEFAULT_EXTENSIONS = ['.csv']
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
