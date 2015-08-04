@@ -118,5 +118,16 @@ describe DataMagic::Config do
 
       end
     end
+
+    describe "when has a custom null_value" do
+      it 'should have a default null value' do
+        expect(config.null_value).to eq('NULL')
+      end
+
+      it 'should set null value field' do
+        config.load_datayaml("./spec/fixtures/import_with_null_value")
+        expect(config.null_value).to eq('xyz')
+      end
+    end
   end
 end

@@ -7,7 +7,7 @@ module DataMagic
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
     row = map_field_names(row, fields, options) unless fields.empty?
-    map_field_types(row, config.field_types) unless config.field_types.empty?
+    map_field_types(row, config.field_types, config.null_value) unless config.field_types.empty?
     row = row.merge(additional) if additional
     row = NestedHash.new.add(row)
     row
@@ -145,17 +145,21 @@ private
   # row: a hash  (keys may be strings or symbols)
   # field_types: hash field_name : type (float, integer, string)
   # returns a hash where values have been coerced to the new type
-  def self.map_field_types(row, field_types = {})
+  def self.map_field_types(row, field_types = {}, null_value = 'NULL')
     row.each do |key, value|
-      type = field_types[key.to_sym] || field_types[key.to_s]
-      #logger.info "key: #{key} type: #{type}"
-      case type
-        when "float"
-          row[key] = value.to_f
-        when "integer"
-          row[key] = value.to_i
-        when "string"
-          row[key] = value.to_s
+      if value == null_value
+        row[key] = nil
+      else
+        type = field_types[key.to_sym] || field_types[key.to_s]
+        #logger.info "key: #{key} type: #{type}"
+        case type
+          when "float"
+            row[key] = value.to_f
+          when "integer"
+            row[key] = value.to_i
+          when "string"
+            row[key] = value.to_s
+        end
       end
     end
     row
