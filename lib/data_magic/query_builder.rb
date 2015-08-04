@@ -71,8 +71,9 @@ module DataMagic
       # Handles location (currently only uses SFO location)
       def search_location(squery, params)
         distance = params[:distance]
+        location = Zipcode.latlon(params[:zip])
+
         if distance && !distance.empty?
-          location = { lat: 37.615223, lon:-122.389977 } #sfo
           squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
           params.delete(:distance)
           params.delete(:zip)
