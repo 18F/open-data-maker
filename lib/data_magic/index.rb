@@ -4,13 +4,14 @@ include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (loggin
 
 module DataMagic
 
+  # parse a row from a csv file, returns a nested document
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
     row = map_field_names(row, fields, options) unless fields.empty?
     map_field_types(row, config.field_types) unless config.field_types.empty?
     row = row.merge(additional) if additional
-    row = NestedHash.new.add(row)
-    row
+    document = NestedHash.new.add(row)
+    document
   end
 
   def self.get_id(row)
@@ -51,21 +52,21 @@ module DataMagic
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
-        row = parse_row(row, new_field_names, options, additional_data)
-        headers ||= row.keys.map(&:to_s)
-        if num_rows == 0
-          logger.info "first row: #{row.inspect[0..500]}"
-          logger.info "id: #{get_id(row).inspect}"
-        end
-        client.index({
-          index: es_index_name,
-          id: get_id(row),
-          type: 'document',
-          body: row,
-        })
+        doc = parse_row(row, new_field_names, options, additional_data)
+        headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
         if num_rows % 500 == 0
           logger.info "indexing rows: #{num_rows}..."
         end
+        if num_rows == 0
+          logger.info "first row -> #{doc.inspect[0..500]}"
+          logger.info "id: #{get_id(doc).inspect}"
+        end
+        client.index({
+          index: es_index_name,
+          id: get_id(doc),
+          type: 'document',
+          body: doc,
+        })
         num_rows += 1
       end
 
