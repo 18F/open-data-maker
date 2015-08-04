@@ -22,11 +22,8 @@ module OpenDataMaker
     end
 
     get :index do
-      categories = DataMagic.config.data['categories'].map do |key, value|
-        category = Category.new(value['title'], value['description'], ['field1', 'field2'])
-        CategoryDrop.new(category)
-      end
-      # change the view to iterate over categories
+      categories = Category.from_yml.map { |category| CategoryDrop.new(category) }
+      
       render :home, layout: true, locals: {
         'title' => 'Open Data Maker',
         'endpoints' => DataMagic.config.api_endpoint_names,

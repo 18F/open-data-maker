@@ -25,10 +25,6 @@ categories:
     title: General
     description: general information about the city, including standard identifiers
 #    fields: [id, code, name, state, population]
-  geographic:
-    title: Geographic
-    description: geographic characteristics of the land and water
-#    fields: [location, land_area, water_area]
 
 files:
   - name: cities100.csv
