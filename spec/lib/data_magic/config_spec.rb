@@ -41,7 +41,7 @@ describe DataMagic::Config do
           contents: [double("item", key:"data.yaml")])
 
       allow(fake_s3).to receive(:get_object)
-        .with(bucket: 'mybucket', key: 'data.yaml')
+        .with(bucket: 'mybucket', key: 'data.yaml', response_target: duck_type(:read))
         .and_return(fake_get_object_response)
       allow(fake_s3).to receive(:list_objects)
                     .with(bucket: 'mybucket')

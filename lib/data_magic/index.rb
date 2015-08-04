@@ -107,7 +107,10 @@ module DataMagic
       logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"
       options[:add_data] = self.config.additional_data_for_file(fname)
       begin
-        rows, _ = DataMagic.import_csv(filepath, options)
+        logger.debug "reading #{filepath}"
+        data = config.read_path(filepath)
+        rows, _ = DataMagic.import_csv(data, options)
+        data.close
         logger.debug "imported #{rows} rows"
       rescue Exception => e
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
