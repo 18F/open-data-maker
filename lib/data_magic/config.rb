@@ -131,12 +131,12 @@ module DataMagic
       scheme = uri.scheme
       case scheme
         when nil
-          File.read(uri.path)
+          File.open(uri.path)
         when "s3"
           key = uri.path
           key[0] = ''  # remove initial /
-          response = @s3.get_object(bucket: uri.hostname, key: key)
-          response.body.read
+          file = Tempfile.new(uri.path)
+          @s3.get_object(bucket: uri.hostname, key: key, response_target: file).body
         else
           raise ArgumentError, "unexpected scheme: #{scheme}"
       end

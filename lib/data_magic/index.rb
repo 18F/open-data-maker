@@ -27,51 +27,46 @@ module DataMagic
     result
   end
 
-  # data could be a String or an io stream
-  def self.import_csv(data, options={})
+  def self.import_csv(data, options = {})
     es_index_name = self.create_index
     Config.logger.debug "Indexing data -- index_name: #{es_index_name}" #options: #{options}"
     additional_fields = options[:mapping] || {}
     additional_data = options[:add_data]
     Config.logger.debug "additional_data: #{additional_data.inspect}"
 
-    data = data.read if data.respond_to?(:read)
-
-    if options[:force_utf8]
-      data = data.encode('UTF-8', invalid: :replace, replace: '')
-    end
+    data = File.open(data) if !data.respond_to?(:read)
 
     new_field_names = options[:fields] || {}
     new_field_names = new_field_names.merge(additional_fields)
     num_rows = 0
     headers = nil
     begin
-      CSV.parse(
+      CSV.new(
         data,
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
-      ) do |row|
-        row = parse_row(row, new_field_names, options, additional_data)
-        headers ||= row.keys.map(&:to_s)
-        if num_rows == 0
-          logger.info "first row: #{row.inspect[0..500]}"
-          logger.info "id: #{get_id(row).inspect}"
+      ).each.each_slice(DataMagic::DEFAULT_CHUNK_SIZE) do |chunk|
+        chunk.each do |row|
+          row = parse_row(row, new_field_names, options, additional_data)
+          headers ||= row.keys.map(&:to_s)
+          if num_rows == 0
+            logger.info "first row: #{row.inspect[0..500]}"
+            logger.info "id: #{get_id(row).inspect}"
+          end
+          client.index({
+            index: es_index_name,
+            id: get_id(row),
+            type: 'document',
+            body: row,
+          })
+          if num_rows % 500 == 0
+            logger.info "indexing rows: #{num_rows}..."
+          end
+          num_rows += 1
         end
-        client.index({
-          index: es_index_name,
-          id: get_id(row),
-          type: 'document',
-          body: row,
-        })
-        if num_rows % 500 == 0
-          logger.info "indexing rows: #{num_rows}..."
-        end
-        num_rows += 1
       end
-
     rescue Exception => e
       Config.logger.error e.message
-      rows = []
     end
 
     raise InvalidData, "invalid file format or zero rows" if num_rows == 0
@@ -115,6 +110,7 @@ module DataMagic
         logger.debug "reading #{filepath}"
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
+        data.close
         logger.debug "imported #{rows} rows"
       rescue Exception => e
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
