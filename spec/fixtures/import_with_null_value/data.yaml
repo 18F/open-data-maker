@@ -1,0 +1,7 @@
+index: city-data
+api: cities
+unique: ['name']
+null_value: 'xyz'
+
+files:
+  null_values.csv:
