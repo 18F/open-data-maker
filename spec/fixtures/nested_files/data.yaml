@@ -27,32 +27,15 @@ dictionary:
 files:
   school-data.csv:
     only: [id, name, city, state]
-  # school2013.csv:
-  #   add:
-  #     year: 2013
-  #   only: [id, zip, year]
   school2013.csv:
     add:
       year: 2013
     nest:
       key: year
       contents: [earnings, sat_average]
-
   school2012.csv:
     add:
       year: 2012
     nest:
       key: year
       contents: [earnings, sat_average]
-
-
-
-
-  # school2012.csv:
-  #   fields: [earnings]
-  #   add:
-  #     year: 2012
-  # school2011.csv:
-  #   fields: [earnings]
-  #   add:
-  #     year: 2011
