@@ -37,13 +37,13 @@ files:
     nest:
       key: year
       contents: [earnings, sat_average]
-  # school2012.csv:
-  #   add:
-  #     year: 2012
-  #   list:
-  #     name: stats
-  #     item: [earnings, year]
-  #   only: [id, stats]
+
+  school2012.csv:
+    add:
+      year: 2012
+    nest:
+      key: year
+      contents: [earnings, sat_average]
 
 
 

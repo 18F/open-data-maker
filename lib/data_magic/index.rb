@@ -38,13 +38,17 @@ module DataMagic
     document
   end
 
-  def self.get_id(row)
+  # return the unique identifier, optionally remove from row
+  def self.get_id(row, options={})
     if config.data['unique'].length > 0
       result = config.data['unique'].map { |field| row[field] }.join(':')
       if result.empty?
         logger.warn "unexpected blank id for "+
                     "unique: #{config.data['unique'].inspect} "+
                     "in row: #{row.inspect[0..255]}"
+      end
+      if options[:remove]
+        config.data['unique'].each { |key| row.delete key }
       end
     else
       result = nil
@@ -100,8 +104,7 @@ module DataMagic
           })
         else
           logger.info "UPDATE #{doc}"
-          id = get_id(doc)
-          doc.delete 'id'  # use configured name
+          id = get_id(doc, remove: true)
           client.update({
             index: es_index_name,
             id: id,
