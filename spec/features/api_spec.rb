@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'fixtures/data.rb'
+require 'byebug'
 
 shared_examples_for "api request" do
 	context "CORS requests" do
@@ -163,6 +164,27 @@ describe 'api', type: 'feature' do
 			end
 		end
 
+		describe "precision" do
+			before do
+				get '/cities?name=New%20York'
+			end
+
+			it "finds New York, but not New Orleans" do
+				expect(last_response).to be_ok
+				result = JSON.parse(last_response.body)
+				result["results"] = result["results"].sort_by { |k| k["name"] }
+
+				expected = {
+					"total" => 1,
+					"page" => 0,
+					"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+					"results" => [
+						{"state"=>"NY", "name"=>"New York", "population"=>8175133, "land_area"=>302.643, "location"=>{"lat"=>40.664274, "lon"=>-73.9385}}
+					]
+				}
+				expect(result).to eq(expected)
+			end
+		end
 	end
 
 end

@@ -79,8 +79,19 @@ module DataMagic
     terms.delete(:page)
     terms.delete(:per_page)
 
-    # logger.info "--> terms: #{terms.inspect}"
     squery = squery.where(terms) unless terms.empty?
+
+    modified_query = squery.to_search
+
+    #this block of code will introduce a
+    #'minimum_should_match' parameter to each query
+    #in order to control query precision
+
+    unless modified_query[:match].nil?
+      modified_query[:match].each do |key, value|
+        modified_query[:match][key]["minimum_should_match"] = "2"
+      end
+    end
 
     full_query = {
       index: index_name,
@@ -88,7 +99,7 @@ module DataMagic
       body: {
         from: page,
         size: per_page,
-        query: squery.to_search
+        query: modified_query
       }
     }
     if not fields.empty?
@@ -96,7 +107,6 @@ module DataMagic
     end
 
     logger.info "===========> full_query:#{full_query.inspect}"
-
     result = client.search full_query
     logger.info "result: #{result.inspect}"
     hits = result["hits"]
