@@ -4,6 +4,28 @@ include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (loggin
 
 module DataMagic
 
+  def self.parse_nested(document, options)
+    new_doc = {}
+    nest_options = options[:nest]
+    if nest_options
+      logger.info "nest: #{nest_options.to_yaml}"
+      logger.info "add to document: #{document.inspect}"
+      key = document[nest_options['key']]
+      logger.info "year => #{key}"
+      new_doc[key] = {}
+
+      id = document['id']
+      new_doc['id'] = id unless id.nil?
+
+      nest_options['contents'].each do |item_key|
+        logger.info "adding item #{item_key}"
+        new_doc[key][item_key] = document[item_key]
+      end
+    end
+    logger.info "here it is: #{new_doc}"
+    new_doc
+  end
+
   # parse a row from a csv file, returns a nested document
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
@@ -11,6 +33,8 @@ module DataMagic
     map_field_types(row, config.field_types) unless config.field_types.empty?
     row = row.merge(additional) if additional
     document = NestedHash.new.add(row)
+    document = parse_nested(document, options) if options[:nest]
+    document = document.select {|key, value| options[:only].include?(key) } unless options[:only].nil?
     document
   end
 
@@ -46,6 +70,11 @@ module DataMagic
     new_field_names = new_field_names.merge(additional_fields)
     num_rows = 0
     headers = nil
+
+    logger.info "  new_field_names: #{new_field_names.inspect}"
+    logger.info "  options: #{options.to_yaml}"
+    logger.info "  additional_data: #{additional_data}"
+
     begin
       CSV.parse(
         data,
@@ -61,12 +90,25 @@ module DataMagic
           logger.info "first row -> #{doc.inspect[0..500]}"
           logger.info "id: #{get_id(doc).inspect}"
         end
-        client.index({
-          index: es_index_name,
-          id: get_id(doc),
-          type: 'document',
-          body: doc,
-        })
+        if options[:nest] == nil  #first time or normal case
+          logger.info "FIRST? #{doc}"
+          client.index({
+            index: es_index_name,
+            id: get_id(doc),
+            type: 'document',
+            body: doc,
+          })
+        else
+          logger.info "UPDATE #{doc}"
+          id = get_id(doc)
+          doc.delete 'id'  # use configured name
+          client.update({
+            index: es_index_name,
+            id: id,
+            type: 'document',
+            body: {doc: doc},
+          })
+        end
         num_rows += 1
       end
 
@@ -111,9 +153,13 @@ module DataMagic
     self.config.files.each do |filepath|
       fname = filepath.split('/').last
       logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"
-      options[:add_data] = self.config.additional_data_for_file(fname)
+      options[:add_data] = config.additional_data_for_file(fname)
+      options[:only] = config.info_for_file(fname, :only)
+      options[:nest] = config.info_for_file(fname, :nest)
       begin
-        logger.debug "reading #{filepath}"
+        logger.info "*"*40
+        logger.info "*    #{filepath}"
+        logger.info "*"*40
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
         logger.debug "imported #{rows} rows"
@@ -132,6 +178,8 @@ private
   def self.map_field_names(row, new_fields, options={})
     mapped = {}
     row.each do |key, value|
+      raise ArgumentError, "column header missing for: #{value}" if key.nil?
+      #logger.info "key: #{key.inspect}, value:#{value.inspect}"
       new_key = new_fields[key.to_sym] || new_fields[key.to_s]
       if new_key
         value = value.to_f if new_key.include? "location"

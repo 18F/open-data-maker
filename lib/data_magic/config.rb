@@ -51,6 +51,11 @@ module DataMagic
       @data.fetch('files', {}).fetch(fname, {}).fetch('add', nil)
     end
 
+    def info_for_file(fname, field)
+      field = field.to_s
+      @data.fetch('files', {}).fetch(fname, {}).fetch(field, nil)
+    end
+
     def scoped_index_name(index_name = nil)
       index_name ||= @data['index']
       env = ENV['RACK_ENV']

@@ -1,0 +1,58 @@
+version: 0.2
+api: school
+index: fake-nested
+unique: [id]
+
+dictionary:
+  id: UNITID
+  name: INSTNM
+  city: CITY_MAIN
+  state: STABBR_MAIN
+  zip: ZIP_MAIN
+  sat_average: SAT_AVG
+  location.lat: LATITUDE_MAIN
+  location.lon: LONGITUDE_MAIN
+
+  earnings.median:
+    source: earn_2002_p10
+    description: Median earnings of students
+    type: integer
+
+  earnings.percent_gt_25k:
+    source: gt_25k_2006_p6
+    description: Share of students earning over $25,000/year
+    type: integer
+
+
+files:
+  school-data.csv:
+    only: [id, name, city, state]
+  # school2013.csv:
+  #   add:
+  #     year: 2013
+  #   only: [id, zip, year]
+  school2013.csv:
+    add:
+      year: 2013
+    nest:
+      key: year
+      contents: [earnings, sat_average]
+  # school2012.csv:
+  #   add:
+  #     year: 2012
+  #   list:
+  #     name: stats
+  #     item: [earnings, year]
+  #   only: [id, stats]
+
+
+
+
+  # school2012.csv:
+  #   fields: [earnings]
+  #   add:
+  #     year: 2012
+  # school2011.csv:
+  #   fields: [earnings]
+  #   add:
+  #     year: 2011
