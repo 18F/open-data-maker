@@ -18,7 +18,7 @@ module DataMagic
       new_doc['id'] = id unless id.nil?
 
       nest_options['contents'].each do |item_key|
-        logger.info "adding item #{item_key}"
+        #logger.info "adding item #{item_key}"
         new_doc[key][item_key] = document[item_key]
       end
     end
