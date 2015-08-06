@@ -89,7 +89,6 @@ describe "DataMagic #import_with_dictionary" do
   end
   context "with options" do
     before(:all) do
-      DataMagic::Config.logger.info "===== before :all"
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_options'
       DataMagic.init(load_now: true)

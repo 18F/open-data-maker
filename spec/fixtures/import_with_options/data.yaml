@@ -2,7 +2,7 @@ version: fixture-import-options
 index: city-data
 api: cities
 options:
-  import: all
+  columns: all
 
 dictionary:
   state: USPS

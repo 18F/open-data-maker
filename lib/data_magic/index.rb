@@ -195,7 +195,7 @@ private
       if new_key
         value = value.to_f if new_key.include? "location"
         mapped[new_key] = value
-      elsif options[:import] == 'all'
+      elsif options[:columns] == 'all'
         mapped[key] = value
       end
     end
