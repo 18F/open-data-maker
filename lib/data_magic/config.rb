@@ -53,7 +53,9 @@ module DataMagic
 
     def info_for_file(fname, field)
       field = field.to_s
-      @data.fetch('files', {}).fetch(fname, {}).fetch(field, nil)
+      result = @data.fetch('files', {}).fetch(fname, {}).fetch(field, nil)
+      result = IndifferentHash.new(result) if result.is_a? Hash
+      result
     end
 
     def scoped_index_name(index_name = nil)

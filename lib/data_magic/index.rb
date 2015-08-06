@@ -8,10 +8,10 @@ module DataMagic
     new_doc = {}
     nest_options = options[:nest]
     if nest_options
-      logger.info "nest: #{nest_options.to_yaml}"
-      logger.info "add to document: #{document.inspect}"
+      #logger.info "nest: #{nest_options.to_yaml}"
+      #logger.info "add to document: #{document.inspect[0..255]}"
       key = document[nest_options['key']]
-      logger.info "year => #{key}"
+      #logger.info "year => #{key}"
       new_doc[key] = {}
 
       id = document['id']
@@ -22,7 +22,7 @@ module DataMagic
         new_doc[key][item_key] = document[item_key]
       end
     end
-    logger.info "here it is: #{new_doc}"
+    #logger.info "here it is: #{new_doc}"
     new_doc
   end
 
@@ -42,6 +42,7 @@ module DataMagic
   def self.get_id(row, options={})
     if config.data['unique'].length > 0
       result = config.data['unique'].map { |field| row[field] }.join(':')
+      #logger.info "id: #{result.inspect}"
       if result.empty?
         logger.warn "unexpected blank id for "+
                     "unique: #{config.data['unique'].inspect} "+
@@ -95,7 +96,6 @@ module DataMagic
           logger.info "id: #{get_id(doc).inspect}"
         end
         if options[:nest] == nil  #first time or normal case
-          logger.info "FIRST? #{doc}"
           client.index({
             index: es_index_name,
             id: get_id(doc),
@@ -103,14 +103,22 @@ module DataMagic
             body: doc,
           })
         else
-          logger.info "UPDATE #{doc}"
-          id = get_id(doc, remove: true)
-          client.update({
-            index: es_index_name,
-            id: id,
-            type: 'document',
-            body: {doc: doc},
-          })
+          begin
+            #logger.info "UPDATE #{doc}"
+            id = get_id(doc, remove: true)
+            client.update({
+              index: es_index_name,
+              id: id,
+              type: 'document',
+              body: {doc: doc},
+            })
+          rescue Elasticsearch::Transport::Transport::Errors::NotFound => e
+            if options[:nest][:parent_missing] == 'skip'
+              logger.info "missing parent id:#{id} -- skipping"
+            else
+              raise e
+            end
+          end
         end
         num_rows += 1
       end
