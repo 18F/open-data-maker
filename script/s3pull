@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby -v
+
 require_relative 's3config.rb'
 
 @s3 = ::Aws::S3::Client.new

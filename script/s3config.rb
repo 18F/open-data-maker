@@ -1,6 +1,6 @@
 # configure S3 with local credentials based on environment
 # usage (from ruby script or irb):
-#    require 's3config'
+#    require 's3config.rb'
 #    @s3 = ::Aws::S3::Client.new
 
 require 'dotenv'
