@@ -9,6 +9,7 @@ db/*.db
 .*.sw*
 .env
 .*.env
+.cfignore
 
 # expect people to put their own data in /data
 data
