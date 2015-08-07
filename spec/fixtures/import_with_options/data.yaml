@@ -4,6 +4,7 @@ api: cities
 options:
   columns: all
   limit_files: 1
+  limit_rows: 3
 
 dictionary:
   state: USPS

@@ -103,9 +103,18 @@ describe "DataMagic #import_with_dictionary" do
                               "population"=>"8175133", "year"=>2010}]
       expect(result).to eq(expected)
     end
-    it "'files: 1' indexes just one file" do
+    context "'limit_files: 1" do
+      it "#config.files is of length 1" do
+        expect(DataMagic.config.files.length).to eq(1)
+      end
+      it "indexes just one file" do
+        result = DataMagic.search({}, api: 'cities')
+        expect(result['total']).to eq(3)
+      end
+    end
+    it "'rows: 2' indexes just 3 rows" do
       result = DataMagic.search({}, api: 'cities')
-      expect(result['total']).to eq(4)
+      expect(result['total']).to eq(3)
     end
 
   end

@@ -121,6 +121,10 @@ module DataMagic
           end
         end
         num_rows += 1
+        if options[:limit_rows] and num_rows == options[:limit_rows]
+          logger.info "done now"
+          break
+        end
       end
 
     rescue Exception => e
