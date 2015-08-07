@@ -87,6 +87,20 @@ describe "DataMagic #import_with_dictionary" do
       expect(result["total"]).to eq(50)
     end
   end
+  context "with errors" do
+    before do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/import_with_errors'
+    end
+    after do
+      DataMagic.destroy
+    end
+    it "raises an error with invalid type" do
+      expect {
+        DataMagic.init(load_now: true)
+      }.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest)
+    end
+  end
   context "with options" do
     before(:all) do
       DataMagic.destroy

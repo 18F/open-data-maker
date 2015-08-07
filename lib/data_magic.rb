@@ -146,8 +146,12 @@ module DataMagic
         }
         logger.info "====> index created with es type mapping: #{es_types.inspect[0..255]}"
       rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
-        logger.debug "create_index attempt failed #{es_index_name} -- maybe it already exists"
-        logger.error error.to_s
+        if error.message.include? "IndexAlreadyExistsException"
+          logger.debug "create_index failed: #{es_index_name} already exists"
+        else
+          logger.error error.to_s
+          raise error
+        end
       end
       es_index_name
     end
