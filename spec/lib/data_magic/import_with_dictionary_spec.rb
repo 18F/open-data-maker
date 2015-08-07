@@ -96,12 +96,17 @@ describe "DataMagic #import_with_dictionary" do
     after(:all) do
       DataMagic.destroy
     end
-    it "can index all columns and apply dictionary mapping to some" do
+    it "'columns: all' indexed all columns and apply dictionary mapping to some" do
       result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
       expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
                               "ANSICODE"=>"2395220", "name"=>"New York",
                               "population"=>"8175133", "year"=>2010}]
       expect(result).to eq(expected)
     end
+    xit "'files: 1' indexes just one file" do
+      result = DataMagic.search({}, api: 'cities')
+      expect(result['total']).to eq(4)
+    end
+
   end
 end

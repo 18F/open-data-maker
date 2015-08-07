@@ -159,14 +159,14 @@ module DataMagic
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    self.create_index es_index_name, config.field_types
+    create_index es_index_name, config.field_types
     logger.info "files: #{self.config.files}"
-    self.config.files.each do |filepath|
+    config.files.each_with_index do |filepath, index|
       fname = filepath.split('/').last
-      logger.debug "indexing #{fname} file config:#{self.config.additional_data_for_file(fname).inspect}"
-      options[:add_data] = config.additional_data_for_file(fname)
-      options[:only] = config.info_for_file(fname, :only)
-      options[:nest] = config.info_for_file(fname, :nest)
+      logger.debug "indexing #{fname} #{index} file config:#{config.additional_data_for_file(index).inspect}"
+      options[:add_data] = config.additional_data_for_file(index)
+      options[:only] = config.info_for_file(index, :only)
+      options[:nest] = config.info_for_file(index, :nest)
       begin
         logger.info "*"*40
         logger.info "*    #{filepath}"
