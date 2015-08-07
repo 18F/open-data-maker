@@ -188,20 +188,28 @@ module DataMagic
       }
     end
 
+    # if limit is not nil, truncate the length of list to limit
+    def truncate_list(list, limit)
+      logger.info("truncating list limit: #{limit.inspect}") unless limit.nil?
+      limit.nil? ? list : list[0...limit]
+    end
+
     # file_data from data.yaml is an array of hashes
     # must have a name, everything else is optional
     # fdata can be nil, then we get all files in path
     def parse_files(path, fdata = nil, options = {})
-      logger.info "parse_files: #{fdata.inspect}"
+      logger.debug "parse_files: #{fdata.inspect}"
+      logger.debug "options: #{options.inspect}"
       names = []
       if fdata.nil?
         names = list_files(path)
         fdata = []
       else
+        fdata = truncate_list(fdata, options[:limit_files])
         fdata.each_with_index do |info, index|
           name = info.fetch('name', '')
           if name.empty?
-            raise ArgumentError "file #{index}: 'name' must not be empty " + 
+            raise ArgumentError "file #{index}: 'name' must not be empty " +
                                 "in #{fdata.inspect}"
           end
           names << name
@@ -237,7 +245,7 @@ module DataMagic
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
         @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, data['files'])
+        @files, @data['files'] = parse_files(directory_path, data['files'], data['options'])
 
         logger.debug "file_config: #{@data['files'].inspect}"
         logger.debug "no files found" if @data['files'].empty?

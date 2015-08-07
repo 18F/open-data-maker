@@ -103,7 +103,7 @@ describe "DataMagic #import_with_dictionary" do
                               "population"=>"8175133", "year"=>2010}]
       expect(result).to eq(expected)
     end
-    xit "'files: 1' indexes just one file" do
+    it "'files: 1' indexes just one file" do
       result = DataMagic.search({}, api: 'cities')
       expect(result['total']).to eq(4)
     end
