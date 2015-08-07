@@ -2,7 +2,9 @@ version: fixture-import-options
 index: city-data
 api: cities
 options:
-  import: all
+  columns: all
+  limit_files: 1
+  limit_rows: 3
 
 dictionary:
   state: USPS
@@ -10,6 +12,9 @@ dictionary:
   population: POP10
 
 files:
-  cities4.csv:
+  - name: cities4.csv
     add:
       year: 2010
+  - name: more_cities.csv # this shouldn't get imported
+    add:
+      year: 1000

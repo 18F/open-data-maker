@@ -14,4 +14,4 @@ dictionary:
 index: place-data
 api: places
 files:
-  places.csv:
+  - name: places.csv

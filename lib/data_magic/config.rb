@@ -47,8 +47,17 @@ module DataMagic
       Config.logger
     end
 
-    def additional_data_for_file(fname)
-      @data.fetch('files', {}).fetch(fname, {}).fetch('add', nil)
+    # fetches file configuration
+    # add: whatever
+    def additional_data_for_file(index)
+      result = @data.fetch('files', []).fetch(index, {}).fetch('add', nil)
+    end
+
+    def info_for_file(index, field)
+      field = field.to_s
+      result = @data.fetch('files', []).fetch(index, {}).fetch(field, nil)
+      result = IndifferentHash.new(result) if result.is_a? Hash
+      result
     end
 
     def scoped_index_name(index_name = nil)
@@ -179,12 +188,37 @@ module DataMagic
       }
     end
 
-    def parse_files(files, path)
-      meta = files || {}
-      names = files.nil? ? list_files(path) : files.keys
+    # if limit is not nil, truncate the length of list to limit
+    def truncate_list(list, limit)
+      logger.info("truncating list limit: #{limit.inspect}") unless limit.nil?
+      limit.nil? ? list : list[0...limit]
+    end
+
+    # file_data from data.yaml is an array of hashes
+    # must have a name, everything else is optional
+    # fdata can be nil, then we get all files in path
+    def parse_files(path, fdata = nil, options = {})
+      logger.debug "parse_files: #{fdata.inspect}"
+      logger.debug "options: #{options.inspect}"
+      names = []
+      if fdata.nil?
+        names = list_files(path)
+        fdata = []
+      else
+        fdata = truncate_list(fdata, options[:limit_files])
+        fdata.each_with_index do |info, index|
+          name = info.fetch('name', '')
+          if name.empty?
+            raise ArgumentError "file #{index}: 'name' must not be empty " +
+                                "in #{fdata.inspect}"
+          end
+          names << name
+        end
+      end
+
       paths = names.map { |name| File.join(path, name) }
-      meta = Hash[names.map { |name| [name, meta[name] || {}] }]
-      return paths, meta
+
+      return paths, fdata
     end
 
     def clean_index(path)
@@ -211,9 +245,9 @@ module DataMagic
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
         @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(data['files'], directory_path)
+        @files, @data['files'] = parse_files(directory_path, data['files'], data['options'])
 
-        logger.debug "file_config: #{@data['files']}"
+        logger.debug "file_config: #{@data['files'].inspect}"
         logger.debug "no files found" if @data['files'].empty?
 
         # keep track of where we loaded our data, so we can avoid loading again

@@ -1,19 +1,25 @@
 # configure S3 with local credentials based on environment
 # usage (from ruby script or irb):
-#    require 's3config'
+#    require 's3config.rb'
 #    @s3 = ::Aws::S3::Client.new
 
 require 'dotenv'
 
 branch = `echo $(git symbolic-ref --short HEAD)`.chomp
-case branch
-  when "master"
-    APP_ENV = "production"
-  when "staging"
-    APP_ENV = "staging"
-  else
-    puts "not on master or staging branch lets use dev"
-    APP_ENV = "dev"
+
+if ENV['APP_ENV']
+  APP_ENV = ENV['APP_ENV']
+  puts "using APP_ENV from environment #{APP_ENV}"
+else
+  case branch
+    when "master"
+      APP_ENV = "production"
+    when "staging"
+      APP_ENV = "staging"
+    else
+      puts "not on master or staging branch lets use dev"
+      APP_ENV = "dev"
+  end
 end
 
 Dotenv.load(
