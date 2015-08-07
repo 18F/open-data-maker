@@ -6,14 +6,20 @@
 require 'dotenv'
 
 branch = `echo $(git symbolic-ref --short HEAD)`.chomp
-case branch
-  when "master"
-    APP_ENV = "production"
-  when "staging"
-    APP_ENV = "staging"
-  else
-    puts "not on master or staging branch lets use dev"
-    APP_ENV = "dev"
+
+if ENV['APP_ENV']
+  APP_ENV = ENV['APP_ENV']
+  puts "using APP_ENV from environment #{APP_ENV}"
+else
+  case branch
+    when "master"
+      APP_ENV = "production"
+    when "staging"
+      APP_ENV = "staging"
+    else
+      puts "not on master or staging branch lets use dev"
+      APP_ENV = "dev"
+  end
 end
 
 Dotenv.load(
