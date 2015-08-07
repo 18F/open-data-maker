@@ -76,8 +76,8 @@ module DataMagic
     num_rows = 0
     headers = nil
 
-    logger.info "  new_field_names: #{new_field_names.inspect}"
-    logger.info "  options: #{options.to_yaml}"
+    logger.info "  new_field_names: #{new_field_names.inspect[0..500]}"
+    logger.info "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
     logger.info "  additional_data: #{additional_data}"
 
     begin
