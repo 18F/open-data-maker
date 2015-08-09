@@ -70,7 +70,6 @@ describe "DataMagic #search" do
         expect(result["results"].length).to eq(3)
       end
 
-
     end
     describe "with mapping" do
       before (:all) do
@@ -124,8 +123,20 @@ describe "DataMagic #search" do
       expected["total"] = expected["results"].length
       expect(result).to eq(expected)
     end
-
   end
 
+  describe "with sample-data" do
+    before do
+      ENV['DATA_PATH'] = './sample-data'
+      DataMagic.init(load_now: true)
+    end
+    after do
+      DataMagic.destroy
+    end
 
+    it "can sort" do
+      response = DataMagic.search({}, sort: "population:asc")
+      expect(response["results"][0]['name']).to eq("Rochester")
+    end
+  end
 end

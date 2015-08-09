@@ -95,6 +95,11 @@ module DataMagic
       full_query[:body][:fields] = fields
     end
 
+    if options[:sort]
+      key, value = options[:sort].split(':')
+      full_query[:body][:sort] = {key => {order:value}}
+    end
+
     logger.info "===========> full_query:#{full_query.inspect}"
 
     result = client.search full_query
