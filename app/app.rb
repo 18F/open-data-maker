@@ -63,7 +63,8 @@ module OpenDataMaker
       end
       fields = params.delete('fields') || ""
       fields = fields.split(',')
-      DataMagic.search(params, api:endpoint, fields:fields).to_json
+      sort = params.delete('sort')
+      DataMagic.search(params, sort:sort, api:endpoint, fields:fields).to_json
     end
 
     ##

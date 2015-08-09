@@ -147,7 +147,6 @@ describe 'api', type: 'feature' do
 
 			it "can find an attribute from an imported file" do
 				expect(last_response).to be_ok
-				#DataMagic.logger.debug "last_response.body: #{last_response.body.inspect}"
 				result = JSON.parse(last_response.body)
 				result["results"] = result["results"].sort_by { |k| k["name"] }
 
@@ -163,6 +162,17 @@ describe 'api', type: 'feature' do
 			end
 		end
 
+		describe "with sort" do
+			it "can sort numbers ascending" do
+				get '/cities?sort=population:asc'
+				expect(last_response).to be_ok
+				response = JSON.parse(last_response.body)
+				expect(response["results"][0]['name']).to eq("Rochester")
+
+			end
+
+
+		end
 	end
 
 end
