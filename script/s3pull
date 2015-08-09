@@ -10,7 +10,9 @@ dirname = 'real-data'
 unless File.directory?(dirname)
   FileUtils.mkdir_p(dirname)
 end
-File.open("#{dirname}/#{bucket}.yaml", 'w') do |file|
+datayamlpath = File.expand_path("#{dirname}/#{bucket}.yaml",  __FILE__)
+
+File.open(datayamlpath, 'w') do |file|
   response = @s3.get_object(bucket: bucket, key: 'data.yaml')
   file << response.body.read
 end
