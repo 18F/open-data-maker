@@ -24,7 +24,8 @@ module OpenDataMaker
     get :index do
       render :home, locals: {
         'title' => 'Open Data Maker',
-        'endpoints' => DataMagic.config.api_endpoint_names
+        'endpoints' => DataMagic.config.api_endpoint_names,
+        'examples' => DataMagic.config.examples
       }
     end
 
