@@ -8,6 +8,8 @@ dirname = 'real-data'
 bucket_name = ENV['s3_bucket']
 datayamlpath = File.expand_path("../../#{dirname}/#{bucket_name}.yaml",  __FILE__)
 
+puts "copying #{datayamlpath}"
+puts "to S3 #{bucket_name}"
 File.open(datayamlpath, 'r') do |file|
   @s3.put_object(bucket: bucket_name, key: 'data.yaml', body: file)
 end
