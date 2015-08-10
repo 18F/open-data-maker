@@ -66,9 +66,13 @@ module DataMagic
     squery = Stretchy.query
 
     distance = terms[:distance]
-    if distance && !distance.empty?
-      location = { lat: 37.615223, lon:-122.389977 } #sfo
-      squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
+    zip = terms[:zip]
+    zip_location = Zipcode.latlon(zip)
+    if distance && !distance.empty? 
+      if zip_location == nil
+        zip_location = { lat: 37.615223, lon:-122.389977 } #sfo is default if zip code is not found
+      end
+      squery = squery.geo('location', distance: distance, lat: zip_location[:lat], lng: zip_location[:lon])
       terms.delete(:distance)
       terms.delete(:zip)
     end
