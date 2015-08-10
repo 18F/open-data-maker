@@ -1,6 +1,7 @@
 require_relative '../data_magic.rb'
 
 module DataMagic
+  require_relative 'example.rb'
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints
     attr_accessor :page_size
@@ -20,6 +21,16 @@ module DataMagic
       load_datayaml
     end
 
+    def examples
+      if @examples.nil?
+        api = api_endpoint_names[0]
+        data['examples'] ||= []
+        @examples = data['examples'].map do |i|
+          Example.new(i.merge(endpoint: api))
+        end
+      end
+      @examples
+    end
 
     def self.init(s3 = nil)
       logger.info "Config.init #{s3.inspect}"
