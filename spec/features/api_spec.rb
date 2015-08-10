@@ -151,11 +151,10 @@ describe 'api', type: 'feature' do
 				result["results"] = result["results"].sort_by { |k| k["name"] }
 
 				expected = {
-				  "total" => 2,
+				  "total" => 1,
 				  "page"  => 0,
 				  "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
 				  "results" => [
-						{"state"=>"CA", "name"=>"Fremont", "population"=>214089, "land_area"=>77.459, "location"=>{"lat"=>37.494373, "lon"=>-121.941117}},
 						{"state"=>"CA", "name"=>"Oakland", "population"=>390724, "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}]
 				}
 				expect(result).to eq(expected)

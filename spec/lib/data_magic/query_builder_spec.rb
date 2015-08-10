@@ -58,7 +58,7 @@ describe DataMagic::QueryBuilder do
         filter: {
           geo_distance: {
             distance: "30mi",
-            "location" => { lat: 37.615223, lon: -122.389977 }
+            "location" => { lat: 37.7211, lon: -122.4754 }
       } } } }
     end
     it_correctly "builds a query"

@@ -14,7 +14,6 @@ module OpenDataMaker
     end
 
     ## app setup
-    Zipcode.init
     DataMagic.logger.info "loading app.rb"
     if ENV['RACK_ENV'] == 'test'
       DataMagic.init(load_now: true)
