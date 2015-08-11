@@ -1,36 +1,43 @@
-require_relative 'config'
-
 module DataMagic
   module QueryBuilder
     class << self
       # Creates query from parameters passed into endpoint
-      def from_params(params)
+      def from_params(params, options, config)
+        query_hash = {
+          from:   params.delete(:page) || 0,
+          size:   params.delete(:per_page) || config.page_size,
+        }
+        query_hash[:query] = generate_squery(params, config).to_search
+        query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
+        query_hash[:sort] = get_sort_order(options) if options[:sort]
+        query_hash
+      end
+
+      private
+
+      def generate_squery(params, config)
         squery = Stretchy.query(type: 'document')
-        squery = handle_pagination(squery, params)
-        squery = handle_boolean_conditions(squery, params)
-        squery = handle_location(squery, params)
+        squery = search_location(squery, params)
+        squery = search_boolean_conditions(squery, params)
       end
 
-      protected
-      # Handles query pagination
-      def handle_pagination(squery, params)
-        page = params[:page] || 0
-        per_page = params[:per_page] || Config.page_size
-        squery = squery.page(page, per_page: per_page)
-        params.delete(:page)
-        params.delete(:per_page)
-        squery
+      def get_restrict_fields(options)
+        options[:fields].map { |field| field.to_s }
       end
 
-      # Handles booleans and remaining equals variables
-      def handle_boolean_conditions(squery, params)
+      def get_sort_order(options)
+        key, value = options[:sort].split(':')
+        return { key => { order: value } }
+      end
+
+      def search_boolean_conditions(squery, params)
         params.each do |field, value|
           match = /(.*)__(gt|lt|gte|lte)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
           squery = if match
             var_name, operator = match.captures
             send(operator, squery, var_name, value)
           else
-            squery.where(field: value)
+            squery.where(field => value)
           end
         end
         squery
@@ -53,7 +60,7 @@ module DataMagic
       end
 
       # Handles location (currently only uses SFO location)
-      def handle_location(squery, params)
+      def search_location(squery, params)
         distance = params[:distance]
         if distance && !distance.empty?
           location = { lat: 37.615223, lon:-122.389977 } #sfo
@@ -65,6 +72,6 @@ module DataMagic
       end
 
     end
-    
+
   end
 end

@@ -1,21 +1,27 @@
 require 'elasticsearch'
-require 'yaml'
+require 'safe_yaml'
 require 'csv'
 require 'stretchy'
 require 'hashie'
 require './lib/nested_hash'
 require 'aws-sdk'
 require 'uri'
+require 'cf-app-utils'
+require 'logger'
+
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
 require_relative 'data_magic/query_builder'
 
+SafeYAML::OPTIONS[:default_mode] = :safe
+
 module DataMagic
-  extend DataMagic::Config
-  extend DataMagic::Index
 
   class << self
-    attr_accessor :client
+    attr_accessor :config
+    def logger
+      Config.logger
+    end
   end
 
   class IndifferentHash < Hash
@@ -23,28 +29,27 @@ module DataMagic
     include Hashie::Extensions::IndifferentAccess
   end
 
-
+  DEFAULT_PAGE_SIZE = 20
+  DEFAULT_EXTENSIONS = ['.csv']
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
 
-  Config.init
-
   def self.s3
     if @s3.nil?
       if ENV['VCAP_APPLICATION']
-        s3cred = CF::App::Credentials.find_by_service_name('s3-sb-ed-college-choice')
+        s3cred = ::CF::App::Credentials.find_by_service_name('bservice')
       else
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
-        puts "s3cred = #{s3cred.inspect}"
       end
-      Aws.config[:credentials] = Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
-      Aws.config[:region] = 'us-east-1'
-      @s3 = Aws::S3::Client.new
-      puts "@s3 = #{@s3.inspect}"
+      logger.info "s3cred = #{s3cred.inspect}"
+      ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
+      ::Aws.config[:region] = 'us-east-1'
+      @s3 = ::Aws::S3::Client.new
+      logger.info "@s3 = #{@s3.inspect}"
     end
     @s3
-  #  puts "response: #{response.inspect}"
+  #  logger.info "response: #{response.inspect}"
   end
 
 
@@ -52,148 +57,163 @@ module DataMagic
   #   Public Class Methods
   #========================================================================
 
-  def self.delete_all
-    client.indices.delete index: '_all'
-    client.indices.clear_cache
-    Config.init
-  end
-
-  def self.scoped_index_name(index_name)
-    Config.load_if_needed
-    env = ENV['RACK_ENV']
-    "#{env}-#{index_name}"
-  end
-
-  def self.delete_index(index_name)
-    Config.load_if_needed
-    index_name = scoped_index_name(index_name)
-    client.indices.delete index: index_name
-    client.indices.clear_cache
-    # TODO: remove some entries from @@files
-  end
-
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
-    Stretchy.configure do |c|
-      c.index_name = 'development-city-data'
-    end
-
     terms = IndifferentHash.new(terms)
-    Config.load_if_needed
-    
-    full_query = QueryBuilder.from_params(terms)
+    query_body = QueryBuilder.from_params(terms, options, config)
+    index_name = index_name_from_options(options)
+    logger.info "search terms:#{terms.inspect}"
 
-    puts "===========> full_query:#{full_query.to_search.inspect}"
-
-    # result = client.search full_query
-    result = full_query.results
-    # puts "result: #{result.inspect}"
-    # hits = result["hits"]
-    # total = hits["total"]
-    # hits["hits"].map {|hit| hit["_source"]}
-    # results = hits["hits"].map {|hit| hit["_source"]}
-    # {
-    #   "total" => total,
-    #   "page" => page,
-    #   "per_page" => per_page,
-    #   "results" => 	results
-    # }
-  end
-
-
-private
-def self.create_index(scoped_index_name)
-  client.indices.create index: scoped_index_name, body: {
-    mappings: {
-      document: {    # for now type 'document' is always used
-        properties: {
-         location: { type: 'geo_point' }
-        }
-      }
+    full_query = {
+      index: index_name,
+      type: 'document',
+      body: query_body
     }
-  }
-end
 
-# takes a external index name, returns scoped index name
-def self.create_index_if_needed(external_index_name)
-  index_name = scoped_index_name(external_index_name)
-  puts "index:#{index_name}"
-  unless client.indices.exists? index: index_name
-    create_index index_name
-  end
-  index_name
-end
+    logger.info "FULL_QUERY: #{full_query.inspect}"
 
-# row: a hash  (keys may be strings or symbols)
-# new_fields: hash current_name : new_name
-# returns a hash (which may be a subset of row) where keys are new_name
-#         with value of corresponding row[current_name]
-def self.map_field_names(row, new_fields)
-  mapped = {}
-  row.each do |key, value|
-    new_key = new_fields[key.to_sym] || new_fields[key.to_s]
-    if new_key
-      value = value.to_f if new_key.include? "location"
-      mapped[new_key] = value
+    result = client.search full_query
+    logger.info "result: #{result.inspect}"
+    hits = result["hits"]
+    total = hits["total"]
+    results = []
+    unless query_body.has_key? :fields
+      # we're getting the whole document and we can find in _source
+      results = hits["hits"].map {|hit| hit["_source"]}
+    else
+      # we're getting a subset of fields...
+      results = hits["hits"].map do |hit|
+        found = hit["fields"]
+        # each result looks like this:
+        # {"city"=>["Springfield"], "address"=>["742 Evergreen Terrace"]}
+
+        found.keys.each { |key| found[key] = found[key][0] }
+        # now it should look like this:
+        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace
+        found
+      end
     end
-  end
-  mapped
-end
 
-# get the real index name when given either
-# api: api endpoint configured in data.yaml
-# index: index name
-def self.index_name_from_options(options)
-  options[:api] = options['api'].to_sym if options['api']
-  options[:index] = options['index'].to_sym if options['index']
-  puts "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
-  if options[:api]
-    index_name = Config.find_index_for(options[:api])
-    if index_name.nil?
-      raise ArgumentError, "no configuration found for '#{options[:api]}', available endpoints: #{api_endpoint_names.inspect}"
+    # assemble a simpler json document to return
+    {
+      "total" => total,
+      "page" => query_body[:from],
+      "per_page" => query_body[:size],
+      "results" => 	results
+    }
+  end
+
+  private
+    def self.create_index(es_index_name = nil, field_types={})
+      es_index_name ||= self.config.scoped_index_name
+      field_types['location'] = 'geo_point'
+      es_types = {}
+      field_types.each do |key, type|
+        es_types[key] = { type: type }
+      end
+      begin
+        client.indices.create index: es_index_name, body: {
+          mappings: {
+            document: {    # type 'document' is always used for external indexed docs
+              properties: es_types
+            }
+          }
+        }
+        logger.info "====> index created with es type mapping: #{es_types.inspect[0..255]}"
+      rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
+        if error.message.include? "IndexAlreadyExistsException"
+          logger.debug "create_index failed: #{es_index_name} already exists"
+        else
+          logger.error error.to_s
+          raise error
+        end
+      end
+      es_index_name
     end
-  else
-    index_name = options[:index]
-  end
-  index_name = scoped_index_name(index_name)
-end
 
 
-def self.index_data_if_needed
-  directory_path = DataMagic.data_path
-  index = load_config(directory_path)
-  if Config.new?(index)
-    puts "new config detected... hitting the big RESET button"
-    Thread.new do
-      self.delete_all
-      puts "deleted all indices, re-indexing..."
-      self.import_all
+    # get the real index name when given either
+    # api: api endpoint configured in data.yaml
+    # index: index name
+    def self.index_name_from_options(options)
+      options[:api] = options['api'].to_sym if options['api']
+      options[:index] = options['index'].to_sym if options['index']
+      logger.info "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
+      if options[:api]
+        index_name = config.find_index_for(options[:api])
+        if index_name.nil?
+          raise ArgumentError, "no configuration found for '#{options[:api]}', available endpoints: #{self.config.api_endpoint_names.inspect}"
+        end
+      else
+        index_name = options[:index]
+      end
+      index_name = self.config.scoped_index_name(index_name)
     end
-    puts "indexing on a thread"
-  end
-end
 
+    def self.index_data_if_needed
+      logger.info "index_data_if_needed"
+      if @index_thread and @index_thread.alive?
+        logger.info "already indexing... skip!"
+      else
+        if config.update_indexed_config
+          logger.info "new config detected... hitting the big RESET button"
+          @index_thread = Thread.new do
+            logger.info "re-indexing..."
 
+            self.import_with_dictionary
+            logger.info "indexing on a thread"
+          end
+        end
+      end
+    end
 
-puts "--"*40
-puts "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
-puts "--"*40
+    def DataMagic.client
+      if @client.nil?
+        if ENV['VCAP_APPLICATION']    # Cloud Foundry
+          logger.info "connect to Cloud Foundry elasticsearch service"
+          eservice = ::CF::App::Credentials.find_by_service_name('eservice')
+          logger.info "eservice: #{eservice.inspect}"
+          service_uri = eservice['url'] || eservice['uri']
+          logger.info "service_uri: #{service_uri}"
+          @client = ::Elasticsearch::Client.new host: service_uri  #, log: true
+          Stretchy.configure do |c|
+            c.client     = @client                       # use a custom client
+          end
+        else
+          logger.info "default local elasticsearch connection"
+          @client = ::Elasticsearch::Client.new #log: true
+        end
+      end
+      @client
+    end
 
-Aws.eager_autoload!       # see https://github.com/aws/aws-sdk-ruby/issues/833
+    # call this before calling anything that requires data.yaml
+    # this will load data.yaml, and optionally index referenced data
+    # options hash
+    #   load_now: default load in background,
+    #             false don't load,
+    #             true load immediately, wait for complete indexing
+    def DataMagic.init(options = {})
+      logger.info "--"*20
+      logger.info "    DataMagic init VCAP_APPLICATION=#{ENV['VCAP_APPLICATION'].inspect}"
+      logger.info "--"*20
+      logger.info "options: #{options.inspect}"
+      logger.info "self.config: #{self.config.inspect}"
+      if self.config.nil?   # only init once
+        ::Aws.eager_autoload!       # see https://github.com/aws/aws-sdk-ruby/issues/833
+        self.config = Config.new(s3: self.s3)    # loads data.yaml
+        self.index_data_if_needed unless options[:load_now] == false
+        @index_thread.join if options[:load_now] and @index_thread
+      end
+    end # init
 
-if ENV['VCAP_APPLICATION']
-  # Cloud Foundry
-  puts "connect to Cloud Foundry elasticsearch service"
-  require 'cf-app-utils'
-  eservice = CF::App::Credentials.find_by_service_name('eservice')
-  puts "eservice: #{eservice.inspect}"
-  service_uri = eservice['url']
-  puts "service_uri: #{service_uri}"
-  self.client = Elasticsearch::Client.new host: service_uri  #, log: true
-  self.index_data_if_needed
-else
-  puts "default elasticsearch connection"
-  self.client = Elasticsearch::Client.new #log: true
-end
+    # this is only used for testing
+    # it will clean up all indices associated with the loaded data.yaml
+    def DataMagic.destroy
+      logger.info "DataMagic.destroy"
+      @index_thread.join unless @index_thread.nil?   # finish up indexing, if needed
+      self.config.clear_all unless config.nil?
+      self.config = nil
+    end
 
-end
+end # DataMagic
