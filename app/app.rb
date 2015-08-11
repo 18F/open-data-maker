@@ -13,23 +13,60 @@ module OpenDataMaker
       end
     end
 
-    get '/' do
-        render :home, locals: {'title' => 'Open Data Maker'}
+    ## app setup
+    DataMagic.logger.info "loading app.rb"
+    if ENV['RACK_ENV'] == 'test'
+      DataMagic.init(load_now: true)
+    else
+      DataMagic.init   # loads in background
     end
 
-    get '/:endpoint' do
+    get :index do
+      render :home, locals: {
+        'title' => 'Open Data Maker',
+        'endpoints' => DataMagic.config.api_endpoint_names,
+        'examples' => DataMagic.config.examples
+      }
+    end
+
+    get :endpoints do
+      content_type :json
+      endpoints = DataMagic.config.api_endpoints.keys.map { |key|
+        {
+          name: key,
+          url: url_for(:index, :endpoint => key),
+        }
+      }
+      return {endpoints: endpoints}.to_json
+    end
+
+    get :'data.json' do
       content_type :json
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
-      puts params.inspect
-      endpoint = params['endpoint']
-      params.delete('endpoint')
-      result = DataMagic.search(params, api:endpoint)
-
-      result.to_json
+      data = DataMagic.config.data
+      data.to_json
     end
 
+    get :index, :with => :endpoint do
+      content_type :json
+      headers 'Access-Control-Allow-Origin' => '*',
+               'Access-Control-Allow-Methods' => ['GET']
+
+      DataMagic.logger.debug "-----> APP GET #{params.inspect}"
+      endpoint = params.delete('endpoint')
+      if not DataMagic.config.api_endpoints.keys.include? endpoint
+        halt 404, {
+          error: 404,
+          message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
+        }.to_json
+      end
+      fields = params.delete('fields') || ""
+      fields = fields.split(',')
+      sort = params.delete('sort')
+      DataMagic.search(params, sort:sort, api:endpoint, fields:fields).to_json
+    end
 
     ##
     # Caching support.

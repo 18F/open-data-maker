@@ -17,7 +17,10 @@ gem 'stretchy'
 gem 'hashie'
 gem 'cf-app-utils'
 gem 'unicorn'
+gem 'safe_yaml'
 gem 'aws-sdk', '~> 2'
+gem 'actionview'
+gem 'dotenv'
 
 # Project requirements
 gem 'rake'
@@ -26,13 +29,23 @@ gem 'rake'
 gem 'sass'
 gem 'liquify'
 gem 'liquid', '= 3.0.3'
+gem 'erubis'
 
 # Test requirements
-gem 'rspec', :group => 'test'
-gem 'rack-test', :require => 'rack/test', :group => 'test'
+group :test do
+  gem 'rspec'
+  gem 'rspec-mocks'
+  gem 'rack-test', :require => 'rack/test'
+end
 
+group 'dev' do
+  gem 'google_drive'
+end
 # Padrino Stable Gem
 gem 'padrino', '0.12.5'
+
+gem 'pry', :group => 'development'
+gem 'pry-byebug', :group => 'development'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

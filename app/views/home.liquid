@@ -1,1 +1,19 @@
-<h1>Welcome to {{ title }}</h1>
+<h1>{{ title }}</h1>
+
+<h2>API endpoints</h2>
+
+<ul>
+{% for name in endpoints %}
+  <li><a href="/{{ name }}">{{ name }}</a></li>
+{% endfor %}
+</ul>
+
+ {% if examples.size > 0 %}
+<h2>Examples</h2>
+
+<ul>
+{% for ex in examples %}
+  <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
+{% endfor %}
+</ul>
+{% endif %}

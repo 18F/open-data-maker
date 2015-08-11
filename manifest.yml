@@ -1,7 +1,8 @@
 ---
 applications:
--  command: bundle exec unicorn -p $PORT -c ./config/unicorn.rb
+-  name: ccapi-staging
+   command: bundle exec unicorn -p $PORT -c ./config/unicorn.rb
    memory: 1G
    services:
-   - s3-sb-ed-college-choice
+   - bservice
    - eservice

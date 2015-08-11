@@ -1,11 +1,18 @@
 .DS_Store
 log/**/*
+log/*.log
 tmp/**/*
 vendor/gems/*
 !vendor/gems/cache/
 .sass-cache/*
 db/*.db
 .*.sw*
+.env
+.*.env
+.cfignore
 
 # expect people to put their own data in /data
-data/*
+data
+
+# another commonly used data directory
+real-data

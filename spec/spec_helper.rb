@@ -1,11 +1,21 @@
-RACK_ENV = 'test' unless defined?(RACK_ENV)
-ENV['DATA_PATH'] = nil
+ENV['DATA_PATH']  = nil
+ENV['RACK_ENV'] ||= 'test'
+RACK_ENV          = ENV['RACK_ENV'] unless defined?(RACK_ENV)
 
-require File.expand_path(File.dirname(__FILE__) + "/../config/boot")
+#require File.expand_path(File.dirname(__FILE__) + "/../config/boot")
+require_relative '../config/env.rb'
 Dir[File.expand_path(File.dirname(__FILE__) + "/../app/helpers/**/*.rb")].each(&method(:require))
 
-RSpec.configure do |conf|
-  conf.include Rack::Test::Methods
+RSpec.configure do |config|
+  config.include Rack::Test::Methods
+
+  config.before(:type => :feature) do
+    # load the Padrino web app defined in app/app.rb
+    require_relative '../config/boot'
+  end
+  config.before do
+    ENV['DATA_PATH'] = nil
+  end
 end
 
 # You can use this method to custom specify a Rack app

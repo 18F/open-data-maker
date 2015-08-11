@@ -7,12 +7,18 @@ version: cities100-2010
 # then convertes to csv and removed " city" from after each city name
 index: city-data
 api: cities
-global_mapping:
-  USPS: state
-  NAME: name
-  POP10: population
-  INTPTLAT: location.lat
-  INTPTLONG: location.lon
+unique: ['name']
+dictionary:
+  state: USPS
+  name: NAME
+  population:
+    source: POP10
+    type: integer
+  location.lat: INTPTLAT
+  location.lon: INTPTLONG
+  land_area:
+    source: ALAND_SQMI
+    type: float
 
 files:
-  cities100.csv:
+  - name: cities100.csv

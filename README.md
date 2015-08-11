@@ -1,5 +1,3 @@
-
-
 # Open Data Maker
 [![Build Status](https://travis-ci.org/18F/open-data-maker.svg?branch=master)](https://travis-ci.org/18F/open-data-maker)
 
@@ -28,23 +26,27 @@ By default, data will be loaded from /sample-data
 
 * [cities100.csv](sample-data/cities100.csv) - dataset of 100 most populous cities in the US
 * [data.yaml](sample-data/data.yaml) - configuration for
-  * how columns are mapped to fields in json output
   * index name *city-data*
   * api endpoint name *cities*
+  * how columns are mapped to fields in json output
+  * data types
+  * unique columns *name*  
 
-When you run the app (after ```rake import```), you can query the dataset via json API, like: /cities?name=Chicago
+When you run the app, you can query the dataset via json API, like: /cities?name=Chicago
 
-To use your own data, you can set a different directory with
+To use your own data, you can set a different directory, for example:
 
 ```
 export DATA_PATH='./data'
 ```
 
 1. Put csv files into /data
-1. Import files from /data: ```rake import```
-   1.1 there can be multiple files (must end in .csv)
-   1.1 optional data.yaml file that specifies column -> field mapping, index and API endpoint
-1. api endpoint to get the data /api?name=value
+1. Import files from /data: ```rake import``` (or restart the app)
+   1. There can be multiple files (must end in .csv)
+   1. Optional [data.yaml](sample-data/data.yaml) file that specifies  index name, API endpoint, file list, and a dictionary of column -> field name mapping and types
+        1. Optionally import all the columns, not just ones specified in dictionary (see example: [import: all](spec/fixtures/import_with_options/data.yaml))
+        1. If data.yaml not provided, all fields and fields will be imported with folder or bucket name used as the API endpoint (name is 'slugified' with dashes replacing spaces)
+1. api endpoint to get the data /api=endpoint?field_or_column_name=value
 
 ## Help Wanted
 
@@ -59,3 +61,12 @@ Here's how it might look in the future:
 
 
 ![Download all the data or make choices to create a csv with a subset](/doc/csv-download.png)
+
+
+### Public domain
+
+This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
+
+> This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+>
+> All contributions to this project will be released under the CC0 dedication. By submitting a pull request, you are agreeing to comply with this waiver of copyright interest.

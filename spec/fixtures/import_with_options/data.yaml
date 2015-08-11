@@ -1,0 +1,20 @@
+version: fixture-import-options
+index: city-data
+api: cities
+options:
+  columns: all
+  limit_files: 1
+  limit_rows: 3
+
+dictionary:
+  state: USPS
+  name: NAME
+  population: POP10
+
+files:
+  - name: cities4.csv
+    add:
+      year: 2010
+  - name: more_cities.csv # this shouldn't get imported
+    add:
+      year: 1000

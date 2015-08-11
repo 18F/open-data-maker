@@ -1,0 +1,15 @@
+version: fixture-type-error
+index: expect-errors
+api: nothing
+
+dictionary:
+  state: USPS
+  name: NAME
+  population:
+    source: POP10
+    type: broken
+
+files:
+  - name: cities4.csv
+    add:
+      year: 2010
