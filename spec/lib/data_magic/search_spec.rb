@@ -33,6 +33,14 @@ describe "DataMagic #search" do
         expect(result).to eq(expected)
       end
 
+      it "can find a document with a set of values delimited by commas" do
+        result = DataMagic.search({name: "Paul,Marilyn"})
+        expected["total"] = 3
+        expect(result["results"]).to include({"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"})
+        expect(result["results"]).to include({"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"})
+        expect(result["results"]).to include({"name" => "Paul", "address" => "19 N Square", "city" => "Boston"})
+      end
+
       it "can return a single attribute" do
         result = DataMagic.search({city: "Springfield"}, fields:[:address])
         expected["results"] = [
