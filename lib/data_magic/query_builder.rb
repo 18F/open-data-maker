@@ -18,7 +18,7 @@ module DataMagic
       def generate_squery(params, config)
         squery = Stretchy.query(type: 'document')
         squery = search_location(squery, params)
-        squery = search_boolean_conditions(squery, params)
+        squery = search_fields_and_ranges(squery, params)
       end
 
       def get_restrict_fields(options)
@@ -30,33 +30,32 @@ module DataMagic
         return { key => { order: value } }
       end
 
-      def search_boolean_conditions(squery, params)
+      RANGE_OPS = {
+        gt:  :min,
+        gte: :min,
+        lt:  :max,
+        lte: :max
+      }
+
+      def search_fields_and_ranges(squery, params)
+        ranges = {}
         params.each do |field, value|
-          match = /(.*)__(gt|lt|gte|lte)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
-          squery = if match
-            var_name, operator = match.captures
-            send(operator, squery, var_name, value)
+          match = /([\w-]*)__(gt|lt|gte|lte)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
+          if match
+            var_name, operator = match.captures.map(&:to_sym)
+            ranges[var_name] = {} if !ranges.has_key?(var_name)
+            ranges[var_name][RANGE_OPS[operator]] = value
+            if operator == :gt or operator == :lt
+              ex_sym = ("exclusive_" + RANGE_OPS[operator].to_s).to_sym
+              ranges[var_name][ex_sym] = true
+            end
           else
-            squery.where(field => value)
+            squery = squery.where(field => value)
           end
         end
+
+        ranges.each {|var_name, range_args| squery = squery.range(var_name, range_args) }
         squery
-      end
-
-      def gt(query, var_name, value)
-        query.range(var_name, exclusive_min: value)
-      end
-
-      def lt(query, var_name, value)
-        query.range(var_name, exclusive_max: value)
-      end
-
-      def gte(query, var_name, value)
-        query.range(var_name, min: value)
-      end
-
-      def lte(query, var_name, value)
-        query.range(var_name, max: value)
       end
 
       # Handles location (currently only uses SFO location)

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'data_magic'
+require 'hashie'
 
 describe DataMagic::QueryBuilder do
 
@@ -23,10 +24,10 @@ describe DataMagic::QueryBuilder do
 
   shared_examples "builds a query" do
 
-    it "builds the query section" do
+    it "with a query section" do
       expect(query_hash[:query]).to eql expected_query
     end
-    it "builds the query metadata" do
+    it "with query metadata" do
       expect(query_hash.reject {|k,v| k == :query }).to eql expected_meta
     end
   end
@@ -45,17 +46,14 @@ describe DataMagic::QueryBuilder do
 
   describe "can search within a location" do
     subject { { zip: "94132", distance: "30mi" } }
-    let(:expected_query) do
-      { filtered:
-        { query: {match_all: {}},
-          filter: {
-            geo_distance: {
-              distance: "30mi",
-              "location" => { lat: 37.615223, lon: -122.389977 }
-            }
-          }
-        }
-      }
+    let(:expected_query) do {
+      filtered: {
+        query: { match_all: {} },
+        filter: {
+          geo_distance: {
+            distance: "30mi",
+            "location" => { lat: 37.615223, lon: -122.389977 }
+      } } } }
     end
     it_correctly "builds a query"
   end
@@ -75,4 +73,72 @@ describe DataMagic::QueryBuilder do
     it_correctly "builds a query"
   end
 
+  describe "can search in an inclusive numeric range" do
+    context "that is open-ended" do
+      subject { { age__gte: 10 } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: {
+            range: {
+              age: {
+                gte: 10
+        } } } } }
+      end
+      it_correctly "builds a query"
+    end
+
+    context "that is closed" do
+      subject { { age__gte: 10, age__lte: 20  } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: { range: { age: { gte: 10, lte: 20 } } }
+        }
+      }
+      end
+      it_correctly "builds a query"
+    end
+  end
+
+  describe "can search in an exclusive numeric range" do
+    context "that is open-ended" do
+      subject { { age__gt: 10 } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: { range: { age: { gt: 10 } } }
+        }
+      }
+      end
+      it_correctly "builds a query"
+    end
+
+    context "that is closed" do
+      subject { { age__gt: 10, age__lt: 20  } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: { range: { age: { gt: 10, lt: 20 } } }
+        }
+      }
+      end
+      it_correctly "builds a query"
+    end
+  end
+
+  describe "can search with multiple ranges" do
+    subject { { age__gt: 10, age__lt: 20, size__lte: 15  } }
+    let(:expected_query) do {
+      filtered: {
+        query: { match_all: {} },
+        filter: {
+          and: [
+            { range: { age: { gt: 10, lt: 20 } } },
+            { range: { size:  { lte: 15 } } }
+          ]
+      } } }
+    end
+    it_correctly "builds a query"
+  end
 end
