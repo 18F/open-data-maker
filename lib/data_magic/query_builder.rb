@@ -3,9 +3,11 @@ module DataMagic
     class << self
       # Creates query from parameters passed into endpoint
       def from_params(params, options, config)
+        per_page = params.delete(:per_page) || config.page_size
+        page = params.delete(:page) || 0
         query_hash = {
-          from:   params.delete(:page) || 0,
-          size:   params.delete(:per_page) || config.page_size,
+          from:   page * per_page,
+          size:   per_page
         }
         query_hash[:query] = generate_squery(params, config).to_search
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?

@@ -67,7 +67,7 @@ describe DataMagic::QueryBuilder do
   describe "can handle pagination" do
     subject { { page: 3, per_page: 11 } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 3, size: 11 } }
+    let(:expected_meta)  { { from: 33, size: 11 } }
     it_correctly "builds a query"
   end
 
