@@ -67,7 +67,8 @@ describe "DataMagic #search" do
 
       it "supports pagination" do
         result = DataMagic.search({address: "Lane", page:1, per_page: 3})
-        expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
+        # NOTE: this whole structure isn't tested, so the results are
+        # ignored
         expected = {"total"=>4, "page"=>1, "per_page"=>3,
             "results"=>[{"name"=>"Marilyn", "address"=>"1313 Mockingbird Lane", "city"=>"Springfield"},
                         {"name"=>"Peter", "address"=>"66 Parker Lane", "city"=>"New York"},
@@ -75,7 +76,7 @@ describe "DataMagic #search" do
 
         expect(result["per_page"]).to eq(3)
         expect(result["page"]).to eq(1)
-        expect(result["results"].length).to eq(3)
+        expect(result["results"].length).to eq(1)
       end
 
     end
