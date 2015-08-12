@@ -40,14 +40,20 @@ module DataMagic
       def search_fields_and_ranges(squery, params)
         ranges = {}
         params.each do |field, value|
-          match = /([\w-]*)__(gt|lt|gte|lte)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
+          match = /([-\w\.]*)__(gt|lt|gte|lte|ne)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
           if match
             var_name, operator = match.captures.map(&:to_sym)
-            ranges[var_name] = {} if !ranges.has_key?(var_name)
-            ranges[var_name][RANGE_OPS[operator]] = value
-            if operator == :gt or operator == :lt
-              ex_sym = ("exclusive_" + RANGE_OPS[operator].to_s).to_sym
-              ranges[var_name][ex_sym] = true
+            if operator == :ne
+              squery = squery.where.not(var_name => value)
+            else
+              ranges[var_name] = {} if !ranges.has_key?(var_name)
+              # NOTE: we assume that range queries will be numeric, and not
+              # dates (for now)
+              ranges[var_name][RANGE_OPS[operator]] = value.to_f
+              if operator == :gt or operator == :lt
+                ex_sym = ("exclusive_" + RANGE_OPS[operator].to_s).to_sym
+                ranges[var_name][ex_sym] = true
+              end
             end
           else
             squery = squery.where(field => value)
