@@ -107,6 +107,101 @@ describe DataMagic::QueryBuilder do
     end
   end
 
+
+  describe "can search using the __range operator" do
+    context "that is open-ended (left-hand side)" do
+      subject { { age__range: '10..' } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: {
+            or: [
+              {
+                range: {
+                  age: {
+                    gte: 10
+                  }
+                }
+              }
+            ]
+        } } }
+      end
+      it_correctly "builds a query"
+    end
+
+    context "that is open-ended (right-hand side)" do
+      subject { { age__range: '..10' } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: {
+            or: [
+              {
+                range: {
+                  age: {
+                    lte: 10
+                  }
+                }
+              }
+            ]
+        } } }
+      end
+      it_correctly "builds a query"
+    end
+
+    context "that is closed" do
+      subject { { age__range: '10..20' } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: {
+            or: [
+              {
+                range: {
+                  age: {
+                    gte: 10,
+                    lte: 20
+                  }
+                }
+              }
+            ]
+        } } }
+      end
+      it_correctly "builds a query"
+    end
+
+    context "that has multiple ranges" do
+      subject { { age__range: '10..20,30..40' } }
+      let(:expected_query) do {
+        filtered: {
+          query: { match_all: {} },
+          filter: {
+            or: [
+              {
+                range: {
+                  age: {
+                    gte: 10,
+                    lte: 20
+                  }
+                }
+              },
+              {
+                range: {
+                  age: {
+                    gte: 30,
+                    lte: 40
+                  }
+                }
+              }
+            ]
+        } } }
+      end
+      it_correctly "builds a query"
+    end
+
+  end
+
+
   describe 'converts values to the correct type' do
     subject { { population__gte: '1000' } }
     let(:expected_query) do {

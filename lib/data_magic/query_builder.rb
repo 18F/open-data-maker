@@ -39,10 +39,14 @@ module DataMagic
         lte: :max
       }
 
+      def to_number(value)
+        value =~ /\./ ? value.to_f : value.to_i
+      end
+
       def search_fields_and_ranges(squery, params)
         ranges = {}
         params.each do |field, value|
-          match = /([-\w\.]*)__(gt|lt|gte|lte|ne)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
+          match = /(.+)__(gt|lt|gte|lte|ne)\z/.match(field)  #regex captures special boolean conditions >, >=, <, <=
           if match
             var_name, operator = match.captures.map(&:to_sym)
             if operator == :ne
@@ -51,12 +55,28 @@ module DataMagic
               ranges[var_name] = {} if !ranges.has_key?(var_name)
               # NOTE: we assume that range queries will be numeric, and not
               # dates (for now)
-              ranges[var_name][RANGE_OPS[operator]] = value =~ /\./ ? value.to_f : value.to_i
+              ranges[var_name][RANGE_OPS[operator]] = to_number(value)
               if operator == :gt or operator == :lt
                 ex_sym = ("exclusive_" + RANGE_OPS[operator].to_s).to_sym
                 ranges[var_name][ex_sym] = true
               end
             end
+          elsif match = /(.+)__range\z/.match(field)
+            var_name, _ = match.captures.map(&:to_sym)
+            clauses = value.split(',').map do |range|
+              min, max = range.split('..')
+              values = {}
+              values[:gte] = to_number(min) if !min.empty?
+              values[:lte] = to_number(max) if max
+              {
+                range: {
+                  var_name => values
+                }
+              }
+            end
+            squery = squery.filter({
+              or: clauses
+            })
           else
             squery = squery.where(field => value)
           end
@@ -81,4 +101,5 @@ module DataMagic
     end
 
   end
+
 end
