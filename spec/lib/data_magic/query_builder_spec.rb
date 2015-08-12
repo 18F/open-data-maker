@@ -112,7 +112,7 @@ describe DataMagic::QueryBuilder do
     let(:expected_query) do {
       filtered: {
         query: { match_all: {} },
-        filter: { range: { population: { gte: 1000.0 } } }
+        filter: { range: { population: { gte: 1000 } } }
       }
     }
     end

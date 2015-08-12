@@ -51,7 +51,7 @@ module DataMagic
               ranges[var_name] = {} if !ranges.has_key?(var_name)
               # NOTE: we assume that range queries will be numeric, and not
               # dates (for now)
-              ranges[var_name][RANGE_OPS[operator]] = value.to_f
+              ranges[var_name][RANGE_OPS[operator]] = value =~ /\./ ? value.to_f : value.to_i
               if operator == :gt or operator == :lt
                 ex_sym = ("exclusive_" + RANGE_OPS[operator].to_s).to_sym
                 ranges[var_name][ex_sym] = true
