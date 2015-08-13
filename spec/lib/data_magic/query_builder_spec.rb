@@ -144,13 +144,19 @@ describe DataMagic::QueryBuilder do
     it_correctly "builds a query"
   end
 
-  describe 'negates values with __ne' do
-    subject { { state__ne: 'CA' } }
+  describe 'negates values' do
     let(:expected_query) do {
       bool: { must_not: [ { match: { 'state' => { query: 'CA' } } } ] }
     }
     end
-    it_correctly "builds a query"
+    context 'with "__ne"' do
+      subject { { state__ne: 'CA' } }
+      it_correctly "builds a query"
+    end
+    context 'with "__not"' do
+      subject { { state__not: 'CA' } }
+      it_correctly "builds a query"
+    end
   end
 
   describe 'allows matching and negation of the different fields' do
