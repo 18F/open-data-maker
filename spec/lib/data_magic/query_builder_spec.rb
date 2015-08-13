@@ -79,35 +79,6 @@ describe DataMagic::QueryBuilder do
     it_correctly "builds a query"
   end
 
-  describe "can search in an inclusive numeric range" do
-    context "that is open-ended" do
-      subject { { age__gte: 10 } }
-      let(:expected_query) do {
-        filtered: {
-          query: { match_all: {} },
-          filter: {
-            range: {
-              age: {
-                gte: 10
-        } } } } }
-      end
-      it_correctly "builds a query"
-    end
-
-    context "that is closed" do
-      subject { { age__gte: 10, age__lte: 20  } }
-      let(:expected_query) do {
-        filtered: {
-          query: { match_all: {} },
-          filter: { range: { age: { gte: 10, lte: 20 } } }
-        }
-      }
-      end
-      it_correctly "builds a query"
-    end
-  end
-
-
   describe "can search using the __range operator" do
     context "that is open-ended (left-hand side)" do
       subject { { age__range: '10..' } }
@@ -115,15 +86,7 @@ describe DataMagic::QueryBuilder do
         filtered: {
           query: { match_all: {} },
           filter: {
-            or: [
-              {
-                range: {
-                  age: {
-                    gte: 10
-                  }
-                }
-              }
-            ]
+            or: [ { range: { age: { gte: 10 } } } ]
         } } }
       end
       it_correctly "builds a query"
@@ -135,15 +98,7 @@ describe DataMagic::QueryBuilder do
         filtered: {
           query: { match_all: {} },
           filter: {
-            or: [
-              {
-                range: {
-                  age: {
-                    lte: 10
-                  }
-                }
-              }
-            ]
+            or: [ { range: { age: { lte: 10 } } } ]
         } } }
       end
       it_correctly "builds a query"
@@ -155,16 +110,7 @@ describe DataMagic::QueryBuilder do
         filtered: {
           query: { match_all: {} },
           filter: {
-            or: [
-              {
-                range: {
-                  age: {
-                    gte: 10,
-                    lte: 20
-                  }
-                }
-              }
-            ]
+            or: [ { range: { age: { gte: 10, lte: 20 } } } ]
         } } }
       end
       it_correctly "builds a query"
@@ -177,37 +123,21 @@ describe DataMagic::QueryBuilder do
           query: { match_all: {} },
           filter: {
             or: [
-              {
-                range: {
-                  age: {
-                    gte: 10,
-                    lte: 20
-                  }
-                }
-              },
-              {
-                range: {
-                  age: {
-                    gte: 30,
-                    lte: 40
-                  }
-                }
-              }
+              { range: { age: { gte: 10, lte: 20 } } },
+              { range: { age: { gte: 30, lte: 40 } } }
             ]
         } } }
       end
       it_correctly "builds a query"
     end
-
   end
 
-
   describe 'converts values to the correct type' do
-    subject { { population__gte: '1000' } }
+    subject { { population__range: '1000..' } }
     let(:expected_query) do {
       filtered: {
         query: { match_all: {} },
-        filter: { range: { population: { gte: 1000 } } }
+        filter: { or: [ { range: { population: { gte: 1000 } } } ] }
       }
     }
     end
@@ -231,59 +161,6 @@ describe DataMagic::QueryBuilder do
         must_not: [ { match: { 'state' => { query: 'CA' } } } ]
       }
     }
-    end
-    it_correctly "builds a query"
-  end
-
-  describe "can search in an exclusive numeric range" do
-    context "that is open-ended" do
-      subject { { age__gt: 10 } }
-      let(:expected_query) do {
-        filtered: {
-          query: { match_all: {} },
-          filter: { range: { age: { gt: 10 } } }
-        }
-      }
-      end
-      it_correctly "builds a query"
-    end
-
-    context "that is closed" do
-      subject { { age__gt: 10, age__lt: 20  } }
-      let(:expected_query) do {
-        filtered: {
-          query: { match_all: {} },
-          filter: { range: { age: { gt: 10, lt: 20 } } }
-        }
-      }
-      end
-      it_correctly "builds a query"
-    end
-
-    context "that recognizes nested fields" do
-      subject { { 'person.age__gt': 10 } }
-      let(:expected_query) do {
-        filtered: {
-          query: { match_all: {} },
-          filter: { range: { 'person.age': { gt: 10 } } }
-        }
-      }
-      end
-      it_correctly "builds a query"
-    end
-  end
-
-  describe "can search with multiple ranges" do
-    subject { { age__gt: 10, age__lt: 20, size__lte: 15  } }
-    let(:expected_query) do {
-      filtered: {
-        query: { match_all: {} },
-        filter: {
-          and: [
-            { range: { age: { gt: 10, lt: 20 } } },
-            { range: { size:  { lte: 15 } } }
-          ]
-      } } }
     end
     it_correctly "builds a query"
   end
