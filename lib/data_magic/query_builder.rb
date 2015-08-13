@@ -38,9 +38,9 @@ module DataMagic
 
       def search_fields_and_ranges(squery, params)
         params.each do |field, value|
-          if match = /(.+)__(range|ne)\z/.match(field)
+          if match = /(.+)__(range|ne|not)\z/.match(field)
             var_name, operator = match.captures.map(&:to_sym)
-            if operator == :ne  # field negation
+            if operator == :ne or operator == :not  # field negation
               squery = squery.where.not(var_name => value)
             else  # field range
               squery = squery.filter({
