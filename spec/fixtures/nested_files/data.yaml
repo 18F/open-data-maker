@@ -21,7 +21,7 @@ dictionary:
   earnings.percent_gt_25k:
     source: gt_25k_2006_p6
     description: Share of students earning over $25,000/year
-    type: integer
+    type: float
 
 
 files:

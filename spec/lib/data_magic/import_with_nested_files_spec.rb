@@ -37,7 +37,6 @@ describe "unique key(s)" do
     DataMagic.config = DataMagic::Config.new
     DataMagic.import_with_dictionary
     result = DataMagic.search({'stats.year'=> '2013'})
-
   end
 
 end

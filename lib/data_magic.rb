@@ -11,6 +11,7 @@ require 'logger'
 
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
+require_relative 'data_magic/query_builder'
 
 SafeYAML::OPTIONS[:default_mode] = :safe
 
@@ -59,55 +60,24 @@ module DataMagic
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
-    options[:fields] ||= []
-    fields = options[:fields].map { |field| field.to_s }
+    query_body = QueryBuilder.from_params(terms, options, config)
     index_name = index_name_from_options(options)
     logger.info "search terms:#{terms.inspect}"
-    squery = Stretchy.query
-
-    distance = terms[:distance]
-    if distance && !distance.empty?
-      location = { lat: 37.615223, lon:-122.389977 } #sfo
-      squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
-      terms.delete(:distance)
-      terms.delete(:zip)
-    end
-
-    page = terms[:page] || 0
-    per_page = terms[:per_page] || config.page_size
-
-    terms.delete(:page)
-    terms.delete(:per_page)
-
-    # logger.info "--> terms: #{terms.inspect}"
-    squery = squery.where(terms) unless terms.empty?
 
     full_query = {
       index: index_name,
       type: 'document',
-      body: {
-        from: page,
-        size: per_page,
-        query: squery.to_search
-      }
+      body: query_body
     }
-    if not fields.empty?
-      full_query[:body][:fields] = fields
-    end
 
-    if options[:sort]
-      key, value = options[:sort].split(':')
-      full_query[:body][:sort] = {key => {order:value}}
-    end
-
-    logger.info "===========> full_query:#{full_query.inspect}"
+    logger.info "FULL_QUERY: #{full_query.inspect}"
 
     result = client.search full_query
     logger.info "result: #{result.inspect}"
     hits = result["hits"]
     total = hits["total"]
     results = []
-    if fields.empty?
+    unless query_body.has_key? :fields
       # we're getting the whole document and we can find in _source
       results = hits["hits"].map {|hit| hit["_source"]}
     else
@@ -127,8 +97,8 @@ module DataMagic
     # assemble a simpler json document to return
     {
       "total" => total,
-      "page" => page,
-      "per_page" => per_page,
+      "page" => query_body[:from] / query_body[:size],
+      "per_page" => query_body[:size],
       "results" => 	results
     }
   end
