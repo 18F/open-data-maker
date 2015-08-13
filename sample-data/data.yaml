@@ -9,12 +9,6 @@ index: city-data
 api: cities
 unique: ['name']
 
-examples:
-- link: cities?state=CA
-  name: Cities in California
-- link: cities?population__range=1000000..
-  name: Cities with 1 million people or more
-
 dictionary:
   state: USPS
   name: NAME
