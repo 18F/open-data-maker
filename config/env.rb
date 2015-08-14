@@ -8,6 +8,7 @@ PADRINO_ROOT      = File.expand_path('../..', __FILE__) unless defined?(PADRINO_
 # Load our dependencies
 require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
+require 'newrelic_rpm'
 Bundler.require(:default, RACK_ENV)
 
 # do this early so we can log during startup
