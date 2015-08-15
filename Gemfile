@@ -46,6 +46,7 @@ gem 'padrino', '0.12.5'
 
 gem 'pry', :group => 'development'
 gem 'pry-byebug', :group => 'development'
+gem 'newrelic_rpm'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
