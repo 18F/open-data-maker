@@ -187,39 +187,58 @@ describe 'api', type: 'feature' do
 		after do
 			DataMagic.destroy
 		end
-
+		let(:expected) {
+			{
+				"total" => 1,
+				"page"  => 0,
+				"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+				"results" => [{"id"=>"9", "city"=>"Tanner", "state"=>"AL",
+					"name"=>"Inquisitive Farm College",
+					"2013"=>{"earnings"=>
+										{"6_yrs_after_entry"=>
+												{"percent_gt_25k"=>0.19, "median"=>34183}},
+									 "sat_average"=>"971"},
+					"2012"=>{"earnings"=>
+										{"6_yrs_after_entry"=>
+												{"percent_gt_25k"=>0.83, "median"=>42150}},
+					"sat_average"=>"1292"}}]
+				}
+		}
 		it "can search" do
 			get '/school?name=Inquisitive Farm'
 			expect(last_response).to be_ok
 			result = JSON.parse(last_response.body)
-			expect(result["total"]).to eq(1)
-			first = result["results"].first
-			expect(first["name"]).to eq("Inquisitive Farm College")
+			expect(result).to eq(expected)
 		end
 		it "can search for nested number" do
-			get '/school?2013.earnings.median=26318'
+			get '/school?2013.earnings.6_yrs_after_entry.median=34183'
 			expect(last_response).to be_ok
 			result = JSON.parse(last_response.body)
-			expect(result["total"]).to eq(1)
-			first = result["results"].first
-			expect(first['2013']['earnings']).to eq({"percent_gt_25k"=>0.53, "median"=>26318})
+			expect(result).to eq(expected)
+		end
+
+		it "can search for nested float" do
+			get '/school?earnings.6_yrs_after_entry.percent_gt_25k=0.19'
+			expect(last_response).to be_ok
+			result = JSON.parse(last_response.body)
+			expect(result).to eq(expected)
 		end
 
 		it "can search for range" do
-			get '/school?2013.earnings.median__range=49310..'
+			get '/school?2013.earnings.6_yrs_after_entry.median__range=49310..'
 			expect(last_response).to be_ok
 			result = JSON.parse(last_response.body)
-			expected = {
-					"total" => 1,
-					"page"  => 0,
-					"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-					"results" => [{"id"=>"8", "city"=>"Birmingham", "state"=>"AL",
+			expected["results"] = [
+				{"id"=>"8", "city"=>"Birmingham", "state"=>"AL",
 						"name"=>"Condemned Balloon Institute",
-						"2013"=>{"earnings"=>{"percent_gt_25k"=>0.59, "median"=>59759}, 
+						"2013"=>{"earnings"=>
+											{"6_yrs_after_entry"=>
+												{"percent_gt_25k"=>0.59, "median"=>59759}},
 									   "sat_average"=>"616"},
-						"2012"=>{"earnings"=>{"percent_gt_25k"=>0.97, "median"=>30063},
+						"2012"=>{"earnings"=>
+											{"6_yrs_after_entry"=>
+													{"percent_gt_25k"=>0.97, "median"=>30063}},
 						         "sat_average"=>"1420"}}]
-			}
 			expect(result).to eq(expected)
 		end
 	end

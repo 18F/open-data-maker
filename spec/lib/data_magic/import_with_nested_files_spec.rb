@@ -36,10 +36,10 @@ describe "unique key(s)" do
   it "can search on a nested field" do
     DataMagic.config = DataMagic::Config.new
     DataMagic.import_with_dictionary
-    result = DataMagic.search({'2013.earnings.median' => 26318})
+    result = DataMagic.search({'2013.earnings.6_yrs_after_entry.median' => 26318})
     expect(result['total']).to eq(1)
     first = result['results'].first
-    expect(first['2013']['earnings']).to eq({"percent_gt_25k"=>0.53, "median"=>26318})
+    expect(first['2013']['earnings']['6_yrs_after_entry']).to eq({"percent_gt_25k"=>0.53, "median"=>26318})
   end
 
 end
