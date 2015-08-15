@@ -205,4 +205,37 @@ describe 'api', type: 'feature' do
 			expect(first['2013']['earnings']).to eq({"percent_gt_25k"=>0.53, "median"=>26318})
 		end
 	end
+
+	context "with alternate nested data" do
+		before do
+			DataMagic.destroy
+			ENV['DATA_PATH'] = './spec/fixtures/nested2'
+			DataMagic.config = DataMagic::Config.new
+			DataMagic.import_with_dictionary
+		end
+		after do
+			DataMagic.destroy
+		end
+		let(:expected) {
+			{
+				"total" => 1,
+				"page"  => 0,
+				"per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+				"results" => [{"id"=>9, "school"=>{"city"=>"Tanner", "state"=>"AL", "zip"=>35671, "name"=>"Inquisitive Farm College"}}]
+				}
+		}
+		it "can search for nested name" do
+			get '/fakeschool?school.name=Inquisitive Farm'
+			expect(last_response).to be_ok
+			result = JSON.parse(last_response.body)
+			expect(result).to eq(expected)
+		end
+		it "can search for nested number" do
+			get '/fakeschool?school.zip=35671'
+			expect(last_response).to be_ok
+			result = JSON.parse(last_response.body)
+			expect(result).to eq(expected)
+		end
+	end
+
 end
