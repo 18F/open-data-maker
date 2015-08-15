@@ -29,6 +29,7 @@ module DataMagic
   # parse a row from a csv file, returns a nested document
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
+    #logger.info "fields #{fields.inspect}"
     row = map_field_names(row, fields, options) unless fields.empty?
     map_field_types(row, config.field_types) unless config.field_types.empty?
     row = row.merge(additional) if additional
@@ -194,8 +195,8 @@ private
     mapped = {}
     row.each do |key, value|
       raise ArgumentError, "column header missing for: #{value}" if key.nil?
-      #logger.info "key: #{key.inspect}, value:#{value.inspect}"
       new_key = new_fields[key.to_sym] || new_fields[key.to_s]
+      #logger.info "key: #{key.inspect}, new_key:#{new_key.inspect}"
       if new_key
         value = value.to_f if new_key.include? "location"
         mapped[new_key] = value

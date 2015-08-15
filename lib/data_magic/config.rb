@@ -102,7 +102,9 @@ module DataMagic
       if @field_types.nil?
         @field_types = {}
         dictionary.each do |field_name, info|
-          type = info['type']
+          type = info['type'] || "string"
+          type = nil if field_name == 'location.lat' || field_name == 'location.lon'
+          logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
         end
       end
@@ -249,7 +251,7 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @data = load_yaml(directory_path)
         @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect[0..255]}"
+        logger.debug "config: #{@data.inspect[0..600]}"
         @data['index'] ||= clean_index(@data_path)
         endpoint = @data['api'] || clean_index(@data_path)
         @dictionary = @data['dictionary'] || {}
