@@ -10,8 +10,7 @@ module DataMagic
     if nest_options
       #logger.info "nest: #{nest_options.to_yaml}"
       #logger.info "add to document: #{document.inspect[0..255]}"
-      key = document[nest_options['key']]
-      #logger.info "year => #{key}"
+      key = nest_options['key']
       new_doc[key] = {}
 
       id = document['id']
@@ -31,7 +30,7 @@ module DataMagic
     row = row.to_hash
     #logger.info "fields #{fields.inspect}"
     row = map_field_names(row, fields, options) unless fields.empty?
-    map_field_types(row, config.field_types) unless config.field_types.empty?
+    map_field_types(row, config.column_field_types) unless config.column_field_types.empty?
     row = row.merge(additional) if additional
     document = NestedHash.new.add(row)
     document = parse_nested(document, options) if options[:nest]

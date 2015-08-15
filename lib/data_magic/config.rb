@@ -3,7 +3,7 @@ require_relative '../data_magic.rb'
 module DataMagic
   require_relative 'example.rb'
   class Config
-    attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints
+    attr_reader :data_path, :data, :dictionary, :files, :file_config, :s3, :api_endpoints
     attr_accessor :page_size
 
     def initialize(options = {})
@@ -18,7 +18,11 @@ module DataMagic
       if @data_path.nil? or @data_path.empty?
         @data_path = DEFAULT_PATH
       end
-      load_datayaml
+      if options[:load_datayaml] == false
+        @data = {}
+      else
+        load_datayaml
+      end
     end
 
     def examples
@@ -98,10 +102,78 @@ module DataMagic
       end
     end
 
+    # look through the files configuration
+    # pull out all the fields that are specified in
+    # only: [one, two, three]
+    # this means we should only take these fields from that file
+    def only_field_list_orig
+      only = file_config.select { |f| f[:only] }
+      only = only.inject([]) {|all, f| all += f[:only] }
+    end
+
+
+    # look through the files configuration
+    # pull out all the fields that are specified in
+    # only: [one, two, three]
+    # this means we should only take these fields from that file
+    def only_field_list(only_names, all_fields)
+      selected = {}
+      only_names.each do |name|
+        # select the exact match or all the fields with prefix "whatever."
+        selected.merge!(all_fields.select { |k,v| name == k || name =~ /#{k}\..*/ })
+      end
+      selected
+    end
+
+    # return new fields Hash, with fields that will turn into the nested hash
+    def make_nested(nest_config, all_fields)
+      new_fields = {}
+      selected = []
+      nest_config['contents'].each do |key_name|
+        # select the exact match or all the fields with prefix "whatever."
+        selected += all_fields.keys.select { |name| name == key_name || name =~ /#{key_name}\..*/ }
+      end
+      nested_prefix = nest_config['key']
+      selected.each do |name|
+        new_fields["#{nested_prefix}.#{name}"] = all_fields[name]
+      end
+      new_fields
+    end
+
+    def file_config
+      @data.fetch('files', [])
+    end
+
+    # returns a hash that lets us know the types of what we read from csv
+    # key: the field names which map directly to csv columns
+    # value: type
+    def column_field_types
+      if @column_types.nil?
+        @column_types = {}
+        dictionary.each do |field_name, info|
+          type = info['type']
+          @column_types[field_name] = type unless type.nil?
+        end
+      end
+      @column_types
+    end
+
+    # this is a mapping of the fields that end up in the json doc
+    # to their types, which might include nested documents
+    # but at this stage, field names use dot syntax for nesting
     def field_types
       if @field_types.nil?
         @field_types = {}
-        dictionary.each do |field_name, info|
+        fields = {}
+        file_config.each do |f|
+          if f.keys == ['name']   # only filename, use all the columns
+            fields.merge!(dictionary)
+          else
+            fields.merge!(only_field_list(f['only'], dictionary)) if f['only']
+            fields.merge!(make_nested(f['nest'], dictionary)) if f['nest']
+          end
+        end
+        fields.each do |field_name, info|
           type = info['type'] || "string"
           type = nil if field_name == 'location.lat' || field_name == 'location.lon'
           #logger.info "field #{field_name}: #{type.inspect}"

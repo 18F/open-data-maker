@@ -218,7 +218,7 @@ describe 'api', type: 'feature' do
 		end
 
 		it "can search for nested float" do
-			get '/school?earnings.6_yrs_after_entry.percent_gt_25k=0.19'
+			get '/school?2013.earnings.6_yrs_after_entry.percent_gt_25k=0.19'
 			expect(last_response).to be_ok
 			result = JSON.parse(last_response.body)
 			expect(result).to eq(expected)

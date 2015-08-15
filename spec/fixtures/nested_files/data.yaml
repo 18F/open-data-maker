@@ -27,14 +27,10 @@ files:
   - name: school-data.csv
     only: [id, name, city, state]
   - name: school2013.csv
-    add:
-      year: 2013
     nest:
-      key: year
+      key: 2013
       contents: [earnings, sat_average]
   - name: school2012.csv
-    add:
-      year: 2012
     nest:
-      key: year
+      key: 2012
       contents: [earnings, sat_average]

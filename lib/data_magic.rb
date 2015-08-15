@@ -15,6 +15,11 @@ require_relative 'data_magic/query_builder'
 
 SafeYAML::OPTIONS[:default_mode] = :safe
 
+class IndifferentHash < Hash
+  include Hashie::Extensions::MergeInitializer
+  include Hashie::Extensions::IndifferentAccess
+end
+
 module DataMagic
 
   class << self
@@ -22,11 +27,6 @@ module DataMagic
     def logger
       Config.logger
     end
-  end
-
-  class IndifferentHash < Hash
-    include Hashie::Extensions::MergeInitializer
-    include Hashie::Extensions::IndifferentAccess
   end
 
   DEFAULT_PAGE_SIZE = 20
@@ -107,8 +107,10 @@ module DataMagic
     def self.nested_object_type(hash)
       hash.each do |key, value|
        if value.is_a?(Hash) && value[:type].nil?  # things are nested under this
-          value[:path] = "full"
-          value[:type] = "object"
+          hash[key] = {
+            path: "full", type: "object",
+            properties: value
+          }
           nested_object_type(value)
         end
       end
