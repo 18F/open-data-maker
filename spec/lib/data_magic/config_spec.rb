@@ -94,6 +94,10 @@ describe DataMagic::Config do
           "general" => {
             "title" => "General",
             "description" => "general information about the city, including standard identifiers"
+          },
+          "geographic" => {
+            "title" => "Geographic",
+            "description" => "geographic characteristics of the land and water"
           }
         }
       }
