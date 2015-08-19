@@ -2,11 +2,11 @@ require 'spec_helper'
 
 describe 'DataMagic::Config #field_types' do
   let(:config) { DataMagic::Config.new(load_datayaml: false) }
+
   it "returns empty if dictionary is empty" do
     allow(config).to receive(:file_config).and_return([{'name' => 'one.csv'}])
     allow(config).to receive(:dictionary).and_return({})
     expect(config.field_types).to eq({})
-
   end
 
   context "when no type is given" do
@@ -16,21 +16,21 @@ describe 'DataMagic::Config #field_types' do
           'name' => {source:'NAME_COLUMN'}
       })
     end
+
     it "defaults to string" do
       expect(config.field_types).to eq({
           'name' => 'string'
       })
     end
   end
+
   it "supports integers" do
     allow(config).to receive(:file_config).and_return([{'name' => 'one.csv'}])
     allow(config).to receive(:dictionary).and_return(
       IndifferentHash.new count:
         {source:'COUNT_COLUMN', type: 'integer'}
     )
-    expect(config.field_types).to eq({
-        'count' => 'integer'
-    })
+    expect(config.field_types).to eq({'count' => 'integer'})
   end
 
   context "with float type" do
@@ -40,24 +40,20 @@ describe 'DataMagic::Config #field_types' do
         IndifferentHash.new percent:
            {source:'PERCENT_COLUMN', type: 'float'}
       )
-      expect(config.field_types).to eq({
-          'percent' => 'float'
-      })
+      expect(config.field_types).to eq({'percent' => 'float'})
     end
+
     it "can be excluded" do
       allow(config).to receive(:dictionary).and_return(
         IndifferentHash.new id: {source:'ID', type: 'integer'},
           percent: {source:'PERCENT', type: 'float'}
       )
       allow(config).to receive(:file_config).and_return([
-        IndifferentHash.new({name:'one.csv',
-            only: ['id']})
+        IndifferentHash.new({ name:'one.csv', only: ['id'] })
       ])
-      expect(config.field_types).to eq({
-          'id' => 'integer'
-      })
-
+      expect(config.field_types).to eq({'id' => 'integer'})
     end
+
     it "can be nested" do
       allow(config).to receive(:dictionary).and_return(
         IndifferentHash.new id: {source:'ID', type: 'integer'},
@@ -73,23 +69,16 @@ describe 'DataMagic::Config #field_types' do
           'id' => 'integer',
           '2012.percent' => 'float'
       })
-
     end
-
-
   end
 
   it "supports special case for location fields as nil" do
+    # special case for location in create_index
     allow(config).to receive(:dictionary).and_return(
       IndifferentHash.new 'location.lat': {source:'LAT_COLUMN'},
                           'location.lon': {source:'LON_COLUMN'}
 
     )
-    expect(config.field_types).to eq({
-      # special case for location in create_index
-    })
+    expect(config.field_types).to eq({})
   end
-
-
-
 end

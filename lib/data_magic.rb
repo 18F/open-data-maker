@@ -73,7 +73,7 @@ module DataMagic
     logger.info "FULL_QUERY: #{full_query.inspect}"
 
     result = client.search full_query
-    logger.info "result: #{result.inspect}"
+    logger.info "result: #{result.inspect[0..500]}"
     hits = result["hits"]
     total = hits["total"]
     results = []

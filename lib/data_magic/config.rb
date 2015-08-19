@@ -65,7 +65,7 @@ module DataMagic
     # fetches file configuration
     # add: whatever
     def additional_data_for_file(index)
-      result = @data.fetch('files', []).fetch(index, {}).fetch('add', nil)
+      @data.fetch('files', []).fetch(index, {}).fetch('add', nil)
     end
 
     def info_for_file(index, field)
@@ -102,17 +102,6 @@ module DataMagic
       end
     end
 
-    # look through the files configuration
-    # pull out all the fields that are specified in
-    # only: [one, two, three]
-    # this means we should only take these fields from that file
-    def only_field_list_orig
-      only = file_config.select { |f| f[:only] }
-      only = only.inject([]) {|all, f| all += f[:only] }
-    end
-
-
-    # look through the files configuration
     # pull out all the fields that are specified in
     # only: [one, two, three]
     # this means we should only take these fields from that file
