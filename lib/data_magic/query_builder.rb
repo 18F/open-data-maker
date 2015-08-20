@@ -20,7 +20,7 @@ module DataMagic
       def generate_squery(params, config)
         squery = Stretchy.query(type: 'document')
         squery = search_location(squery, params)
-        squery = search_fields_and_ranges(squery, params)
+        search_fields_and_ranges(squery, params)
       end
 
       def get_restrict_fields(options)
