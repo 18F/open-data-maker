@@ -9,7 +9,7 @@ shared_examples_for "api request" do
 
     it "allows GET HTTP method thru CORS" do
       allowed_http_methods = last_response.header['Access-Control-Allow-Methods']
-      %w{GET}.each do |method|  # don't expect we'll need: POST PUT DELETE
+      %w{GET}.each do |method| # don't expect we'll need: POST PUT DELETE
         expect(allowed_http_methods).to include(method)
       end
     end
@@ -18,6 +18,8 @@ end
 
 
 describe 'api', type: 'feature' do
+  let(:json_response) { JSON.parse(last_response.body) }
+
   context 'with sample data' do
     # app starts up in advance of before :all so for now testing only
     # with ./sample-data
@@ -32,28 +34,24 @@ describe 'api', type: 'feature' do
 
       expect(last_response).to be_ok
       expect(last_response.content_type).to eq('application/json')
-
-      result = JSON.parse(last_response.body)
       expected = {
-        'endpoints'=>[
-          'name'=>'cities',
-          'url'=>'/cities',
+        'endpoints' => [
+          'name' => 'cities',
+          'url' => '/cities',
         ]
       }
-      expect(result).to eq expected
+      expect(json_response).to eq expected
     end
 
     it "raises a 404 on missing endpoints" do
       get "/missing"
       expect(last_response.status).to eq(404)
       expect(last_response.content_type).to eq('application/json')
-
-      result = JSON.parse(last_response.body)
       expected = {
-        "error"=>404,
-        "message"=>"missing not found. Available endpoints: cities",
+        "error" => 404,
+        "message" => "missing not found. Available endpoints: cities",
       }
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
 
     describe "data description" do
@@ -80,39 +78,31 @@ describe 'api', type: 'feature' do
         it "responds with json" do
           expect(last_response).to be_ok
           expect(last_response.content_type).to eq('application/json')
-
-          result = JSON.parse(last_response.body)
-
           expected = {
             "total" => 1,
-            "page"  => 0,
+            "page" => 0,
             "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
             "results" => [
-              {"state"=>"IL", "name"=>"Chicago", "population"=>2695598,
-               "land_area"=>227.635,   # later we'll make this a float
-               "location"=>{"lat"=>41.837551, "lon"=>-87.681844}}            ]
+              { "state" => "IL", "name" => "Chicago", "population" => 2695598,
+                "land_area" => 227.635, # later we'll make this a float
+                "location" => { "lat" => 41.837551, "lon" => -87.681844 } }]
           }
-          expect(result).to eq(expected)
-
+          expect(json_response).to eq(expected)
         end
       end
+
       describe "with options" do
         it "can return a subset of fields" do
           get '/cities?state=MA&fields=name,population'
-
           expect(last_response).to be_ok
-          result = JSON.parse(last_response.body)
-
           expected = {
             "total" => 1,
-            "page"  => 0,
+            "page" => 0,
             "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-            "results" => [{"name"=>"Boston", "population"=>617594}]
+            "results" => [{ "name" => "Boston", "population" => 617594 }]
           }
-          expect(result).to eq(expected)
-
+          expect(json_response).to eq(expected)
         end
-
       end
 
       describe "with float" do
@@ -123,22 +113,18 @@ describe 'api', type: 'feature' do
         it "responds with json" do
           expect(last_response).to be_ok
           expect(last_response.content_type).to eq('application/json')
-
-          result = JSON.parse(last_response.body)
-
           expected = {
             "total" => 1,
-            "page"  => 0,
+            "page" => 0,
             "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-            "results" => [{"state"=>"NY", "name"=>"New York",
-              "population"=>8175133, "land_area"=>302.643,
-              "location"=>{"lat"=>40.664274, "lon"=>-73.9385}}]
-            }
-          expect(result).to eq(expected)
-
+            "results" => [{ "state" => "NY", "name" => "New York",
+                            "population" => 8175133, "land_area" => 302.643,
+                            "location" => { "lat" => 40.664274, "lon" => -73.9385 } }]
+          }
+          expect(json_response).to eq(expected)
         end
-
       end
+
       describe "near zipcode" do
         before do
           get '/cities?zip=94132&distance=30mi'
@@ -148,31 +134,35 @@ describe 'api', type: 'feature' do
 
         it "can find an attribute from an imported file" do
           expect(last_response).to be_ok
-          result = JSON.parse(last_response.body)
-          result["results"] = result["results"].sort_by { |k| k["name"] }
-
+          json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
           expected = {
             "total" => 2,
-            "page"  => 0,
+            "page" => 0,
             "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
             "results" => [
-              {"state"=>"CA", "name"=>"Fremont", "population"=>214089, "land_area"=>77.459, "location"=>{"lat"=>37.494373, "lon"=>-121.941117}},
-              {"state"=>"CA", "name"=>"Oakland", "population"=>390724, "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}]
+              { "state" => "CA", "name" => "Fremont", "population" => 214089, "land_area" => 77.459, "location" => { "lat" => 37.494373, "lon" => -121.941117 } },
+              { "state" => "CA", "name" => "Oakland", "population" => 390724, "land_area" => 55.786, "location" => { "lat" => 37.769857, "lon" => -122.22564 } }]
           }
-          expect(result).to eq(expected)
+          expect(json_response).to eq(expected)
         end
       end
 
+      # @todo add example with multi words
       describe "with sort" do
-        it "can sort numbers ascending" do
+        it 'returns the data sorted by population in ascending order' do
           get '/cities?sort=population:asc'
           expect(last_response).to be_ok
-          response = JSON.parse(last_response.body)
-          expect(response["results"][0]['name']).to eq("Rochester")
-
+          expect(json_response["results"][0]['name']).to eq("Rochester")
         end
 
-
+        context 'when :sort is "name"' do
+          it 'returns the data sorted by name in descending order' do
+            get '/cities?sort=name:desc&per_page=100'
+            expect(last_response).to be_ok
+            expect(json_response["results"][0]['name']).to eq("Winston-Salem")
+            expect(json_response["results"][-1]['name']).to eq("Albuquerque")
+          end
+        end
       end
     end
   end
@@ -190,56 +180,52 @@ describe 'api', type: 'feature' do
     let(:expected) {
       {
         "total" => 1,
-        "page"  => 0,
+        "page" => 0,
         "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-        "results" => [{"id"=>"9", "city"=>"Tanner", "state"=>"AL",
-          "name"=>"Inquisitive Farm College",
-          "2013"=>{"earnings"=>
-                    {"6_yrs_after_entry"=>
-                        {"percent_gt_25k"=>0.19, "median"=>34183}},
-                   "sat_average"=>"971"},
-          "2012"=>{"earnings"=>
-                    {"6_yrs_after_entry"=>
-                        {"percent_gt_25k"=>0.83, "median"=>42150}},
-          "sat_average"=>"1292"}}]
-        }
+        "results" => [{ "id" => "9", "city" => "Tanner", "state" => "AL",
+                        "name" => "Inquisitive Farm College",
+                        "2013" => { "earnings" =>
+                                      { "6_yrs_after_entry" =>
+                                          { "percent_gt_25k" => 0.19, "median" => 34183 } },
+                                    "sat_average" => "971" },
+                        "2012" => { "earnings" =>
+                                      { "6_yrs_after_entry" =>
+                                          { "percent_gt_25k" => 0.83, "median" => 42150 } },
+                                    "sat_average" => "1292" } }]
+      }
     }
     it "can search" do
-      get '/school?name=Inquisitive Farm'
+      get '/school?name=Inquisitive Farm College'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
     it "can search for nested number" do
       get '/school?2013.earnings.6_yrs_after_entry.median=34183'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
 
     it "can search for nested float" do
       get '/school?2013.earnings.6_yrs_after_entry.percent_gt_25k=0.19'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
 
     it "can search for range" do
       get '/school?2013.earnings.6_yrs_after_entry.median__range=49310..'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
       expected["results"] = [
-        {"id"=>"8", "city"=>"Birmingham", "state"=>"AL",
-            "name"=>"Condemned Balloon Institute",
-            "2013"=>{"earnings"=>
-                      {"6_yrs_after_entry"=>
-                        {"percent_gt_25k"=>0.59, "median"=>59759}},
-                     "sat_average"=>"616"},
-            "2012"=>{"earnings"=>
-                      {"6_yrs_after_entry"=>
-                          {"percent_gt_25k"=>0.97, "median"=>30063}},
-                     "sat_average"=>"1420"}}]
-      expect(result).to eq(expected)
+        { "id" => "8", "city" => "Birmingham", "state" => "AL",
+          "name" => "Condemned Balloon Institute",
+          "2013" => { "earnings" =>
+                        { "6_yrs_after_entry" =>
+                            { "percent_gt_25k" => 0.59, "median" => 59759 } },
+                      "sat_average" => "616" },
+          "2012" => { "earnings" =>
+                        { "6_yrs_after_entry" =>
+                            { "percent_gt_25k" => 0.97, "median" => 30063 } },
+                      "sat_average" => "1420" } }]
+      expect(json_response).to eq(expected)
     end
   end
 
@@ -250,41 +236,43 @@ describe 'api', type: 'feature' do
       DataMagic.config = DataMagic::Config.new
       DataMagic.import_with_dictionary
     end
+
     after do
       DataMagic.destroy
     end
+
     let(:expected) {
       {
         "total" => 1,
-        "page"  => 0,
+        "page" => 0,
         "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-        "results" => [{"id"=>9, "school"=>{"city"=>"Tanner", "state"=>"AL", "zip"=>35671, "name"=>"Inquisitive Farm College"}}]
-        }
+        "results" => [{ "id" => 9, "school" => { "city" => "Tanner", "state" => "AL", "zip" => 35671, "name" => "Inquisitive Farm College" } }]
+      }
     }
+
     it "can search for nested name" do
       get '/fakeschool?school.name=Inquisitive Farm'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
+
     it "can search for nested number" do
       get '/fakeschool?school.zip=35671'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
+
     it "can search for range" do
       get '/fakeschool?school.zip__range=36800..'
       expect(last_response).to be_ok
-      result = JSON.parse(last_response.body)
       expected["results"] = [
-        {"id"=>7,
-         "school"=>{"city"=>"Auburn University",
-              "state"=>"AL", "zip"=>36849,
-             "name"=>"Alabama Beauty College of Auburn University"}
-         }
+        { "id" => 7,
+          "school" => { "city" => "Auburn University",
+                        "state" => "AL", "zip" => 36849,
+                        "name" => "Alabama Beauty College of Auburn University" }
+        }
       ]
-      expect(result).to eq(expected)
+      expect(json_response).to eq(expected)
     end
   end
 
