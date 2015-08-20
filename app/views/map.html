@@ -10,10 +10,10 @@
     <div id="map" style="height: 100vh"></div>
 
     <script>
-      var myLatlng = new google.maps.LatLng(37.7833, -122.4167);
+      var kansasCity = new google.maps.LatLng(39.0997, -94.5783);
       var mapOptions = {
-        zoom: 8,
-        center: myLatlng,
+        zoom: 3,
+        center: kansasCity,
         mapTypeId: google.maps.MapTypeId.DEFAULT
       };
       var map = new google.maps.Map(document.getElementById("map"), mapOptions);
@@ -21,19 +21,31 @@
       $.get(
         "/cities",
         {
-          
+          per_page: 100
         },
         function(resp) {
-        console.log(resp)
-      })
+          markerMaker(resp.results);
+        }
+      )
 
+      var bounds = new google.maps.LatLngBounds();
 
+      function markerMaker(cities) {
+        cities.forEach(function(city) {
+          var lat = city.location.lat;
+          var lon = city.location.lon;
 
-      var marker = new google.maps.Marker({
-        position: myLatlng,
-        map: map,
-        title: "hello world"
-      });
+          var latlng = new google.maps.LatLng(lat, lon);
+          bounds.extend(latlng);
+          var marker = new google.maps.Marker({
+            position: latlng,
+            map: map,
+            title: city.name
+          });
+        })
+      }
+
+      map.fitBounds(bounds);
     </script>
   </body>
 </html>
