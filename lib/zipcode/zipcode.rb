@@ -17,7 +17,6 @@ class Zipcode
     @@zipcode_hash[zipcode]
   end
 
-File.expand_path("../us_zipcodes.txt", __FILE__)
   private
     def self.converted_zipcodes
       parsed_file = CSV.read(File.expand_path("../us_zipcodes.txt", __FILE__), { :col_sep => "\t" })
