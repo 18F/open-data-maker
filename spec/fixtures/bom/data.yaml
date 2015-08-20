@@ -6,4 +6,4 @@ dictionary:
   value: VAL
 
 files:
-  bom.csv:
+  - name: bom.csv
