@@ -3,6 +3,10 @@ class CategoryDrop < Liquid::Drop
     @category = category
   end
 
+  def id
+    @category.id
+  end
+
   def name
     @category.name
   end

@@ -1,8 +1,18 @@
+
 .categories .category {
   margin: 5px;
   padding: 15px;
   border: solid 1px silver;
   word-wrap: break-word;
+}
+
+.categories .category a {
+  color: black;
+  text-decoration: none;
+}
+
+.categories .category a:visited {
+  color: black;
 }
 
 .categories__column {
@@ -15,4 +25,15 @@
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 10px;
+}
+
+.category__fields {
+  list-style: none;
+  padding: 0;
+}
+
+.category__field-name {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 2px;
 }

@@ -24,8 +24,10 @@
   <div class="categories__column">
   {% for category in column %}
     <div class="category">
-      <div class="category__name"> {{ category.name }} </div>
-      <div> {{ category.description }} </div>
+      <a href="/categories/{{category.id}}">
+        <div class="category__name"> {{ category.name }} </div>
+        <div> {{ category.description }} </div>
+      </a>
     </div>
   {% endfor %}
   </div>
