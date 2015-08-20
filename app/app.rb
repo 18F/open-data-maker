@@ -29,6 +29,10 @@ module OpenDataMaker
       }
     end
 
+    get :map do
+      render :map, layout: true
+    end
+
     get :endpoints do
       content_type :json
       endpoints = DataMagic.config.api_endpoints.keys.map { |key|
