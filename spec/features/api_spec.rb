@@ -71,7 +71,7 @@ describe 'api', type: 'feature' do
 	describe "query" do
 		describe "with one term" do
 			before do
-				get '/cities?name=Chicago'
+				get '/cities.json?name=Chicago'
 			end
 
 			it_behaves_like "api request"
@@ -92,9 +92,29 @@ describe 'api', type: 'feature' do
 						 "location"=>{"lat"=>41.837551, "lon"=>-87.681844}}						]
 				}
 				expect(result).to eq(expected)
+			end
+		  end
 
+      describe "exporting csv" do
+	  		before do
+				get '/cities.csv?name=Chicago'
+			end
+
+			it_behaves_like "api request"
+
+			it "handles a csv format request" do
+			  expect(last_response).to be_ok
+				expect(last_response.content_type).to eq('text/csv;charset=utf-8')
+
+				result = CSV.parse(last_response.body)
+				
+				expect(result.length).to eq 2
+				
+				expect(result[0]).to eq %w[state name population land_area location.lat location.lon]
+				expect(result[1]).to eq %w[IL Chicago 2695598 227.635 41.837551 -87.681844]
 			end
 		end
+
 		describe "with options" do
 			it "can return a subset of fields" do
 				get '/cities?state=MA&fields=name,population'
