@@ -220,6 +220,8 @@ private
           row[key] = value.to_i
         when "string"
           row[key] = value.to_s
+        when "date"
+          row[key] = value.to_date
       end
     end
     row
