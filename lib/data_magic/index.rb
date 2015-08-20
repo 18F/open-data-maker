@@ -220,6 +220,12 @@ private
           row[key] = value.to_i
         when "string"
           row[key] = value.to_s
+        when "boolean"
+          if value.to_s == "0"
+            row[key] = false
+          else
+            row[key] = true
+          end
       end
     end
     row
