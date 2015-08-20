@@ -9,6 +9,7 @@
   <body>
     <div id="map" style="height: 100vh"></div>
 
+
     <script>
       var kansasCity = new google.maps.LatLng(39.0997, -94.5783);
       var mapOptions = {
@@ -28,12 +29,27 @@
         }
       )
 
-      var bounds = new google.maps.LatLngBounds();
 
+
+      var bounds = new google.maps.LatLngBounds();
       function markerMaker(cities) {
         cities.forEach(function(city) {
           var lat = city.location.lat;
           var lon = city.location.lon;
+
+          var contentString = '<div id="content">' +
+            '<h3>City</h3>' +
+            '<p>' + city.name + '</p>' +
+            '<h3>State</h3>' +
+            '<p>' + city.state + '</p>' +
+            '<h3>Population</h3>' +
+            '<p>' + city.population + '</p>' +
+            '<h3>Land Area</h3>' +
+            '<p>' + city.land_area + '</p>' +
+            '</div>';
+          var infowindow = new google.maps.InfoWindow({
+            content: contentString
+          });
 
           var latlng = new google.maps.LatLng(lat, lon);
           bounds.extend(latlng);
@@ -41,6 +57,10 @@
             position: latlng,
             map: map,
             title: city.name
+          });
+
+          marker.addListener('click', function() {
+            infowindow.open(map, marker);
           });
         })
       }
