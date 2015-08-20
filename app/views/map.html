@@ -9,7 +9,6 @@
   <body>
     <div id="map" style="height: 100vh"></div>
 
-
     <script>
       var kansasCity = new google.maps.LatLng(39.0997, -94.5783);
       var mapOptions = {
@@ -28,8 +27,6 @@
           markerMaker(resp.results);
         }
       )
-
-
 
       var bounds = new google.maps.LatLngBounds();
       function markerMaker(cities) {
