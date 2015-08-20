@@ -12,5 +12,7 @@ describe 'app', type: 'feature' do
 	it "should load the home page" do
 	  get '/'
 	  expect(last_response).to be_ok
+	  expect(last_response.body).to include('Data Details')
+	  expect(last_response.body).to include('general information about the city, including standard identifiers')
 	end
 end

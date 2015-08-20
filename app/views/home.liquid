@@ -8,7 +8,7 @@
 {% endfor %}
 </ul>
 
- {% if examples.size > 0 %}
+{% if examples.size > 0 %}
 <h2>Examples</h2>
 
 <ul>
@@ -17,3 +17,21 @@
 {% endfor %}
 </ul>
 {% endif %}
+
+<h2>Data Details</h2>
+<ul class="dictionary">
+  {% for category in categories %}
+    <li class="dictionary__category">
+      <h3> {{ category.name }} </h3>
+      <div> {{ category.description }} </div>
+      <ul>
+        {% for field in category.fields %}
+          <li class="dictionary__field">
+            <div class="dictionary__field-item dictionary__field-name"> {{ field }} </div>
+            <div class="dictionary__field-item"> lorem ipsum... (field description placeholder) </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </li>
+  {% endfor %}
+</ul>

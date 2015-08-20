@@ -77,6 +77,7 @@ describe DataMagic::Config do
         expect(config.scoped_index_name).to eq('test-city-data')
       end
     end
+
     it "has config data" do
       default_config = {"version"=>"cities100-2010",
         "index"=>"city-data", "api"=>"cities",
@@ -89,6 +90,16 @@ describe DataMagic::Config do
         "data_path" => "./sample-data",
         "options"=>{},
         "unique"=>["name"],
+        "categories" => {
+          "general" => {
+            "title" => "General",
+            "description" => "general information about the city, including standard identifiers"
+          },
+          "geographic" => {
+            "title" => "Geographic",
+            "description" => "geographic characteristics of the land and water"
+          }
+        }
       }
       expect(config.data).to eq(default_config)
     end
