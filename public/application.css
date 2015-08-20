@@ -1,16 +1,18 @@
-  ul.dictionary {
-    list-style-type: none;
-  }
+.categories .category {
+  margin: 5px;
+  padding: 15px;
+  border: solid 1px silver;
+  word-wrap: break-word;
+}
 
-  .dictionary .dictionary__field {
-    clear: both;
-  }
+.categories__column {
+  display: inline-block;
+  width: 49%;
+  vertical-align: top;
+}
 
-  .dictionary .dictionary__field-item {
-    float:left;
-    margin-right: 10px;
-  }
-
-  .dictionary .dictionary__field-name {
-    font-weight: bold;
-  }
+.category__name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
