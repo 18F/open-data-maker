@@ -23,12 +23,13 @@ module OpenDataMaker
 
     get :index do
       categories = Category.from_yml.map { |category| CategoryDrop.new(category) }
+      category_columns = categories.each_slice((categories.length / 2) + 1).to_a
       
       render :home, layout: true, locals: {
         'title' => 'Open Data Maker',
         'endpoints' => DataMagic.config.api_endpoint_names,
         'examples' => DataMagic.config.examples,
-        'categories' => categories
+        'category_columns' => category_columns
       }
     end
 
