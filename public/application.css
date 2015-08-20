@@ -1,2 +1,16 @@
-body {
-}
+  ul.dictionary {
+    list-style-type: none;
+  }
+
+  .dictionary .dictionary__field {
+    clear: both;
+  }
+
+  .dictionary .dictionary__field-item {
+    float:left;
+    margin-right: 10px;
+  }
+
+  .dictionary .dictionary__field-name {
+    font-weight: bold;
+  }
