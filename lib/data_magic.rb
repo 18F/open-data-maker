@@ -12,6 +12,7 @@ require 'logger'
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
 require_relative 'data_magic/query_builder'
+require_relative 'zipcode/zipcode'
 
 SafeYAML::OPTIONS[:default_mode] = :safe
 

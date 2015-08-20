@@ -1,5 +1,3 @@
-require 'zipcode/zipcode'
-
 module DataMagic
   module QueryBuilder
     class << self
