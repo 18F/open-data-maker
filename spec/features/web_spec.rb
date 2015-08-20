@@ -9,10 +9,19 @@ describe 'app', type: 'feature' do
 		DataMagic.destroy
 	end
 
-	it "should load the home page" do
-	  get '/'
-	  expect(last_response).to be_ok
-	  expect(last_response.body).to include('Data Details')
-	  expect(last_response.body).to include('general information about the city, including standard identifiers')
+  describe "visiting the home page" do
+  	before do
+		  get '/'
+  	end
+
+  	it "succeeds" do
+		  expect(last_response).to be_ok
+  	end
+
+		it "renders a list of categories" do
+		  expect(last_response.body).to include('Browse Data Details by Category')
+		  expect(last_response.body).to include('General') #category name
+		  expect(last_response.body).to include('general information about the city, including standard identifiers')
+		end
 	end
 end
