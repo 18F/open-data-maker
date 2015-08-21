@@ -1,10 +1,18 @@
+<div id="map-container">
+  <div id="map-background"></div>
+  <div id="map"></div>
+</div>
+
 <h1>{{ title }}</h1>
 
 <h2>API endpoints</h2>
 
-<ul>
+<ul class="endpoints-list">
 {% for name in endpoints %}
-  <li><a href="/{{ name }}">{{ name }}</a></li>
+  <li>
+    <a href="/{{ name }}">{{ name }}</a>
+    <a href="javascript:void(0)" class="map-link" data-map-category="{{ name }}">map</a>
+  </li>
 {% endfor %}
 </ul>
 

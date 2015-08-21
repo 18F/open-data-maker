@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="application.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js" type="text/javascript"></script>
+  </head>
+  <body>
+    <%== yield %>
+
+    <script type="text/javascript">
+      $(".endpoints-list").on("click", ".map-link", function(e) {
+        e.preventDefault();
+        $("#map-container").children().toggleClass("active");
+
+        var mapCategory = $(e.currentTarget).data("map-category");
+        var mapOptions = {
+          zoom: 3,
+          center: new google.maps.LatLng(39.0997, -94.5783),
+          mapTypeId: google.maps.MapTypeId.DEFAULT
+        };
+        var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+        $.ajax({
+          url: "/" + mapCategory,
+          data: { per_page: 100 },
+          success: function(resp) {
+            markerMaker(resp.results);
+          }
+        })
+
+        function markerMaker(cities) {
+          var bounds = new google.maps.LatLngBounds();
+          cities.forEach(function(city) {
+            var latlng = new google.maps.LatLng(
+              city.location.lat,
+              city.location.lon
+            );
+            bounds.extend(latlng);
+
+            var contentString = '<div id="content">' +
+              '<h3>City</h3>' +
+              '<p>' + city.name + '</p>' +
+              '<h3>State</h3>' +
+              '<p>' + city.state + '</p>' +
+              '<h3>Population</h3>' +
+              '<p>' + city.population + '</p>' +
+              '<h3>Land Area</h3>' +
+              '<p>' + city.land_area + '</p>' +
+              '</div>';
+            var infowindow = new google.maps.InfoWindow({
+              content: contentString
+            });
+
+            var marker = new google.maps.Marker({
+              position: latlng,
+              map: map,
+              title: city.name
+            });
+            marker.addListener('click', function() {
+              infowindow.open(map, marker);
+            });
+          })
+
+          map.fitBounds(bounds);
+        }
+
+      });
+
+      $("#map-background").on("click", function(e) {
+        e.preventDefault();
+        $("#map-container").children().toggleClass("active").empty();
+      });
+    </script>
+  </body>
+</html>
