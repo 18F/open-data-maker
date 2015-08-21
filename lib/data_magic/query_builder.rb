@@ -74,6 +74,10 @@ module DataMagic
         location = Zipcode.latlon(params[:zip])
 
         if distance && !distance.empty?
+          # default to miles if no distance given
+          unit = distance[-2..-1]
+          distance = "#{distance}mi" if unit != "km" and unit != "mi"
+
           squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
           params.delete(:distance)
           params.delete(:zip)
