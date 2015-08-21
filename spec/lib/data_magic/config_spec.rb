@@ -98,6 +98,12 @@ describe DataMagic::Config do
       expect(config.page_size).to eq(DataMagic::DEFAULT_PAGE_SIZE)
     end
 
+    it "has can parse expressions" do
+      expr = "ONE or TWO"
+      expect(config.parse_expression(expr)).to eq(['ONE', 'TWO'])
+    end
+
+
     describe "#update_indexed_config" do   #rename ... or do this in load_config or something
       context "after loading config" do
         let(:fixture_path) {"./spec/fixtures/import_with_dictionary"}

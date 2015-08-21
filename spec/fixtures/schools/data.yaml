@@ -35,8 +35,8 @@ dictionary:
     type: float
     description: 150% completion rate for four-year institutions, pooled in two-year rolling averages and suppressed for small n size
   completion.rate.overall:
-    source: C150_L4_POOLED_SUPP || C150_4_POOLED_SUPP
-    type: expression
+    calculate: C150_L4_POOLED_SUPP or C150_4_POOLED_SUPP
+    type: float
     description: 150% completion rate for the institution, independent of degree
 
 files:

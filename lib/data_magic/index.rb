@@ -146,24 +146,9 @@ module DataMagic
   def self.import_with_dictionary(options = {})
     start_time = Time.now
     Config.logger.debug "--- import_with_dictionary, starting at #{start_time}"
-    field_mapping = {}
 
-    # field_name: name we want as the json key
-    # field_mapping[column_name] = field_name
-    self.config.dictionary.each do |field_name, info|
-      case info
-        when String
-          field_mapping[info] = field_name
-        when Hash
-          column_name = info['source']
-          field_mapping[column_name] = field_name
-        else
-          Config.logger.warn("unexpected dictionary field info " +
-            "for #{field_name}: #{info.inspect} -- expected String or Hash")
-      end
-    end
     #logger.debug("field_mapping: #{field_mapping.inspect}")
-    options[:mapping] = field_mapping
+    options[:mapping] = config.field_mapping
     options = options.merge(config.data['options'])
 
     es_index_name = self.config.load_datayaml(options[:data_path])
@@ -183,7 +168,7 @@ module DataMagic
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
         logger.debug "imported #{rows} rows"
-      rescue Exception => e
+      rescue DataMagic::InvalidData => e
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
       end
     end
@@ -208,7 +193,22 @@ private
         mapped[key] = value
       end
     end
-    mapped
+    mapped.merge(config.calculated_fields(row))
+  end
+
+  def self.fix_field_type(type, value, key=nil)
+    #logger.info "fix_field_type type:#{type.inspect} value: #{value.inspect}"
+    new_value = case type
+      when "float"
+        value.to_f
+      when "integer"
+        value.to_i
+      else # "string"
+        value.to_s
+    end
+    new_value = value.to_f if key and key.include? "location"
+    #logger.info "new_value #{new_value.inspect}"
+    new_value
   end
 
   # row: a hash  (keys may be strings or symbols)
@@ -217,15 +217,8 @@ private
   def self.map_field_types(row, field_types = {})
     row.each do |key, value|
       type = field_types[key.to_sym] || field_types[key.to_s]
+      row[key] = fix_field_type(type, value, key)
       #logger.info "key: #{key} type: #{type}"
-      case type
-        when "float"
-          row[key] = value.to_f
-        when "integer"
-          row[key] = value.to_i
-        when "string"
-          row[key] = value.to_s
-      end
     end
     row
   end

@@ -14,8 +14,8 @@ describe "unique key(s)" do
   it "can combine two columns" do
     DataMagic.config = DataMagic::Config.new
     DataMagic.import_with_dictionary
-    result = DataMagic.search({})
-    expect(result['results']).to eq({})
+    result = DataMagic.search({id: 1}, fields: ['id', 'completion.rate.overall'] )
+    expect(result['results'].first).to eq({'id' => 1, 'completion.rate.overall' => 0.16 })
   end
 
 end
