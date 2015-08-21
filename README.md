@@ -62,10 +62,12 @@ Here's how it might look in the future:
 
 ![Download all the data or make choices to create a csv with a subset](/doc/csv-download.png)
 
+### Acknowledgements
+Zipcode latitude and longitude provided by [GeoNames](http://www.geonames.org/) under under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).
 
 ### Public domain
 
-This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
+Except as noted above, this project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
 
 > This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
 >
