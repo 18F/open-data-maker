@@ -16,7 +16,6 @@ shared_examples_for "api request" do
   end
 end
 
-
 describe 'api', type: 'feature' do
   context 'with sample data' do
     # app starts up in advance of before :all so for now testing only
@@ -168,8 +167,30 @@ describe 'api', type: 'feature' do
           expect(response["results"][0]['name']).to eq("Rochester")
         end
       end
-    end
+      
+      describe "with a json format string" do
+        it "returns JSON" do
+          get '/cities.json?name=Chicago'
 
+          expect(last_response).to be_ok
+          expect(last_response.content_type).to eq('application/json')
+        end
+      end
+
+      describe "with a csv format string" do
+        it "returns CSV data" do
+          get '/cities.csv?name=Chicago'
+
+          expect(last_response.content_type).to eq('text/csv;charset=utf-8')
+          expect(last_response).to be_ok
+
+          result = CSV.parse(last_response.body)
+          expect(result.length).to eq 2
+          expect(result[0]).to eq %w[state name population land_area location.lat location.lon]
+          expect(result[1]).to eq %w[IL Chicago 2695598 227.635 41.837551 -87.681844]
+        end
+      end
+    end
   end
 
   context "with nested data" do
