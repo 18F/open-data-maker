@@ -92,7 +92,7 @@ module DataMagic
           logger.info "indexing rows: #{num_rows}..."
         end
         if num_rows == 0
-          logger.info "first row -> #{doc.inspect[0..500]}"
+          logger.info "row#{num_rows} -> #{doc.inspect[0..500]}"
           logger.info "id: #{get_id(doc).inspect}"
         end
         if options[:nest] == nil  #first time or normal case
