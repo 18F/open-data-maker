@@ -1,2 +1,33 @@
 body {
 }
+
+#map-background {
+  display: none;
+}
+
+#map {
+  display: none;
+}
+
+#map-background.active {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: black;
+  opacity: 0.8;
+}
+
+#map.active {
+  display: block;
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) !important;
+  -ms-transform: translate(-50%, -50%) !important;
+  -webkit-transform: translate(-50%, -50%) !important;
+}
