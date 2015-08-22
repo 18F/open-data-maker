@@ -79,13 +79,15 @@ module OpenDataMaker
       data = DataMagic.search(params, sort:sort, api:endpoint, fields:fields)
 
       if format == 'csv'
-        csv_data = data['results']
+        data = data['results']
         # We assume all rows have the same keys
-        if csv_data.first
-          human_names, paths = recursive_keys(csv_data.first)
+        if data.first
           CSV.generate(force_quotes: true, headers: true) do |csv|
-            csv << human_names
-            csv_data.each { |row| csv << recursive_fields(row, paths) }
+            data.each_with_index do |row, row_num|
+              row = NestedHash.new(row).withdotkeys
+              csv << row.keys if row_num == 0
+              csv << row
+            end
           end
         else
           ''
