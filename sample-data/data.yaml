@@ -10,7 +10,9 @@ api: cities
 unique: ['name']
 dictionary:
   state: USPS
-  name: NAME
+  name:
+    source: NAME
+    type: literal
   population:
     source: POP10
     type: integer
