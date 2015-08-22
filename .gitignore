@@ -10,6 +10,7 @@ db/*.db
 .env
 .*.env
 .cfignore
+.vagrant
 
 # expect people to put their own data in /data
 data
