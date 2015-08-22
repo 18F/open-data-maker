@@ -120,7 +120,7 @@ module DataMagic
       logger.info "create_index field_types: #{field_types.inspect[0..500]}"
       es_index_name ||= self.config.scoped_index_name
       field_types['location'] = 'geo_point'
-      es_types = prepare_field_types(field_types)
+      es_types = es_field_types(field_types)
       es_types = NestedHash.new.add(es_types)
       nested_object_type(es_types)
       begin
@@ -143,11 +143,12 @@ module DataMagic
       es_index_name
     end
 
-    def self.prepare_field_types(field_types)
-      custom_indices = { 'name' => 'not_analyzed' }
+    # convert the types from data.yaml to Elasticsearch-specific types
+    def self.es_field_types(field_types)
+      custom_type = { 'literal' => {type: 'string', index:'not_analyzed'} }
       field_types.each_with_object({}) do |(key, type), result|
-        result[key] = { type: type }
-        result[key][:index] = custom_indices[key] if custom_indices.has_key?(key)
+        result[key] = custom_type[type]
+        result[key] ||= { type: type }
       end
     end
 

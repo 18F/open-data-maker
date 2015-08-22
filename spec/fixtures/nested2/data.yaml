@@ -24,6 +24,7 @@ dictionary:
     description: 6-digit OPE ID for institution
   school.name:
     source: INSTNM
+    type: literal
     description: Institution name
   school.city:
     source: CITY_MAIN

@@ -249,7 +249,7 @@ describe 'api', type: 'feature' do
     }
 
     it "can search for nested name" do
-      get '/fakeschool?school.name=Inquisitive Farm'
+      get '/fakeschool?school.name=Inquisitive Farm College'
       expect(last_response).to be_ok
       expect(json_response).to eq(expected)
     end

@@ -80,7 +80,7 @@ describe DataMagic::Config do
     it "has config data" do
       default_config = {"version"=>"cities100-2010",
         "index"=>"city-data", "api"=>"cities",
-        "dictionary"=> {"state"=>"USPS", "name"=>"NAME",
+        "dictionary"=> {"state"=>"USPS", "name"=>{"source"=>"NAME", "type"=>"literal"},
                         "population"=>{"source"=>"POP10", "type"=>"integer"},
                         "location.lat"=>"INTPTLAT", "location.lon"=>"INTPTLONG",
                         "land_area"=>{"source"=>"ALAND_SQMI", "type"=>"float"}
