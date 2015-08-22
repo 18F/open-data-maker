@@ -1,5 +1,9 @@
+require 'csv'
+require_relative '../lib/csv_field_helpers'
+
 module OpenDataMaker
   class App < Padrino::Application
+    include CSVFieldHelpers
     register SassInitializer
     register Padrino::Helpers
 
@@ -50,12 +54,22 @@ module OpenDataMaker
     end
 
     get :index, :with => :endpoint do
-      content_type :json
+      endpoint = params.delete('endpoint')
+
+      format_regex = /\.(csv|json)\z/
+      if match_data = format_regex.match(endpoint)
+        format = match_data[1]
+        endpoint = endpoint.sub(format_regex, '')
+      else
+        format = 'json'
+      end
+
+      content_type(format == 'csv' ? :csv : :json)
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
-
+               
       DataMagic.logger.debug "-----> APP GET #{params.inspect}"
-      endpoint = params.delete('endpoint')
+
       if not DataMagic.config.api_endpoints.keys.include? endpoint
         halt 404, {
           error: 404,
@@ -65,7 +79,23 @@ module OpenDataMaker
       fields = params.delete('fields') || ""
       fields = fields.split(',')
       sort = params.delete('sort')
-      DataMagic.search(params, sort:sort, api:endpoint, fields:fields).to_json
+      data = DataMagic.search(params, sort:sort, api:endpoint, fields:fields)
+      
+      if format == 'csv'
+        csv_data = data['results']
+        # We assume all rows have the same keys
+        if csv_data.first
+          human_names, paths = recursive_keys(csv_data.first)
+          CSV.generate(force_quotes: true, headers: true) do |csv|
+            csv << human_names
+            csv_data.each { |row| csv << recursive_fields(row, paths) }
+          end
+        else
+          ''
+        end
+      else
+        data.to_json
+      end
     end
 
     ##
