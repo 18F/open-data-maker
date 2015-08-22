@@ -28,13 +28,15 @@ module DataMagic
   # parse a row from a csv file, returns a nested document
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
-    #logger.info "fields #{fields.inspect}"
+    #logger.info "fields #{fields.inspect[0..255]}"
     row = map_field_names(row, fields, options) unless fields.empty?
     map_field_types(row, config.column_field_types) unless config.column_field_types.empty?
+    #logger.info "row #{row.inspect[0..255]}"
     row = row.merge(additional) if additional
     document = NestedHash.new.add(row)
     document = parse_nested(document, options) if options[:nest]
     document = document.select {|key, value| options[:only].include?(key) } unless options[:only].nil?
+    #logger.info "document #{document.inspect[0..255]}"
     document
   end
 
@@ -78,7 +80,6 @@ module DataMagic
 
     logger.info "  new_field_names: #{new_field_names.inspect[0..500]}"
     logger.info "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
-    logger.info "  additional_data: #{additional_data}"
 
     begin
       CSV.parse(
@@ -86,8 +87,8 @@ module DataMagic
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
+        logger.info "csv parsed" if num_rows == 0
         doc = parse_row(row, new_field_names, options, additional_data)
-        headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
         if num_rows % 500 == 0
           logger.info "indexing rows: #{num_rows}..."
         end
@@ -95,6 +96,7 @@ module DataMagic
           logger.info "row#{num_rows} -> #{doc.inspect[0..500]}"
           logger.info "id: #{get_id(doc).inspect}"
         end
+        headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
         if options[:nest] == nil  #first time or normal case
           client.index({
             index: es_index_name,
@@ -139,7 +141,7 @@ module DataMagic
 
     raise InvalidData, "zero rows" if num_rows == 0
     client.indices.refresh index: es_index_name
-
+    logger.info "done: #{num_rows} rows"
     return [num_rows, headers]
   end
 
@@ -197,7 +199,9 @@ private
   end
 
   def self.fix_field_type(type, value, key=nil)
-    #logger.info "fix_field_type type:#{type.inspect} value: #{value.inspect}"
+    #logger.info "fix_field_type type:#{type.inspect} value: #{value.inspect} key: #{key.inspect}"
+    return value if value.nil?
+
     new_value = case type
       when "float"
         value.to_f
@@ -206,7 +210,7 @@ private
       else # "string"
         value.to_s
     end
-    new_value = value.to_f if key and key.include? "location"
+    new_value = value.to_f if key and key.to_s.include? "location"
     #logger.info "new_value #{new_value.inspect}"
     new_value
   end

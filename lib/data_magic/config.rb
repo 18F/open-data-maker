@@ -186,14 +186,15 @@ module DataMagic
     # currently we just support 'or' operations on two columns
     def calculate(field_name, row)
       item = dictionary[field_name]
-      # logger.debug("row #{row.inspect}")
-      # logger.debug("calculate item #{item.inspect}")
+      #logger.debug("row #{row.inspect}")
+      #logger.debug("calculate item #{item.inspect}")
       expr = item['calculate']
       raise ArgumentError, "expected to calculate #{field_name}" if expr.nil?
       cols = parse_expression(expr, field_name) #if expr.is_a? String
       cols = cols.map { |c| row[c.to_sym] }
       cols = cols.map { |value| value == 'NULL' ? nil : value }
       a, b = cols.map { |c| (DataMagic::fix_field_type(item['type'], c)) }
+      #logger.debug("final: data #{cols.inspect} #{a.inspect} #{b.inspect} #{(a || b).inspect}")
       a || b
     end
 
@@ -235,7 +236,7 @@ module DataMagic
         fields.each do |field_name, info|
           type = info['type'] || "string"
           type = nil if field_name == 'location.lat' || field_name == 'location.lon'
-          logger.info "field #{field_name}: #{type.inspect}"
+          #logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
         end
       end
