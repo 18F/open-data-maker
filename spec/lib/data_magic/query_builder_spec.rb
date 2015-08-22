@@ -75,7 +75,15 @@ describe DataMagic::QueryBuilder do
     subject { { } }
     let(:options) { { sort: "population:asc" } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 0, size: 20, sort: { "population" => {order: "asc"} } } }
+    let(:expected_meta)  { { from: 0, size: 20, sort: [{ "population" => {order: "asc"} }] } }
+    it_correctly "builds a query"
+  end
+
+  describe "can sort by multiple fields" do
+    subject { { } }
+    let(:options) { { sort: "state:desc, population:asc,name" } }
+    let(:expected_query) { { match_all: {} } }
+    let(:expected_meta)  { { from: 0, size: 20, sort: [{'state' => {order: 'desc'}}, { "population" => {order: "asc"} }, { 'name' => {order: 'asc'}}] } }
     it_correctly "builds a query"
   end
 

@@ -11,7 +11,7 @@ module DataMagic
         }
         query_hash[:query] = generate_squery(params, config).to_search
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
-        query_hash[:sort] = get_sort_order(options) if options[:sort]
+        query_hash[:sort] = get_sort_order(options[:sort]) if options[:sort] && !options[:sort].empty?
         query_hash
       end
 
@@ -27,9 +27,14 @@ module DataMagic
         options[:fields].map { |field| field.to_s }
       end
 
-      def get_sort_order(options)
-        key, value = options[:sort].split(':')
-        return { key => { order: value } }
+      # @description turns a string like "state,population:desc" into [{'state' => {order: 'asc'}},{ "population" => {order: "asc"} }]
+      # @param [String] sort_param
+      # @return [Array]
+      def get_sort_order(sort_param)
+        sort_param.to_s.scan(/(\w+):?(\w*)/).map do |field_name, direction|
+          direction = 'asc' if direction.empty?
+          { field_name => { order: direction } }
+        end
       end
 
       def to_number(value)
