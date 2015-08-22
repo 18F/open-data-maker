@@ -128,11 +128,16 @@ module DataMagic
       end
 
     rescue Exception => e
-      Config.logger.error e.message
-      rows = []
+        if e.class == ArgumentError && e.message == "invalid byte sequence in UTF-8"
+          Config.logger.error e.message
+          raise InvalidData, "invalid file format" if num_rows == 0
+          rows = []
+        else
+          raise e
+        end
     end
 
-    raise InvalidData, "invalid file format or zero rows" if num_rows == 0
+    raise InvalidData, "zero rows" if num_rows == 0
     client.indices.refresh index: es_index_name
 
     return [num_rows, headers]
