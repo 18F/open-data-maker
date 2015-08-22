@@ -1,9 +1,7 @@
 require 'csv'
-require_relative '../lib/csv_field_helpers'
 
 module OpenDataMaker
   class App < Padrino::Application
-    include CSVFieldHelpers
     register SassInitializer
     register Padrino::Helpers
 
