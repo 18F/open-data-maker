@@ -8,6 +8,7 @@ version: cities100-2010
 index: city-data
 api: cities
 unique: ['name']
+
 dictionary:
   state: USPS
   name:
