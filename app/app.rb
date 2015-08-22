@@ -56,18 +56,15 @@ module OpenDataMaker
     get :index, :with => :endpoint do
       endpoint = params.delete('endpoint')
 
-      format_regex = /\.(csv|json)\z/
-      if match_data = format_regex.match(endpoint)
-        format = match_data[1]
-        endpoint = endpoint.sub(format_regex, '')
-      else
-        format = 'json'
-      end
+      format = File.extname(endpoint)
+      endpoint = File.basename(endpoint, format)
+      format[0] = ''
+      format = 'json' if format.empty?
+      content_type format.to_sym
 
-      content_type(format == 'csv' ? :csv : :json)
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
-               
+
       DataMagic.logger.debug "-----> APP GET #{params.inspect}"
 
       if not DataMagic.config.api_endpoints.keys.include? endpoint
@@ -80,7 +77,7 @@ module OpenDataMaker
       fields = fields.split(',')
       sort = params.delete('sort')
       data = DataMagic.search(params, sort:sort, api:endpoint, fields:fields)
-      
+
       if format == 'csv'
         csv_data = data['results']
         # We assume all rows have the same keys
