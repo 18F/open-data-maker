@@ -132,7 +132,7 @@ describe DataMagic::Config do
 
       it 'should set null value field' do
         config.load_datayaml("./spec/fixtures/import_with_null_value")
-        expect(config.null_value).to eq('xyz')
+        expect(config.null_value).to eq('abc123')
       end
     end
   end

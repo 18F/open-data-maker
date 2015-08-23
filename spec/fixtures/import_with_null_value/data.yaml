@@ -1,7 +1,14 @@
 index: city-data
 api: cities
 unique: ['name']
-null_value: 'xyz'
+null_value: 'abc123'
+options:
+  columns: all
+
+dictionary:
+  state: USPS
+  population: POP10
+  name: NAME
 
 files:
-  null_values.csv:
+  - name: null_values.csv

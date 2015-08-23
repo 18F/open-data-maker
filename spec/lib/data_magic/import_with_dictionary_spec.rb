@@ -1,9 +1,4 @@
 require 'spec_helper'
-require 'data_magic'
-
-class DataMagic::Config
-  attr_writer :null_value
-end
 
 describe "unique key(s)" do
 
@@ -144,7 +139,6 @@ describe "DataMagic #import_with_dictionary" do
 
   context "with null value" do
     before(:all) do
-      DataMagic::Config.logger.info "===== before :all"
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_null_value'
       DataMagic.init(load_now: true)
@@ -154,12 +148,10 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "should change null values to nil" do
-      DataMagic.config.null_value='abc123'
-
       result = DataMagic.search({ANSICODE: "2395220"}, api: 'cities')
       expected["results"] = [{"state"=>"NY", "GEOID"=>nil,
                               "ANSICODE"=>"2395220", "name"=>"New York",
-                              "population"=>"8175133", "year"=>2010}]
+                              "population"=>"8175133"}]
       expect(result).to eq(expected)
     end
   end
