@@ -79,6 +79,30 @@ describe "DataMagic #search" do
         expect(result["results"].length).to eq(1)
       end
 
+      context "invalid" do
+        let (:expected) { {
+                  "total" => 0,
+                  "page" => 0,
+                  "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+                  "results" => 	[]
+                } }
+
+        it "reports errors for term" do
+          result = DataMagic.search({fake: "Marilyn"})
+          expected["errors"] = [{
+            terms: {code:'field_not_found', meta: {fields:['fake']} }
+          }]
+          expect(result).to eq(expected)
+        end
+        it "reports errors for fields" do
+          result = DataMagic.search({}, fields: 'fake')
+          expected["errors"] = [{
+            fields: {code:'field_not_found', meta: {fields:['fake']} }
+          }]
+          expect(result).to eq(expected)
+        end
+
+      end
     end
     describe "with mapping" do
       before (:all) do
@@ -147,5 +171,31 @@ describe "DataMagic #search" do
       response = DataMagic.search({}, sort: "population:asc")
       expect(response["results"][0]['name']).to eq("Rochester")
     end
+
+    context "invalid request" do
+      let (:expected) { {
+                "total" => 0,
+                "page" => 0,
+                "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+                "results" => 	[]
+              } }
+
+      it "reports errors for term" do
+        result = DataMagic.search({fake: "Marilyn"})
+        expected["errors"] = [{
+          terms: {code:'field_not_found', meta: {terms:['fake']} }
+        }]
+        expect(result).to eq(expected)
+      end
+      it "reports errors for fields" do
+        result = DataMagic.search({}, fields: 'fake')
+        expected["errors"] = [{
+          fields: {code:'field_not_found', meta: {fields:['fake']} }
+        }]
+        expect(result).to eq(expected)
+      end
+
+    end
+
   end
 end
