@@ -1,0 +1,41 @@
+---
+version: Aug6-2015-08-10-23:48-0600
+api: fakeschool
+index: fakeschool-data
+unique:
+- id
+options:
+#  columns: all
+  limit_files: 1
+  limit_rows: 100
+
+dictionary:
+  id:
+    source: UNITID
+    type: integer
+    description: Unit ID for institution
+  ope8_id:
+    source: OPEID
+    type: integer
+    description: 8-digit OPE ID for institution
+  ope6_id:
+    source: opeid6
+    type: integer
+    description: 6-digit OPE ID for institution
+  school.name:
+    source: INSTNM
+    type: literal
+    description: Institution name
+  school.city:
+    source: CITY_MAIN
+    description: City
+  school.state:
+    source: STABBR_MAIN
+    description: State postcode
+  school.zip:
+    source: ZIP_MAIN
+    type: integer
+    description: ZIP code
+
+files:
+  - name: school2013.csv

@@ -1,0 +1,11 @@
+UNITID,CITY_MAIN,STABBR_MAIN,ST_FIPS_MAIN,ZIP_MAIN,REGION_MAIN,LATITUDE_MAIN,LONGITUDE_MAIN,INSTNM,SAT_AVG,earn_2002_p10,gt_25k_2006_p6
+1,Normal,AL,1,35762,5,34.7834,-86.5685,Reichert University,1195,26318,0.53
+2,Montgomery,AL,1,36109-3378,5,32.3842,-86.2164,Montgomery School,770,6785,0.61
+3,Montevallo,AL,1,35115-6000,5,33.1063,-86.8651,Indigo Card Community College,526,16767,0.50
+4,Montgomery,AL,1,36104-0271,5,32.3643,-86.2957,Warm Meadow School of Fine Art,457,1836,0.09
+5,Alexander City,AL,1,35010,5,32.9244,-85.9465,Kovacek Institute of Technology,1511,19372,0.82
+6,Athens,AL,1,35611,5,34.8056,-86.9651,Athens Institute,1057,49203,0.06
+7,Auburn University,AL,1,36849,5,32.6002,-85.4924,Alabama Beauty College of Auburn University,486,44097,0.50
+8,Birmingham,AL,1,35254,5,33.5155,-86.8536,Condemned Balloon Institute,616,59759,0.59
+9,Tanner,AL,1,35671,5,34.6543,-86.9491,Inquisitive Farm College,971,34183,0.19
+10,Enterprise,AL,1,36330-1300,5,31.2975,-85.837,Enterprise University,920,42629,0.59

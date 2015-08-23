@@ -15,7 +15,7 @@ global_mapping:
   INTPTLONG: longitude
 
 files:
-  cities50.csv:
+  - name: cities50.csv
     add:
       category: 'top50'
-  cities51-100.csv:
+  - name: cities51-100.csv

@@ -11,8 +11,15 @@ require 'logger'
 
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
+require_relative 'data_magic/query_builder'
+require_relative 'zipcode/zipcode'
 
 SafeYAML::OPTIONS[:default_mode] = :safe
+
+class IndifferentHash < Hash
+  include Hashie::Extensions::MergeInitializer
+  include Hashie::Extensions::IndifferentAccess
+end
 
 module DataMagic
 
@@ -21,11 +28,6 @@ module DataMagic
     def logger
       Config.logger
     end
-  end
-
-  class IndifferentHash < Hash
-    include Hashie::Extensions::MergeInitializer
-    include Hashie::Extensions::IndifferentAccess
   end
 
   DEFAULT_PAGE_SIZE = 20
@@ -51,7 +53,6 @@ module DataMagic
   #  logger.info "response: #{response.inspect}"
   end
 
-
   #========================================================================
   #   Public Class Methods
   #========================================================================
@@ -59,50 +60,24 @@ module DataMagic
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
-    options[:fields] ||= []
-    fields = options[:fields].map { |field| field.to_s }
+    query_body = QueryBuilder.from_params(terms, options, config)
     index_name = index_name_from_options(options)
     logger.info "search terms:#{terms.inspect}"
-    squery = Stretchy.query
-
-    distance = terms[:distance]
-    if distance && !distance.empty?
-      location = { lat: 37.615223, lon:-122.389977 } #sfo
-      squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
-      terms.delete(:distance)
-      terms.delete(:zip)
-    end
-
-    page = terms[:page] || 0
-    per_page = terms[:per_page] || config.page_size
-
-    terms.delete(:page)
-    terms.delete(:per_page)
-
-    # logger.info "--> terms: #{terms.inspect}"
-    squery = squery.where(terms) unless terms.empty?
 
     full_query = {
       index: index_name,
       type: 'document',
-      body: {
-        from: page,
-        size: per_page,
-        query: squery.to_search
-      }
+      body: query_body
     }
-    if not fields.empty?
-      full_query[:body][:fields] = fields
-    end
 
-    logger.info "===========> full_query:#{full_query.inspect}"
+    logger.info "FULL_QUERY: #{full_query.inspect}"
 
     result = client.search full_query
-    logger.info "result: #{result.inspect}"
+    logger.info "result: #{result.inspect[0..500]}"
     hits = result["hits"]
     total = hits["total"]
     results = []
-    if fields.empty?
+    unless query_body.has_key? :fields
       # we're getting the whole document and we can find in _source
       results = hits["hits"].map {|hit| hit["_source"]}
     else
@@ -122,21 +97,34 @@ module DataMagic
     # assemble a simpler json document to return
     {
       "total" => total,
-      "page" => page,
-      "per_page" => per_page,
+      "page" => query_body[:from] / query_body[:size],
+      "per_page" => query_body[:size],
       "results" => 	results
     }
   end
 
   private
+    def self.nested_object_type(hash)
+      hash.each do |key, value|
+       if value.is_a?(Hash) && value[:type].nil?  # things are nested under this
+          hash[key] = {
+            path: "full", type: "object",
+            properties: value
+          }
+          nested_object_type(value)
+        end
+      end
+    end
+
     def self.create_index(es_index_name = nil, field_types={})
+      logger.info "create_index field_types: #{field_types.inspect[0..500]}"
       es_index_name ||= self.config.scoped_index_name
       field_types['location'] = 'geo_point'
-      es_types = {}
-      field_types.each do |key, type|
-        es_types[key] = { type: type }
-      end
+      es_types = es_field_types(field_types)
+      es_types = NestedHash.new.add(es_types)
+      nested_object_type(es_types)
       begin
+        logger.info "====> creating index with type mapping: #{es_types.inspect[0..500]}"
         client.indices.create index: es_index_name, body: {
           mappings: {
             document: {    # type 'document' is always used for external indexed docs
@@ -144,12 +132,24 @@ module DataMagic
             }
           }
         }
-        logger.info "====> index created with es type mapping: #{es_types.inspect[0..255]}"
       rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
-        logger.debug "create_index attempt failed #{es_index_name} -- maybe it already exists"
-        logger.error error.to_s
+        if error.message.include? "IndexAlreadyExistsException"
+          logger.debug "create_index failed: #{es_index_name} already exists"
+        else
+          logger.error error.to_s
+          raise error
+        end
       end
       es_index_name
+    end
+
+    # convert the types from data.yaml to Elasticsearch-specific types
+    def self.es_field_types(field_types)
+      custom_type = { 'literal' => {type: 'string', index:'not_analyzed'} }
+      field_types.each_with_object({}) do |(key, type), result|
+        result[key] = custom_type[type]
+        result[key] ||= { type: type }
+      end
     end
 
 

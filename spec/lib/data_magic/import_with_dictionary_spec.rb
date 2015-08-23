@@ -50,7 +50,6 @@ describe "DataMagic #import_with_dictionary" do
 
   context "with common options" do
     before(:all) do
-      DataMagic::Config.logger.info "===== before :all"
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
       DataMagic.init(load_now: true)
@@ -91,9 +90,25 @@ describe "DataMagic #import_with_dictionary" do
       expect(result["total"]).to eq(50)
     end
   end
+
+  context "with errors" do
+    before do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/import_with_errors'
+    end
+    after do
+      DataMagic.destroy
+    end
+
+    xit "raises an error with invalid type" do
+      expect {
+        DataMagic.init(load_now: true)
+      }.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest)
+    end
+  end
+
   context "with options" do
     before(:all) do
-      DataMagic::Config.logger.info "===== before :all"
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_options'
       DataMagic.init(load_now: true)
@@ -102,13 +117,29 @@ describe "DataMagic #import_with_dictionary" do
       DataMagic.destroy
     end
 
-    it "can index all columns and apply dictionary mapping to some" do
+    it "'columns: all' indexed all columns and apply dictionary mapping to some" do
       result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
       expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
                               "ANSICODE"=>"2395220", "name"=>"New York",
                               "population"=>"8175133", "year"=>2010}]
       expect(result).to eq(expected)
     end
+
+    context "'limit_files: 1" do
+      it "#config.files is of length 1" do
+        expect(DataMagic.config.files.length).to eq(1)
+      end
+      it "indexes just one file" do
+        result = DataMagic.search({}, api: 'cities')
+        expect(result['total']).to eq(3)
+      end
+    end
+
+    it "'rows: 2' indexes just 3 rows" do
+      result = DataMagic.search({}, api: 'cities')
+      expect(result['total']).to eq(3)
+    end
+
   end
 
   context "with null value" do

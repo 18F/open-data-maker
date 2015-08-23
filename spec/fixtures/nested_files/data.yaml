@@ -1,0 +1,38 @@
+version: 0.2
+api: school
+index: fake-nested
+unique: [id]
+
+dictionary:
+  id: UNITID
+  name:
+    source: INSTNM
+    type: literal
+  city: CITY_MAIN
+  state: STABBR_MAIN
+  zip: ZIP_MAIN
+  sat_average: SAT_AVG
+  location.lat: LATITUDE_MAIN
+  location.lon: LONGITUDE_MAIN
+
+  earnings.6_yrs_after_entry.median:
+    source: earn_2002_p10
+    description: Median earnings of students
+    type: integer
+
+  earnings.6_yrs_after_entry.percent_gt_25k:
+    source: gt_25k_2006_p6
+    description: Share of students earning over $25,000/year
+    type: float
+
+files:
+  - name: school-data.csv
+    only: [id, name, city, state]
+  - name: school2013.csv
+    nest:
+      key: 2013
+      contents: [earnings, sat_average]
+  - name: school2012.csv
+    nest:
+      key: 2012
+      contents: [earnings, sat_average]
