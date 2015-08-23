@@ -66,10 +66,7 @@ module DataMagic
     Config.logger.debug "additional_data: #{additional_data.inspect}"
 
     data = data.read if data.respond_to?(:read)
-    if data[0...3] == "\EF\xBB\xBF"
-      data[0...3] = ""
-    #-- search for bom in 1st three index, if present delete---#
-    end
+    data.sub!("\xEF\xBB\xBF", "") # remove Byte Order Mark
     if options[:force_utf8]
       data = data.encode('UTF-8', invalid: :replace, replace: '')
     end

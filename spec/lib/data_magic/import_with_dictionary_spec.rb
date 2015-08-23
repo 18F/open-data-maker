@@ -177,7 +177,7 @@ describe "DataMagic #import_with_dictionary" do
       DataMagic.destroy
     end
     it "can index all columns and apply dictionary mapping to some" do
-      result = DataMagic.search({UNITID: "100654"}, api: 'test')
+      result = DataMagic.search({id: "100654"}, api: 'test')
       expected["results"] = [{"id"=>"100654", "value"=>"00100200"}]
       expect(result).to eq(expected)
     end
