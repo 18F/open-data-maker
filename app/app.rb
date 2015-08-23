@@ -1,3 +1,5 @@
+require 'csv'
+
 module OpenDataMaker
   class App < Padrino::Application
     register SassInitializer
@@ -22,7 +24,7 @@ module OpenDataMaker
     end
 
     get :index do
-      render :home, locals: {
+      render :home, layout: true, locals: {
         'title' => 'Open Data Maker',
         'endpoints' => DataMagic.config.api_endpoint_names,
         'examples' => DataMagic.config.examples
@@ -50,12 +52,19 @@ module OpenDataMaker
     end
 
     get :index, :with => :endpoint do
-      content_type :json
+      endpoint = params.delete('endpoint')
+
+      format = File.extname(endpoint)
+      endpoint = File.basename(endpoint, format)
+      format[0] = ''
+      format = 'json' if format.empty?
+      content_type format.to_sym
+
       headers 'Access-Control-Allow-Origin' => '*',
                'Access-Control-Allow-Methods' => ['GET']
 
       DataMagic.logger.debug "-----> APP GET #{params.inspect}"
-      endpoint = params.delete('endpoint')
+
       if not DataMagic.config.api_endpoints.keys.include? endpoint
         halt 404, {
           error: 404,
@@ -65,7 +74,25 @@ module OpenDataMaker
       fields = params.delete('fields') || ""
       fields = fields.split(',')
       sort = params.delete('sort')
-      DataMagic.search(params, sort:sort, api:endpoint, fields:fields).to_json
+      data = DataMagic.search(params, sort:sort, api:endpoint, fields:fields)
+
+      if format == 'csv'
+        data = data['results']
+        # We assume all rows have the same keys
+        if data.first
+          CSV.generate(force_quotes: true, headers: true) do |csv|
+            data.each_with_index do |row, row_num|
+              row = NestedHash.new(row).withdotkeys
+              csv << row.keys if row_num == 0
+              csv << row
+            end
+          end
+        else
+          ''
+        end
+      else
+        data.to_json
+      end
     end
 
     ##

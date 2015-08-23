@@ -10,8 +10,7 @@ module DataMagic
     if nest_options
       #logger.info "nest: #{nest_options.to_yaml}"
       #logger.info "add to document: #{document.inspect[0..255]}"
-      key = document[nest_options['key']]
-      #logger.info "year => #{key}"
+      key = nest_options['key']
       new_doc[key] = {}
 
       id = document['id']
@@ -29,12 +28,15 @@ module DataMagic
   # parse a row from a csv file, returns a nested document
   def self.parse_row(row, fields, options, additional)
     row = row.to_hash
+    #logger.info "fields #{fields.inspect[0..255]}"
     row = map_field_names(row, fields, options) unless fields.empty?
-    map_field_types(row, config.field_types) unless config.field_types.empty?
+    map_field_types(row, config.column_field_types) unless config.column_field_types.empty?
+    #logger.info "row #{row.inspect[0..255]}"
     row = row.merge(additional) if additional
     document = NestedHash.new.add(row)
     document = parse_nested(document, options) if options[:nest]
     document = document.select {|key, value| options[:only].include?(key) } unless options[:only].nil?
+    #logger.info "document #{document.inspect[0..255]}"
     document
   end
 
@@ -78,7 +80,6 @@ module DataMagic
 
     logger.info "  new_field_names: #{new_field_names.inspect[0..500]}"
     logger.info "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
-    logger.info "  additional_data: #{additional_data}"
 
     begin
       CSV.parse(
@@ -86,15 +87,16 @@ module DataMagic
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
+        logger.info "csv parsed" if num_rows == 0
         doc = parse_row(row, new_field_names, options, additional_data)
-        headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
         if num_rows % 500 == 0
           logger.info "indexing rows: #{num_rows}..."
         end
         if num_rows == 0
-          logger.info "first row -> #{doc.inspect[0..500]}"
+          logger.info "row#{num_rows} -> #{doc.inspect[0..500]}"
           logger.info "id: #{get_id(doc).inspect}"
         end
+        headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
         if options[:nest] == nil  #first time or normal case
           client.index({
             index: es_index_name,
@@ -128,37 +130,27 @@ module DataMagic
       end
 
     rescue Exception => e
-      Config.logger.error e.message
-      rows = []
+        if e.class == ArgumentError && e.message == "invalid byte sequence in UTF-8"
+          Config.logger.error e.message
+          raise InvalidData, "invalid file format" if num_rows == 0
+          rows = []
+        else
+          raise e
+        end
     end
 
-    raise InvalidData, "invalid file format or zero rows" if num_rows == 0
+    raise InvalidData, "zero rows" if num_rows == 0
     client.indices.refresh index: es_index_name
-
+    logger.info "done: #{num_rows} rows"
     return [num_rows, headers]
   end
 
   def self.import_with_dictionary(options = {})
     start_time = Time.now
     Config.logger.debug "--- import_with_dictionary, starting at #{start_time}"
-    field_mapping = {}
 
-    # field_name: name we want as the json key
-    # field_mapping[column_name] = field_name
-    self.config.dictionary.each do |field_name, info|
-      case info
-        when String
-          field_mapping[info] = field_name
-        when Hash
-          column_name = info['source']
-          field_mapping[column_name] = field_name
-        else
-          Config.logger.warn("unexpected dictionary field info " +
-            "for #{field_name}: #{info.inspect} -- expected String or Hash")
-      end
-    end
     #logger.debug("field_mapping: #{field_mapping.inspect}")
-    options[:mapping] = field_mapping
+    options[:mapping] = config.field_mapping
     options = options.merge(config.data['options'])
 
     es_index_name = self.config.load_datayaml(options[:data_path])
@@ -178,7 +170,7 @@ module DataMagic
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
         logger.debug "imported #{rows} rows"
-      rescue Exception => e
+      rescue DataMagic::InvalidData => e
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
       end
     end
@@ -194,8 +186,8 @@ private
     mapped = {}
     row.each do |key, value|
       raise ArgumentError, "column header missing for: #{value}" if key.nil?
-      #logger.info "key: #{key.inspect}, value:#{value.inspect}"
       new_key = new_fields[key.to_sym] || new_fields[key.to_s]
+      #logger.info "key: #{key.inspect}, new_key:#{new_key.inspect}"
       if new_key
         value = value.to_f if new_key.include? "location"
         mapped[new_key] = value
@@ -203,7 +195,24 @@ private
         mapped[key] = value
       end
     end
-    mapped
+    mapped.merge(config.calculated_fields(row))
+  end
+
+  def self.fix_field_type(type, value, key=nil)
+    #logger.info "fix_field_type type:#{type.inspect} value: #{value.inspect} key: #{key.inspect}"
+    return value if value.nil?
+
+    new_value = case type
+      when "float"
+        value.to_f
+      when "integer"
+        value.to_i
+      else # "string"
+        value.to_s
+    end
+    new_value = value.to_f if key and key.to_s.include? "location"
+    #logger.info "new_value #{new_value.inspect}"
+    new_value
   end
 
   # row: a hash  (keys may be strings or symbols)
@@ -212,15 +221,8 @@ private
   def self.map_field_types(row, field_types = {})
     row.each do |key, value|
       type = field_types[key.to_sym] || field_types[key.to_s]
+      row[key] = fix_field_type(type, value, key)
       #logger.info "key: #{key} type: #{type}"
-      case type
-        when "float"
-          row[key] = value.to_f
-        when "integer"
-          row[key] = value.to_i
-        when "string"
-          row[key] = value.to_s
-      end
     end
     row
   end

@@ -3,7 +3,7 @@ require_relative '../data_magic.rb'
 module DataMagic
   require_relative 'example.rb'
   class Config
-    attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints
+    attr_reader :data_path, :data, :dictionary, :files, :file_config, :s3, :api_endpoints
     attr_accessor :page_size
 
     def initialize(options = {})
@@ -18,7 +18,11 @@ module DataMagic
       if @data_path.nil? or @data_path.empty?
         @data_path = DEFAULT_PATH
       end
-      load_datayaml
+      if options[:load_datayaml] == false
+        @data = {}
+      else
+        load_datayaml
+      end
     end
 
     def examples
@@ -61,7 +65,7 @@ module DataMagic
     # fetches file configuration
     # add: whatever
     def additional_data_for_file(index)
-      result = @data.fetch('files', []).fetch(index, {}).fetch('add', nil)
+      @data.fetch('files', []).fetch(index, {}).fetch('add', nil)
     end
 
     def info_for_file(index, field)
@@ -98,11 +102,141 @@ module DataMagic
       end
     end
 
+    # pull out all the fields that are specified in
+    # only: [one, two, three]
+    # this means we should only take these fields from that file
+    def only_field_list(only_names, all_fields)
+      selected = {}
+      only_names.each do |name|
+        # select the exact match or all the fields with prefix "whatever."
+        selected.merge!(all_fields.select { |k,v| name == k || name =~ /#{k}\..*/ })
+      end
+      selected
+    end
+
+    # return new fields Hash, with fields that will turn into the nested hash
+    def make_nested(nest_config, all_fields)
+      new_fields = {}
+      selected = []
+      nest_config['contents'].each do |key_name|
+        # select the exact match or all the fields with prefix "whatever."
+        selected += all_fields.keys.select { |name| name == key_name || name =~ /#{key_name}\..*/ }
+      end
+      nested_prefix = nest_config['key']
+      selected.each do |name|
+        new_fields["#{nested_prefix}.#{name}"] = all_fields[name]
+      end
+      new_fields
+    end
+
+    def file_config
+      @data.fetch('files', [])
+    end
+
+    # returns a hash that lets us know the types of what we read from csv
+    # key: the field names which map directly to csv columns
+    # value: type
+    def column_field_types
+      if @column_types.nil?
+        @column_types = {}
+        dictionary.each do |field_name, info|
+          type = info['type']
+          @column_types[field_name] = type unless type.nil?
+        end
+      end
+      @column_types
+    end
+
+
+    # field_mapping[column_name] = field_name
+    def field_mapping
+      if @field_mapping.nil?
+        @field_mapping = {}
+        # field_name: name we want as the json key
+        dictionary.each do |field_name, info|
+          case info
+            when String
+              dictionary[field_name] = {'source' => field_name}
+              field_mapping[info] = field_name
+            when Hash
+              column_name = info['source']
+              unless column_name.nil? and info['calculate'] # skip calc columns
+                @field_mapping[column_name] = field_name
+              end
+            else
+              Config.logger.warn("unexpected dictionary field info " +
+                "for #{field_name}: #{info.inspect} -- expected String or Hash")
+          end
+        end
+
+      end
+      @field_mapping
+    end
+
+    def parse_expression(expression, field_name='unknown')
+      match = /\s*(\w+)\s+or\s+(\w+)\s*/.match expression
+      # logger.debug("parse_expression #{match.inspect}")
+      if match.nil? or match[1].nil? or match[2].nil?
+        raise ArgumentError,
+          "can't interpret #{expression.inspect} for #{field_name}"
+      end
+      [match[1], match[2]]
+    end
+
+    # currently we just support 'or' operations on two columns
+    def calculate(field_name, row)
+      item = dictionary[field_name]
+      #logger.debug("row #{row.inspect}")
+      #logger.debug("calculate item #{item.inspect}")
+      expr = item['calculate']
+      raise ArgumentError, "expected to calculate #{field_name}" if expr.nil?
+      cols = parse_expression(expr, field_name) #if expr.is_a? String
+      cols = cols.map { |c| row[c.to_sym] }
+      cols = cols.map { |value| value == 'NULL' ? nil : value }
+      a, b = cols.map { |c| (DataMagic::fix_field_type(item['type'], c)) }
+      #logger.debug("final: data #{cols.inspect} #{a.inspect} #{b.inspect} #{(a || b).inspect}")
+      a || b
+    end
+
+    def calculated_field_list(row)
+      if @calculated_field_list.nil?
+        @calculated_field_list = []
+        dictionary.each do |field_name, info|
+          if info.is_a? Hash and info['calculate']
+            @calculated_field_list << field_name
+          end
+        end
+      end
+      @calculated_field_list
+    end
+
+    def calculated_fields(row)
+      result = {}
+      calculated_field_list(row).each do |name|
+        result[name] = calculate(name, row)
+      end
+      result
+    end
+
+    # this is a mapping of the fields that end up in the json doc
+    # to their types, which might include nested documents
+    # but at this stage, field names use dot syntax for nesting
     def field_types
       if @field_types.nil?
         @field_types = {}
-        dictionary.each do |field_name, info|
-          type = info['type']
+        fields = {}
+        file_config.each do |f|
+          if f.keys == ['name']   # only filename, use all the columns
+            fields.merge!(dictionary)
+          else
+            fields.merge!(only_field_list(f['only'], dictionary)) if f['only']
+            fields.merge!(make_nested(f['nest'], dictionary)) if f['nest']
+          end
+        end
+        fields.each do |field_name, info|
+          type = info['type'] || "string"
+          type = nil if field_name == 'location.lat' || field_name == 'location.lon'
+          #logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
         end
       end
@@ -249,7 +383,7 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @data = load_yaml(directory_path)
         @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect[0..255]}"
+        logger.debug "config: #{@data.inspect[0..600]}"
         @data['index'] ||= clean_index(@data_path)
         endpoint = @data['api'] || clean_index(@data_path)
         @dictionary = @data['dictionary'] || {}

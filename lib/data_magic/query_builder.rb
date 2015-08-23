@@ -11,7 +11,7 @@ module DataMagic
         }
         query_hash[:query] = generate_squery(params, config).to_search
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
-        query_hash[:sort] = get_sort_order(options) if options[:sort]
+        query_hash[:sort] = get_sort_order(options[:sort]) if options[:sort] && !options[:sort].empty?
         query_hash
       end
 
@@ -20,16 +20,21 @@ module DataMagic
       def generate_squery(params, config)
         squery = Stretchy.query(type: 'document')
         squery = search_location(squery, params)
-        squery = search_fields_and_ranges(squery, params)
+        search_fields_and_ranges(squery, params)
       end
 
       def get_restrict_fields(options)
         options[:fields].map { |field| field.to_s }
       end
 
-      def get_sort_order(options)
-        key, value = options[:sort].split(':')
-        return { key => { order: value } }
+      # @description turns a string like "state,population:desc" into [{'state' => {order: 'asc'}},{ "population" => {order: "asc"} }]
+      # @param [String] sort_param
+      # @return [Array]
+      def get_sort_order(sort_param)
+        sort_param.to_s.scan(/(\w+):?(\w*)/).map do |field_name, direction|
+          direction = 'asc' if direction.empty?
+          { field_name => { order: direction } }
+        end
       end
 
       def to_number(value)
@@ -71,8 +76,13 @@ module DataMagic
       # Handles location (currently only uses SFO location)
       def search_location(squery, params)
         distance = params[:distance]
+        location = Zipcode.latlon(params[:zip])
+
         if distance && !distance.empty?
-          location = { lat: 37.615223, lon:-122.389977 } #sfo
+          # default to miles if no distance given
+          unit = distance[-2..-1]
+          distance = "#{distance}mi" if unit != "km" and unit != "mi"
+
           squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
           params.delete(:distance)
           params.delete(:zip)

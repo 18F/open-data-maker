@@ -80,7 +80,7 @@ describe DataMagic::Config do
     it "has config data" do
       default_config = {"version"=>"cities100-2010",
         "index"=>"city-data", "api"=>"cities",
-        "dictionary"=> {"state"=>"USPS", "name"=>"NAME",
+        "dictionary"=> {"state"=>"USPS", "name"=>{"source"=>"NAME", "type"=>"literal"},
                         "population"=>{"source"=>"POP10", "type"=>"integer"},
                         "location.lat"=>"INTPTLAT", "location.lon"=>"INTPTLONG",
                         "land_area"=>{"source"=>"ALAND_SQMI", "type"=>"float"}
@@ -97,6 +97,12 @@ describe DataMagic::Config do
       expect(DataMagic::DEFAULT_PAGE_SIZE).to_not be_nil
       expect(config.page_size).to eq(DataMagic::DEFAULT_PAGE_SIZE)
     end
+
+    it "has can parse expressions" do
+      expr = "ONE or TWO"
+      expect(config.parse_expression(expr)).to eq(['ONE', 'TWO'])
+    end
+
 
     describe "#update_indexed_config" do   #rename ... or do this in load_config or something
       context "after loading config" do
