@@ -147,6 +147,77 @@ module DataMagic
       @column_types
     end
 
+
+    # field_mapping[column_name] = field_name
+    def field_mapping
+      if @field_mapping.nil?
+        @field_mapping = {}
+        # field_name: name we want as the json key
+        dictionary.each do |field_name, info|
+          case info
+            when String
+              dictionary[field_name] = {'source' => field_name}
+              field_mapping[info] = field_name
+            when Hash
+              column_name = info['source']
+              unless column_name.nil? and info['calculate'] # skip calc columns
+                @field_mapping[column_name] = field_name
+              end
+            else
+              Config.logger.warn("unexpected dictionary field info " +
+                "for #{field_name}: #{info.inspect} -- expected String or Hash")
+          end
+        end
+
+      end
+      @field_mapping
+    end
+
+    def parse_expression(expression, field_name='unknown')
+      match = /\s*(\w+)\s+or\s+(\w+)\s*/.match expression
+      # logger.debug("parse_expression #{match.inspect}")
+      if match.nil? or match[1].nil? or match[2].nil?
+        raise ArgumentError,
+          "can't interpret #{expression.inspect} for #{field_name}"
+      end
+      [match[1], match[2]]
+    end
+
+    # currently we just support 'or' operations on two columns
+    def calculate(field_name, row)
+      item = dictionary[field_name]
+      #logger.debug("row #{row.inspect}")
+      #logger.debug("calculate item #{item.inspect}")
+      expr = item['calculate']
+      raise ArgumentError, "expected to calculate #{field_name}" if expr.nil?
+      cols = parse_expression(expr, field_name) #if expr.is_a? String
+      cols = cols.map { |c| row[c.to_sym] }
+      cols = cols.map { |value| value == 'NULL' ? nil : value }
+      a, b = cols.map { |c| (DataMagic::fix_field_type(item['type'], c)) }
+      #logger.debug("final: data #{cols.inspect} #{a.inspect} #{b.inspect} #{(a || b).inspect}")
+      a || b
+    end
+
+    def calculated_field_list(row)
+      if @calculated_field_list.nil?
+        @calculated_field_list = []
+        dictionary.each do |field_name, info|
+          if info.is_a? Hash and info['calculate']
+            @calculated_field_list << field_name
+          end
+        end
+      end
+      @calculated_field_list
+    end
+
+    def calculated_fields(row)
+      result = {}
+      calculated_field_list(row).each do |name|
+        result[name] = calculate(name, row)
+      end
+      result
+    end
+
     # this is a mapping of the fields that end up in the json doc
     # to their types, which might include nested documents
     # but at this stage, field names use dot syntax for nesting
