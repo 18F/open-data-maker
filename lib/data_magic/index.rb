@@ -30,7 +30,9 @@ module DataMagic
     row = row.to_hash
     #logger.info "fields #{fields.inspect[0..255]}"
     row = map_field_names(row, fields, options) unless fields.empty?
-    map_field_types(row, config.field_types, config.null_value) unless config.field_types.empty?
+    unless config.column_field_types.empty? && config.null_value.empty?
+      map_field_types(row, config.column_field_types, config.null_value)
+    end
     row = row.merge(additional) if additional
     document = NestedHash.new.add(row)
     document = parse_nested(document, options) if options[:nest]
