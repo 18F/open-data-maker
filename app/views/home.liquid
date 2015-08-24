@@ -8,12 +8,28 @@
 {% endfor %}
 </ul>
 
- {% if examples.size > 0 %}
-<h2>Examples</h2>
+{% if examples.size > 0 %}
+  <h2>Examples</h2>
 
-<ul>
-{% for ex in examples %}
-  <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
-{% endfor %}
-</ul>
+  <ul>
+  {% for ex in examples %}
+    <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
+  {% endfor %}
+  </ul>
 {% endif %}
+
+<h2>Browse Data Details by Category</h2>
+<div class="categories">
+{% for column in category_columns %}
+  <div class="categories__column">
+  {% for category in column %}
+    <div class="category">
+      <a href="/categories/{{category.id}}">
+        <div class="category__name"> {{ category.name }} </div>
+        <div> {{ category.description }} </div>
+      </a>
+    </div>
+  {% endfor %}
+  </div>
+{% endfor %}
+</div>

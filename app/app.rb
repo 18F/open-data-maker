@@ -24,10 +24,25 @@ module OpenDataMaker
     end
 
     get :index do
+      categories = Category.from_yml.map { |category| CategoryDrop.new(category) }
+      category_columns = categories.each_slice((categories.length / 2) + 1).to_a
+      # improve when category count is even
+
       render :home, layout: true, locals: {
         'title' => 'Open Data Maker',
         'endpoints' => DataMagic.config.api_endpoint_names,
-        'examples' => DataMagic.config.examples
+        'examples' => DataMagic.config.examples,
+        'category_columns' => category_columns
+      }
+    end
+
+    get :categories, :with => :id do
+      category = Category.from_yml.find { |category| category.id == params[:id] }
+      # handle when category is nil
+
+      render :category, layout: true, locals: {
+        'title' => 'Open Data Maker',
+        'category' => CategoryDrop.new(category)
       }
     end
 
