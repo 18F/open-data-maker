@@ -20,14 +20,16 @@ end
 describe 'api', type: 'feature' do
   let(:json_response) { JSON.parse(last_response.body) }
 
-  context 'with sample data' do
-    # app starts up in advance of before :all so for now testing only
-    # with ./sample-data
-
-    after(:all) do
-      Stretchy.delete 'test-city-data'
-      #expect(DataMagic.client.indices.get(index: '_all')).to be_empty
+  context 'with some sample data' do
+    before do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/sample-data'
+      DataMagic.init(load_now: true)
     end
+    after do
+      DataMagic.destroy
+    end
+
 
     it "loads the endpoint list" do
       get "/endpoints"
