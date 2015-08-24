@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'data_magic'
 
 describe "unique key(s)" do
 
@@ -138,6 +137,26 @@ describe "DataMagic #import_with_dictionary" do
     end
 
   end
+
+  context "with option import: all" do
+    before(:all) do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/import_with_options'
+      DataMagic.init(load_now: true)
+    end
+    after(:all) do
+      DataMagic.destroy
+    end
+
+    it "can index all columns and apply dictionary mapping to some" do
+      result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
+      expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
+                              "ANSICODE"=>"2395220", "name"=>"New York",
+                              "population"=>"8175133", "year"=>2010}]
+      expect(result).to eq(expected)
+    end
+  end
+
   context "with option import: all" do
     before(:all) do
       DataMagic.destroy
@@ -155,23 +174,7 @@ describe "DataMagic #import_with_dictionary" do
       expect(result).to eq(expected)
     end
   end
-  context "with option import: all" do
-    before(:all) do
-      DataMagic.destroy
-      ENV['DATA_PATH'] = './spec/fixtures/import_with_options'
-      DataMagic.init(load_now: true)
-    end
-    after(:all) do
-      DataMagic.destroy
-    end
-    it "can index all columns and apply dictionary mapping to some" do
-      result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
-      expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
-                              "ANSICODE"=>"2395220", "name"=>"New York",
-                              "population"=>"8175133", "year"=>2010}]
-      expect(result).to eq(expected)
-    end
-  end
+
   context "with BOM (byte order mark)" do
     before(:all) do
       DataMagic.destroy
@@ -184,6 +187,25 @@ describe "DataMagic #import_with_dictionary" do
     it "can index all columns and apply dictionary mapping to some" do
       result = DataMagic.search({id: "100654"}, api: 'test')
       expected["results"] = [{"id"=>"100654", "value"=>"00100200"}]
+      expect(result).to eq(expected)
+    end
+  end
+  
+  context "with null value" do
+    before(:all) do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/import_with_null_value'
+      DataMagic.init(load_now: true)
+    end
+    after(:all) do
+      DataMagic.destroy
+    end
+
+    it "should change null values to nil" do
+      result = DataMagic.search({ANSICODE: "2395220"}, api: 'cities')
+      expected["results"] = [{"state"=>"NY", "GEOID"=>nil,
+                              "ANSICODE"=>"2395220", "name"=>"New York",
+                              "population"=>"8175133"}]
       expect(result).to eq(expected)
     end
   end
