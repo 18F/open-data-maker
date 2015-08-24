@@ -42,4 +42,13 @@ describe "unique key(s)" do
     expect(first['2013']['earnings']['6_yrs_after_entry']).to eq({"percent_gt_25k"=>0.53, "median"=>26318})
   end
 
+  it "can sort with a nested field" do
+    DataMagic.config = DataMagic::Config.new
+    DataMagic.import_with_dictionary
+    result = DataMagic.search({}, sort:'2013.earnings.6_yrs_after_entry.median')
+    expect(result['total']).to eq(10)
+    first = result['results'].first
+    expect(first['2013']['earnings']['6_yrs_after_entry']).to eq({"percent_gt_25k"=>0.09, "median"=>1836})
+  end
+
 end
