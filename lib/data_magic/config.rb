@@ -3,7 +3,8 @@ require_relative '../data_magic.rb'
 module DataMagic
   require_relative 'example.rb'
   class Config
-    attr_reader :data_path, :data, :dictionary, :files, :file_config, :s3, :api_endpoints
+    attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
+                :null_value, :file_config
     attr_accessor :page_size
 
     def initialize(options = {})
@@ -383,6 +384,7 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @data = load_yaml(directory_path)
         @data['unique'] ||= []
+        @null_value = @data['null_value'] || 'NULL'
         logger.debug "config: #{@data.inspect[0..600]}"
         @data['index'] ||= clean_index(@data_path)
         endpoint = @data['api'] || clean_index(@data_path)

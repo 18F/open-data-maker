@@ -30,8 +30,9 @@ module DataMagic
     row = row.to_hash
     #logger.info "fields #{fields.inspect[0..255]}"
     row = map_field_names(row, fields, options) unless fields.empty?
-    map_field_types(row, config.column_field_types) unless config.column_field_types.empty?
-    #logger.info "row #{row.inspect[0..255]}"
+    unless config.column_field_types.empty? && config.null_value.empty?
+      map_field_types(row, config.column_field_types, config.null_value)
+    end
     row = row.merge(additional) if additional
     document = NestedHash.new.add(row)
     document = parse_nested(document, options) if options[:nest]
@@ -218,11 +219,15 @@ private
   # row: a hash  (keys may be strings or symbols)
   # field_types: hash field_name : type (float, integer, string)
   # returns a hash where values have been coerced to the new type
-  def self.map_field_types(row, field_types = {})
+  def self.map_field_types(row, field_types = {}, null_value = 'NULL')
     row.each do |key, value|
-      type = field_types[key.to_sym] || field_types[key.to_s]
-      row[key] = fix_field_type(type, value, key)
-      #logger.info "key: #{key} type: #{type}"
+      if value == null_value
+        row[key] = nil
+      else
+        type = field_types[key.to_sym] || field_types[key.to_s]
+        row[key] = fix_field_type(type, value, key)
+        #logger.info "key: #{key} type: #{type}"
+      end
     end
     row
   end
