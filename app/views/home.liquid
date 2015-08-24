@@ -1,3 +1,7 @@
+<script>
+  categories = {{ categories }}
+</script>
+
 <h1>{{ title }}</h1>
 
 <h2>API endpoints</h2>
@@ -19,8 +23,8 @@
 {% endif %}
 
 <h2>Browse Data Details by Category</h2>
-<div class="categories">
-{% for column in category_columns %}
+<div class="categories"> categories </div>
+<!-- {% for column in category_columns %}
   <div class="categories__column">
   {% for category in column %}
     <div class="category">
@@ -30,4 +34,4 @@
   {% endfor %}
   </div>
 {% endfor %}
-</div>
+-->
