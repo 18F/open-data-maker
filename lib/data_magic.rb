@@ -35,6 +35,8 @@ module DataMagic
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
   end
+  class InvalidDictionary < StandardError
+  end
 
   def self.s3
     if @s3.nil?
