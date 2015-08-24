@@ -77,19 +77,22 @@ describe DataMagic::Config do
         expect(config.scoped_index_name).to eq('test-city-data')
       end
     end
+    
     it "has config data" do
       default_config = {"version"=>"cities100-2010",
         "index"=>"city-data", "api"=>"cities",
-        "dictionary"=> {"state"=>"USPS", "name"=>{"source"=>"NAME", "type"=>"literal"},
-                        "population"=>{"source"=>"POP10", "type"=>"integer"},
-                        "location.lat"=>"INTPTLAT", "location.lon"=>"INTPTLONG",
-                        "land_area"=>{"source"=>"ALAND_SQMI", "type"=>"float"}
-                      },
         "files" => [{"name"=>"cities100.csv"}],
         "data_path" => "./sample-data",
         "options"=>{},
         "unique"=>["name"],
       }
+      expect(config.data.keys).to include('dictionary')
+      dictionary = config.data.delete 'dictionary'
+
+      expect(dictionary.keys.sort).to eq %w[id code name state population
+        location.lat location.lon land_area water_area].sort
+      categories = config.data.delete 'categories'
+      expect(categories.keys.sort).to eq %w[general geographic].sort
       expect(config.data).to eq(default_config)
     end
 
