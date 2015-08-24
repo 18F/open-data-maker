@@ -102,7 +102,7 @@ describe "DataMagic #import_with_dictionary" do
     xit "raises an error with invalid type" do
       expect {
         DataMagic.init(load_now: true)
-      }.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest)
+      }.to raise_error(DataMagic::InvalidDictionary)
     end
   end
 
