@@ -27,6 +27,11 @@ module OpenDataMaker
       DataMagic.init   # loads in background
     end
 
+    get :index do
+      render :home, layout: true, locals: {
+        'categories' => DataMagic.config.data['categories'].to_json
+      }
+    end
     ##
     # Caching support.
     #
