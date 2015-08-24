@@ -77,7 +77,7 @@ describe DataMagic::Config do
         expect(config.scoped_index_name).to eq('test-city-data')
       end
     end
-    
+
     it "has config data" do
       default_config = {"version"=>"cities100-2010",
         "index"=>"city-data", "api"=>"cities",
@@ -90,7 +90,7 @@ describe DataMagic::Config do
       dictionary = config.data.delete 'dictionary'
 
       expect(dictionary.keys.sort).to eq %w[id code name state population
-        location.lat location.lon land_area water_area].sort
+        location.lat location.lon area.land area.water].sort
       categories = config.data.delete 'categories'
       expect(categories.keys.sort).to eq %w[general geographic].sort
       expect(config.data).to eq(default_config)

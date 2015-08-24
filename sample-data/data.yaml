@@ -44,10 +44,10 @@ dictionary:
     type: integer
   location.lat: INTPTLAT
   location.lon: INTPTLONG
-  land_area:
+  area.land:
     description: Land Area (square miles)
     type: float
-  water_area:
+  area.water:
     description: Water Area (square miles)
     source: AWATER_SQMI
     type: float
@@ -67,7 +67,7 @@ categories:
       purposes does not constitute a determination of jurisdictional authority
       or rights of ownership or entitlement.
     source: ALAND_SQMI
-    fields: [location, land_area, water_area]
+    fields: [location, area.land, area.water]
 
 
 files:
