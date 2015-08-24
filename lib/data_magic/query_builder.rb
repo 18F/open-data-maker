@@ -27,11 +27,11 @@ module DataMagic
         options[:fields].map { |field| field.to_s }
       end
 
-      # @description turns a string like "state,population:desc" into [{'state' => {order: 'asc'}},{ "population" => {order: "asc"} }]
+      # @description turns a string like "state,population:desc" into [{'state' => {order: 'asc'}},{ "population" => {order: "desc"} }]
       # @param [String] sort_param
       # @return [Array]
       def get_sort_order(sort_param)
-        sort_param.to_s.scan(/(\w+):?(\w*)/).map do |field_name, direction|
+        sort_param.to_s.scan(/(\w+[\.\w]*):?(\w*)/).map do |field_name, direction|
           direction = 'asc' if direction.empty?
           { field_name => { order: direction } }
         end
