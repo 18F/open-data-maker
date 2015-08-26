@@ -90,6 +90,8 @@ describe "DataMagic #import_with_dictionary" do
 
   context "with errors" do
     before do
+      # This disables threading, and has the thread proc exec in main thread
+      allow(Thread).to receive(:new).and_yield
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_errors'
     end
@@ -98,9 +100,9 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "raises an error with invalid type" do
-      expect do
+      expect {
         DataMagic.init(load_now: true)
-      end.to raise_error(DataMagic::InvalidDictionary)
+      }.to raise_error(DataMagic::InvalidDictionary)
     end
   end
 
