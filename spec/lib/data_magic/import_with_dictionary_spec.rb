@@ -100,9 +100,9 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "raises an error with invalid type" do
-      expect {
+      expect do
         DataMagic.init(load_now: true)
-      }.to raise_error(DataMagic::InvalidDictionary)
+      end.to raise_error(DataMagic::InvalidDictionary)
     end
   end
 
