@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe "unique key(s)" do
-
   before :example do
     DataMagic.destroy
     ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
@@ -32,7 +31,6 @@ describe "unique key(s)" do
     result = DataMagic.search({})
     expect(result['metadata']['total']).to eq(100)
   end
-
 end
 
 describe "DataMagic #import_with_dictionary" do
@@ -68,12 +66,12 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "indexes files with yaml mapping" do
-      result = DataMagic.search({name: "Chicago"}, api: 'cities')
+      result = DataMagic.search({ name: "Chicago" }, api: 'cities')
       expected["results"] = [
-        { "state"=>"IL", "name"=>"Chicago",
-          "population"=>"2695598",
-          "latitude"=>"41.837551", "longitude"=>"-87.681844",
-          "category"=>"top50"
+        { "state" => "IL", "name" => "Chicago",
+          "population" => "2695598",
+          "latitude" => "41.837551", "longitude" => "-87.681844",
+          "category" => "top50"
         }
       ]
       expect(result).to eq(expected)
@@ -85,13 +83,15 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "adds column with additional field data" do
-      result = DataMagic.search({category: "top50"}, api: 'cities')
+      result = DataMagic.search({ category: "top50" }, api: 'cities')
       expect(result['metadata']['total']).to eq(50)
     end
   end
 
   context "with errors" do
     before do
+      # This disables threading, and has the thread proc exec in main thread
+      allow(Thread).to receive(:new).and_yield
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_errors'
     end
@@ -99,15 +99,14 @@ describe "DataMagic #import_with_dictionary" do
       DataMagic.destroy
     end
 
-    xit "raises an error with invalid type" do
-      expect {
+    it "raises an error with invalid type" do
+      expect do
         DataMagic.init(load_now: true)
-      }.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest)
+      end.to raise_error(DataMagic::InvalidDictionary)
     end
   end
 
   context "with options" do
-
     before(:all) do
       DataMagic.destroy
       ENV['DATA_PATH'] = './spec/fixtures/import_with_options'
@@ -118,10 +117,10 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "'columns: all' indexed all columns and apply dictionary mapping to some" do
-      result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
-      expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
-                              "ANSICODE"=>"2395220", "name"=>"New York",
-                              "population"=>"8175133", "year"=>2010}]
+      result = DataMagic.search({ GEOID: "3651000" }, api: 'cities')
+      expected["results"] = [{ "state" => "NY", "GEOID" => "3651000",
+                               "ANSICODE" => "2395220", "name" => "New York",
+                               "population" => "8175133", "year" => 2010 }]
       expect(result).to eq(expected)
     end
 
@@ -139,7 +138,6 @@ describe "DataMagic #import_with_dictionary" do
       result = DataMagic.search({}, api: 'cities')
       expect(result['metadata']['total']).to eq(3)
     end
-
   end
 
   context "with option import: all" do
@@ -153,10 +151,10 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "can index all columns and apply dictionary mapping to some" do
-      result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
-      expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
-                              "ANSICODE"=>"2395220", "name"=>"New York",
-                              "population"=>"8175133", "year"=>2010}]
+      result = DataMagic.search({ GEOID: "3651000" }, api: 'cities')
+      expected["results"] = [{ "state" => "NY", "GEOID" => "3651000",
+                               "ANSICODE" => "2395220", "name" => "New York",
+                               "population" => "8175133", "year" => 2010 }]
       expect(result).to eq(expected)
     end
   end
@@ -171,10 +169,10 @@ describe "DataMagic #import_with_dictionary" do
       DataMagic.destroy
     end
     it "can index all columns and apply dictionary mapping to some" do
-      result = DataMagic.search({GEOID: "3651000"}, api: 'cities')
-      expected["results"] = [{"state"=>"NY", "GEOID"=>"3651000",
-                              "ANSICODE"=>"2395220", "name"=>"New York",
-                              "population"=>"8175133", "year"=>2010}]
+      result = DataMagic.search({ GEOID: "3651000" }, api: 'cities')
+      expected["results"] = [{ "state" => "NY", "GEOID" => "3651000",
+                               "ANSICODE" => "2395220", "name" => "New York",
+                               "population" => "8175133", "year" => 2010 }]
       expect(result).to eq(expected)
     end
   end
@@ -189,8 +187,8 @@ describe "DataMagic #import_with_dictionary" do
       DataMagic.destroy
     end
     it "can index all columns and apply dictionary mapping to some" do
-      result = DataMagic.search({id: "100654"}, api: 'test')
-      expected["results"] = [{"id"=>"100654", "value"=>"00100200"}]
+      result = DataMagic.search({ id: "100654" }, api: 'test')
+      expected["results"] = [{ "id" => "100654", "value" => "00100200" }]
       expect(result).to eq(expected)
     end
   end
@@ -206,10 +204,10 @@ describe "DataMagic #import_with_dictionary" do
     end
 
     it "should change null values to nil" do
-      result = DataMagic.search({ANSICODE: "2395220"}, api: 'cities')
-      expected["results"] = [{"state"=>"NY", "GEOID"=>nil,
-                              "ANSICODE"=>"2395220", "name"=>"New York",
-                              "population"=>"8175133"}]
+      result = DataMagic.search({ ANSICODE: "2395220" }, api: 'cities')
+      expected["results"] = [{ "state" => "NY", "GEOID" => nil,
+                               "ANSICODE" => "2395220", "name" => "New York",
+                               "population" => "8175133" }]
       expect(result).to eq(expected)
     end
   end

@@ -216,6 +216,14 @@ private
     new_value
   end
 
+  def self.valid_types
+    %w[integer float string literal]
+  end
+
+  def self.valid_type_config
+    @valid_type_config ||= valid_types + [nil]
+  end
+
   # row: a hash  (keys may be strings or symbols)
   # field_types: hash field_name : type (float, integer, string)
   # returns a hash where values have been coerced to the new type
@@ -225,8 +233,13 @@ private
         row[key] = nil
       else
         type = field_types[key.to_sym] || field_types[key.to_s]
-        row[key] = fix_field_type(type, value, key)
         #logger.info "key: #{key} type: #{type}"
+        if valid_type_config.include? type
+          row[key] = fix_field_type(type, value, key)
+        else
+          raise InvalidDictionary, "unexpected type #{type.inspect} " +
+            "for field #{key}"
+        end
       end
     end
     row
