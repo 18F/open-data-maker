@@ -10,7 +10,7 @@ class Example < Hashie::Mash
    super
    # we want to use this in a liquid template
    # so all attributes needs to be plain data, not code
-   self[:link] = "/#{endpoint}?#{params}" if self[:link].nil?
+   self[:link] = "/v1/#{endpoint}?#{params}" if self[:link].nil?
  end
 
 end
