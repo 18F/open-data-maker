@@ -3,12 +3,16 @@ require 'data_magic'
 require 'fixtures/data.rb'
 
 describe "DataMagic #search" do
-  let (:expected) { {
-            "total" => 1,
-            "page" => 0,
-            "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-            "results" => 	[]
-          } }
+  let (:expected) do
+    {
+      "metadata" => {
+        "total" => 1,
+        "page" => 0,
+        "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+      },
+      "results" => 	[]
+    }
+  end
 
   describe "with terms" do
     describe "as strings" do
@@ -35,7 +39,7 @@ describe "DataMagic #search" do
 
       it "can find a document with a set of values delimited by commas" do
         result = DataMagic.search({name: "Paul,Marilyn"})
-        expected["total"] = 3
+        expected['metadata']["total"] = 3
         expect(result["results"]).to include({"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"})
         expect(result["results"]).to include({"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"})
         expect(result["results"]).to include({"name" => "Paul", "address" => "19 N Square", "city" => "Boston"})
@@ -47,7 +51,7 @@ describe "DataMagic #search" do
           {"address" => "1313 Mockingbird Lane"},
           {"address"=>"742 Evergreen Terrace"},
         ]
-        expected["total"] = 2
+        expected['metadata']["total"] = 2
         DataMagic.logger.info "======= EXPECTED: #{expected.inspect}"
         result["results"] = result["results"].sort_by { |k| k["address"] }
         expect(result).to eq(expected)
@@ -60,22 +64,15 @@ describe "DataMagic #search" do
           {"city"=>"Springfield", "address"=>"742 Evergreen Terrace"},
         ]
         result["results"] = result["results"].sort_by { |k| k["address"] }
-        expected["total"] = 2
+        expected['metadata']["total"] = 2
         expect(result).to eq(expected)
       end
 
 
       it "supports pagination" do
         result = DataMagic.search({address: "Lane", page:1, per_page: 3})
-        # NOTE: this whole structure isn't tested, so the results are
-        # ignored
-        expected = {"total"=>4, "page"=>1, "per_page"=>3,
-            "results"=>[{"name"=>"Marilyn", "address"=>"1313 Mockingbird Lane", "city"=>"Springfield"},
-                        {"name"=>"Peter", "address"=>"66 Parker Lane", "city"=>"New York"},
-                        {"name"=>"Paul", "address"=>"15 Penny Lane", "city"=>"Liverpool"}]}
-
-        expect(result["per_page"]).to eq(3)
-        expect(result["page"]).to eq(1)
+        expect(result['metadata']["per_page"]).to eq(3)
+        expect(result['metadata']["page"]).to eq(1)
         expect(result["results"].length).to eq(1)
       end
 
@@ -129,7 +126,7 @@ describe "DataMagic #search" do
         {"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},
         {"city" => "San Jose",      "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
       ]
-      expected["total"] = expected["results"].length
+      expected['metadata']["total"] = expected["results"].length
       expect(result).to eq(expected)
     end
   end

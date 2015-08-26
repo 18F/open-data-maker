@@ -14,7 +14,7 @@ describe "unique key(s)" do
     DataMagic.config = DataMagic::Config.new
     2.times { DataMagic.import_with_dictionary }
     result = DataMagic.search({})
-    expect(result['total']).to eq(200)
+    expect(result['metadata']['total']).to eq(200)
   end
 
   it "loads records once by state" do
@@ -22,7 +22,7 @@ describe "unique key(s)" do
     DataMagic.config.data['unique'] = ['state']
     2.times { DataMagic.import_with_dictionary }
     result = DataMagic.search({})
-    expect(result['total']).to eq(35)
+    expect(result['metadata']['total']).to eq(35)
   end
 
   it "loads records once by city" do
@@ -30,18 +30,22 @@ describe "unique key(s)" do
     DataMagic.config.data['unique'] = ['name']
     2.times { DataMagic.import_with_dictionary }
     result = DataMagic.search({})
-    expect(result['total']).to eq(100)
+    expect(result['metadata']['total']).to eq(100)
   end
 
 end
 
 describe "DataMagic #import_with_dictionary" do
-  let (:expected) { {
-            "total" => 1,
-            "page" => 0,
-            "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-            "results" => 	[]
-          } }
+  let(:expected) do
+    {
+      "metadata" => {
+        "total" => 1,
+        "page" => 0,
+        "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+      },
+      "results" => 	[]
+    }
+  end
 
   context "with common options" do
     before(:all) do
@@ -77,12 +81,12 @@ describe "DataMagic #import_with_dictionary" do
 
     it "indexes rows from all the files" do
       result = DataMagic.search({}, api: 'cities')
-      expect(result["total"]).to eq(100)
+      expect(result['metadata']['total']).to eq(100)
     end
 
     it "adds column with additional field data" do
       result = DataMagic.search({category: "top50"}, api: 'cities')
-      expect(result["total"]).to eq(50)
+      expect(result['metadata']['total']).to eq(50)
     end
   end
 
@@ -127,13 +131,13 @@ describe "DataMagic #import_with_dictionary" do
       end
       it "indexes just one file" do
         result = DataMagic.search({}, api: 'cities')
-        expect(result['total']).to eq(3)
+        expect(result['metadata']['total']).to eq(3)
       end
     end
 
     it "'rows: 2' indexes just 3 rows" do
       result = DataMagic.search({}, api: 'cities')
-      expect(result['total']).to eq(3)
+      expect(result['metadata']['total']).to eq(3)
     end
 
   end
@@ -190,7 +194,7 @@ describe "DataMagic #import_with_dictionary" do
       expect(result).to eq(expected)
     end
   end
-  
+
   context "with null value" do
     before(:all) do
       DataMagic.destroy
