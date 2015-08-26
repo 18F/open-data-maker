@@ -2,12 +2,16 @@ require 'spec_helper'
 require 'data_magic'
 
 describe "DataMagic #import_without_data_yaml" do
-  let (:expected) { {
-            "total" => 1,
-            "page" => 0,
-            "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
-            "results" => 	[]
-          } }
+  let (:expected) do
+    {
+      "metadata" => {
+        "total" => 1,
+        "page" => 0,
+        "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+      },
+      "results" => 	[]
+    }
+  end
 
   before(:all) do
     DataMagic::Config.logger.info "===== before :all"
