@@ -96,9 +96,11 @@ module DataMagic
 
     # assemble a simpler json document to return
     {
-      "total" => total,
-      "page" => query_body[:from] / query_body[:size],
-      "per_page" => query_body[:size],
+      "metadata" => {
+        "total" => total,
+        "page" => query_body[:from] / query_body[:size],
+        "per_page" => query_body[:size]
+      },
       "results" => 	results
     }
   end
