@@ -227,6 +227,10 @@ module DataMagic
       result
     end
 
+    def field_type(field_name)
+      field_types[field_name]
+    end
+
     # this is a mapping of the fields that end up in the json doc
     # to their types, which might include nested documents
     # but at this stage, field names use dot syntax for nesting

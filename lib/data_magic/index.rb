@@ -217,7 +217,7 @@ private
   end
 
   def self.valid_types
-    %w[integer float string literal]
+    %w[integer float string literal name]
   end
 
   def self.valid_type_config
