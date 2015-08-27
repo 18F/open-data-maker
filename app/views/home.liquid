@@ -1,7 +1,3 @@
-<script>
-  categories = {{ categories }}
-</script>
-
 <h1>{{ title }}</h1>
 
 <h2>API endpoints</h2>
@@ -23,15 +19,17 @@
 {% endif %}
 
 <h2>Browse Data Details by Category</h2>
-<div class="categories"> categories </div>
-<!-- {% for column in category_columns %}
-  <div class="categories__column">
-  {% for category in column %}
-    <div class="category">
-      <div class="category__name"> {{ category.name }} </div>
-      <div> {{ category.description }} </div>
-    </div>
-  {% endfor %}
-  </div>
-{% endfor %}
--->
+<div class="categories">
+  <div id="categories-list" class="categories__column"></div>
+</div>
+
+<script>
+  var categories = {{ categories }} ;
+  var oneColumn = "";
+  for (var i in categories) {
+    oneColumn = oneColumn + "<div class=\"category__name\">" + categories[i].title + "</div>" + 
+      "<p>" + categories[i].description + "</p>";
+  }
+//  alert(oneColumn);
+  document.getElementById("categories-list").innerHTML=oneColumn;
+</script>
