@@ -12,6 +12,7 @@ require 'logger'
 require_relative 'data_magic/config'
 require_relative 'data_magic/index'
 require_relative 'data_magic/query_builder'
+require_relative 'data_magic/error_checker'
 require_relative 'zipcode/zipcode'
 
 SafeYAML::OPTIONS[:default_mode] = :safe
@@ -62,6 +63,9 @@ module DataMagic
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
+    errors = ErrorChecker.check(terms, options, config)
+    return { errors: errors } if errors.length > 0
+
     query_body = QueryBuilder.from_params(terms, options, config)
     index_name = index_name_from_options(options)
     logger.info "search terms:#{terms.inspect}"
