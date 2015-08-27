@@ -46,6 +46,7 @@ OpenDataMaker::App.controllers :v1 do
     end
 
     data = DataMagic.search(params, sort: sort, api: endpoint, fields: fields)
+    halt 400, data.to_json if data.key?(:errors)
 
     if format == 'csv'
       output_data_as_csv(data['results'])

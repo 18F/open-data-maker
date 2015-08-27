@@ -69,6 +69,20 @@ describe 'api', type: 'feature' do
       expect(json_response).to eq(expected)
     end
 
+    it "raises a 400 on a bad query" do
+      expected = {
+        "errors" => [{
+          "error" => 'parameter_not_found',
+          "message" => "The input parameter 'frog' is not known in this dataset.",
+          "input" => 'frog'
+        }]
+      }
+      get "/v1/cities?frog=toad"
+      expect(last_response.status).to eq(400)
+      expect(last_response.content_type).to eq('application/json')
+      expect(json_response).to eq(expected)
+    end
+
     describe "data description" do
       before do
         get '/v1/data.json'
