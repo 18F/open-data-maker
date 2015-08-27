@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe DataMagic::Config do
-
   before(:all) do
     ENV['DATA_PATH'] = './spec/fixtures/import_with_dictionary'
   end
@@ -28,24 +27,23 @@ describe DataMagic::Config do
 
   context "s3" do
     it "detects data.yaml" do
-
-      DataMagic::Config.logger.info "="*40
-      DataMagic::Config.logger.info "="*40
       ENV['DATA_PATH'] = 's3://mybucket'
       fake_s3 = class_spy("Fake Aws::S3::Client")
-      fake_get_object_response = double("S3 response",
-        body: StringIO.new(
-          {'index'=> 'fake-index'}.to_yaml
-        ))
-      fake_list_objects_response = double("S3 response",
-          contents: [double("item", key:"data.yaml")])
+      fake_get_object_response = double(
+        "S3 response",
+        body: StringIO.new({ 'index' => 'fake-index' }.to_yaml)
+      )
+      fake_list_objects_response = double(
+        "S3 response",
+        contents: [double("item", key: "data.yaml")]
+      )
 
       allow(fake_s3).to receive(:get_object)
         .with(bucket: 'mybucket', key: 'data.yaml')
         .and_return(fake_get_object_response)
       allow(fake_s3).to receive(:list_objects)
-                    .with(bucket: 'mybucket')
-                    .and_return(fake_list_objects_response)
+        .with(bucket: 'mybucket')
+        .and_return(fake_list_objects_response)
       config = DataMagic::Config.new(s3: fake_s3)
       expect(config.s3).to eq(fake_s3)
       expect(config.data["index"]).to eq("fake-index")
@@ -65,11 +63,10 @@ describe DataMagic::Config do
   end
 
   context "when loaded" do
-    let(:config) {DataMagic::Config.new}
+    let(:config) { DataMagic::Config.new }
 
     after do
       config.clear_all
-      #expect(DataMagic.client.indices.get(index: '_all')).to be_empty
     end
 
     context "#scoped_index_name" do
@@ -79,20 +76,21 @@ describe DataMagic::Config do
     end
 
     it "has config data" do
-      default_config = {"version"=>"cities100-2010",
-        "index"=>"city-data", "api"=>"cities",
-        "files" => [{"name"=>"cities100.csv"}],
+      default_config = {
+        "version" => "cities100-2010",
+        "index" => "city-data", "api" => "cities",
+        "files" => [{ "name" => "cities100.csv" }],
         "data_path" => "./sample-data",
-        "options"=>{},
-        "unique"=>["name"],
+        "options" => {},
+        "unique" => ["name"]
       }
       expect(config.data.keys).to include('dictionary')
       dictionary = config.data.delete 'dictionary'
 
-      expect(dictionary.keys.sort).to eq %w[id code name state population
-        location.lat location.lon area.land area.water].sort
+      expect(dictionary.keys.sort).to eq %w(id code name state population
+        location.lat location.lon area.land area.water).sort
       categories = config.data.delete 'categories'
-      expect(categories.keys.sort).to eq %w[general geographic].sort
+      expect(categories.keys.sort).to eq %w(general geographic).sort
       expect(config.data).to eq(default_config)
     end
 
@@ -103,13 +101,12 @@ describe DataMagic::Config do
 
     it "has can parse expressions" do
       expr = "ONE or TWO"
-      expect(config.parse_expression(expr)).to eq(['ONE', 'TWO'])
+      expect(config.parse_expression(expr)).to eq(%w(ONE TWO))
     end
 
-
-    describe "#update_indexed_config" do   #rename ... or do this in load_config or something
+    describe "#update_indexed_config" do # rename ... or do this in load_config or something
       context "after loading config" do
-        let(:fixture_path) {"./spec/fixtures/import_with_dictionary"}
+        let(:fixture_path) { "./spec/fixtures/import_with_dictionary" }
         before do
           config.load_datayaml(fixture_path)
         end
@@ -124,7 +121,6 @@ describe DataMagic::Config do
           config.update_indexed_config
           expect(config.update_indexed_config).to be false
         end
-
       end
     end
 
@@ -141,26 +137,24 @@ describe DataMagic::Config do
   end
 
   context "helper method" do
-    let(:config) {DataMagic::Config.new(load_datayaml:false)}
-    let(:simple_fields) {
-      {'one'=> 'column1', 'two' => 'column2', 'three' => 'column3'}
-    }
-    let(:fields_with_dots) {
-      {'one'=> 'column1', 'two.a' => 'column2a', 'two.b' => 'column2b'}
-    }
+    let(:config) { DataMagic::Config.new(load_datayaml: false) }
+    let(:simple_fields) do
+      { 'one' => 'column1', 'two' => 'column2', 'three' => 'column3' }
+    end
+    let(:fields_with_dots) do
+      { 'one' => 'column1', 'two.a' => 'column2a', 'two.b' => 'column2b' }
+    end
 
     it ".only_field_list selects a subset" do
-
-      expect(config.only_field_list(%w[one two], simple_fields)).to eq(
-        {'one'=> 'column1', 'two' => 'column2'}
-      )
-    end
-    it ".only_field_list selects a fields with dots" do
-
-      expect(config.only_field_list(%w[two], fields_with_dots)).to eq(
-        {'two.a' => 'column2a', 'two.b' => 'column2b'}
+      expect(config.only_field_list(%w(one two), simple_fields)).to eq(
+        'one' => 'column1', 'two' => 'column2'
       )
     end
 
+    it ".only_field_list selects fields with dots" do
+      expect(config.only_field_list(%w(two), fields_with_dots)).to eq(
+        'two.a' => 'column2a', 'two.b' => 'column2b'
+      )
+    end
   end
 end

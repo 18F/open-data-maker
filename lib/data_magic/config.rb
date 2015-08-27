@@ -105,20 +105,18 @@ module DataMagic
 
     # pull out all the fields that are specified in
     # only: [one, two, three]
-    # this means we should only take these fields from that file
+    # this means we should only take these fields from that file, or fields
+    # with the specified prefix
     def only_field_list(only_names, all_fields)
       logger.info "only_field_list #{only_names.inspect}"
       selected = {}
       only_names.each do |name|
-        # select the exact match or all the fields with prefix "whatever."
+        # pick all fields with given only_name as either exact match or prefix
         named = all_fields.select do |k,v|
-          logger.info "#{name.inspect} #{k.inspect}: #{k =~ /#{name}.*/}"
           name == k || ((k =~ /#{name}.*/) == 0)
         end
-        logger.info "#{name}: #{named.inspect}"
         selected.merge! named
       end
-      logger.info "selected #{selected.inspect}"
       selected
     end
 
