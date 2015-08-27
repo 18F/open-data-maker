@@ -14,7 +14,6 @@ describe "DataMagic #import_without_data_yaml" do
   end
 
   before(:all) do
-    DataMagic::Config.logger.info "===== before :all"
     DataMagic.destroy
     ENV['DATA_PATH'] = './spec/fixtures/cities_without_yml'
     DataMagic.init(load_now: true)

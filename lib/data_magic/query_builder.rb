@@ -20,11 +20,11 @@ module DataMagic
       def generate_squery(params, config)
         squery = Stretchy.query(type: 'document')
         squery = search_location(squery, params)
-        search_fields_and_ranges(squery, params)
+        search_fields_and_ranges(squery, params, config)
       end
 
       def get_restrict_fields(options)
-        options[:fields].map { |field| field.to_s }
+        options[:fields].map(&:to_s)
       end
 
       # @description turns a string like "state,population:desc" into [{'state' => {order: 'asc'}},{ "population" => {order: "desc"} }]
@@ -41,16 +41,21 @@ module DataMagic
         value =~ /\./ ? value.to_f : value.to_i
       end
 
-      def search_fields_and_ranges(squery, params)
+      def search_fields_and_ranges(squery, params, config)
         params.each do |field, value|
-          if match = /(.+)__(range|ne|not)\z/.match(field)
+          if config.field_type(field) == "name"
+            value = value.split(' ').map { |word| "#{word}*"}.join(' ')
+            squery = squery.match.query(
+              "wildcard": { "name": { "value": value } }
+            )
+          elsif match = /(.+)__(range|ne|not)\z/.match(field)
             var_name, operator = match.captures.map(&:to_sym)
             if operator == :ne or operator == :not  # field negation
               squery = squery.where.not(var_name => value)
             else  # field range
-              squery = squery.filter({
+              squery = squery.filter(
                 or: build_ranges(var_name, value.split(','))
-              })
+              )
             end
           else # field equality
             squery = squery.where(field => value)
@@ -63,12 +68,10 @@ module DataMagic
         range_strings.map do |range|
           min, max = range.split('..')
           values = {}
-          values[:gte] = to_number(min) if !min.empty?
+          values[:gte] = to_number(min) unless min.empty?
           values[:lte] = to_number(max) if max
           {
-            range: {
-              var_name => values
-            }
+            range: { var_name => values }
           }
         end
       end
