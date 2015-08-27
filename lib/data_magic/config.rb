@@ -107,15 +107,23 @@ module DataMagic
     # only: [one, two, three]
     # this means we should only take these fields from that file
     def only_field_list(only_names, all_fields)
+      logger.info "only_field_list #{only_names.inspect}"
       selected = {}
       only_names.each do |name|
         # select the exact match or all the fields with prefix "whatever."
-        selected.merge!(all_fields.select { |k,v| name == k || name =~ /#{k}\..*/ })
+        named = all_fields.select do |k,v|
+          logger.info "#{name.inspect} #{k.inspect}: #{k =~ /#{name}.*/}"
+          name == k || ((k =~ /#{name}.*/) == 0)
+        end
+        logger.info "#{name}: #{named.inspect}"
+        selected.merge! named
       end
+      logger.info "selected #{selected.inspect}"
       selected
     end
 
     # return new fields Hash, with fields that will turn into the nested hash
+    # based on the 'nest' option for a file
     def make_nested(nest_config, all_fields)
       new_fields = {}
       selected = []
@@ -226,7 +234,9 @@ module DataMagic
       if @field_types.nil?
         @field_types = {}
         fields = {}
+        logger.info "file_config #{file_config.inspect}"
         file_config.each do |f|
+          logger.info "f #{f.inspect}"
           if f.keys == ['name']   # only filename, use all the columns
             fields.merge!(dictionary)
           else
@@ -234,6 +244,7 @@ module DataMagic
             fields.merge!(make_nested(f['nest'], dictionary)) if f['nest']
           end
         end
+        logger.info "field_types #{fields.inspect}"
         fields.each do |field_name, info|
           type = info['type'] || "string"
           type = nil if field_name == 'location.lat' || field_name == 'location.lon'
@@ -392,7 +403,7 @@ module DataMagic
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
         @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, data['files'], data['options'])
+        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
 
         logger.debug "file_config: #{@data['files'].inspect}"
         logger.debug "no files found" if @data['files'].empty?

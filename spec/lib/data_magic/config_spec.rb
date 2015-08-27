@@ -139,4 +139,28 @@ describe DataMagic::Config do
       end
     end
   end
+
+  context "helper method" do
+    let(:config) {DataMagic::Config.new(load_datayaml:false)}
+    let(:simple_fields) {
+      {'one'=> 'column1', 'two' => 'column2', 'three' => 'column3'}
+    }
+    let(:fields_with_dots) {
+      {'one'=> 'column1', 'two.a' => 'column2a', 'two.b' => 'column2b'}
+    }
+
+    it ".only_field_list selects a subset" do
+
+      expect(config.only_field_list(%w[one two], simple_fields)).to eq(
+        {'one'=> 'column1', 'two' => 'column2'}
+      )
+    end
+    it ".only_field_list selects a fields with dots" do
+
+      expect(config.only_field_list(%w[two], fields_with_dots)).to eq(
+        {'two.a' => 'column2a', 'two.b' => 'column2b'}
+      )
+    end
+
+  end
 end
