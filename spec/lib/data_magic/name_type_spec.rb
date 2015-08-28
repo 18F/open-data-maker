@@ -33,7 +33,7 @@ describe "DataMagic name types" do
       [{"city.name"=>"San Francisco"}])
   end
 
-  xit "is not case sensitive" do
+  it "is not case sensitive" do
     response = DataMagic.search({'city.name' => 'new'}, fields:['city.name'])
     results = response['results'].sort {|a,b| a['city.name'] <=> b['city.name']}
     expect(results).to eq(

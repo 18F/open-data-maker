@@ -41,13 +41,18 @@ module DataMagic
         value =~ /\./ ? value.to_f : value.to_i
       end
 
+      def include_name_query(squery, field, value)
+        value = value.split(' ').map { |word| "#{word}*"}.join(' ')
+        squery = squery.match.query(
+          # we store lowercase name in field with prefix _
+          "wildcard": { "_#{field}" => { "value": value.downcase } }
+        )
+      end
+
       def search_fields_and_ranges(squery, params, config)
         params.each do |field, value|
           if config.field_type(field) == "name"
-            value = value.split(' ').map { |word| "#{word}*"}.join(' ')
-            squery = squery.match.query(
-              "wildcard": { "name": { "value": value } }
-            )
+            squery = include_name_query(squery, field, value)
           elsif match = /(.+)__(range|ne|not)\z/.match(field)
             var_name, operator = match.captures.map(&:to_sym)
             if operator == :ne or operator == :not  # field negation
