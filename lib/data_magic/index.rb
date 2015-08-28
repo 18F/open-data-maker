@@ -194,6 +194,7 @@ private
       if new_key
         value = value.to_f if new_key.include? "location"
         mapped[new_key] = value
+        mapped["_#{new_key}"] = value.downcase if config.field_type(new_key) == "name"
       elsif options[:columns] == 'all'
         mapped[key] = value
       end
@@ -210,6 +211,8 @@ private
         value.to_f
       when "integer"
         value.to_i
+      when "lowercase_name"
+        value.to_s.downcase   # used for searching
       else # "string"
         value.to_s
     end
