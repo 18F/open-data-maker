@@ -46,6 +46,7 @@ dictionary:
   location.lon: INTPTLONG
   area.land:
     description: Land Area (square miles)
+    source: ALAND_SQMI
     type: float
   area.water:
     description: Water Area (square miles)
@@ -66,7 +67,6 @@ categories:
       statistical purposes only.  Depiction and designation for statistical
       purposes does not constitute a determination of jurisdictional authority
       or rights of ownership or entitlement.
-    source: ALAND_SQMI
     fields: [location, area.land, area.water]
 
 files:
