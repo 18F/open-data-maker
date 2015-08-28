@@ -82,6 +82,7 @@ module DataMagic
     logger.info "  new_field_names: #{new_field_names.inspect[0..500]}"
     logger.info "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
 
+    skipped = []
     begin
       CSV.parse(
         data,
@@ -117,7 +118,7 @@ module DataMagic
             })
           rescue Elasticsearch::Transport::Transport::Errors::NotFound => e
             if options[:nest][:parent_missing] == 'skip'
-              logger.info "missing parent id:#{id} -- skipping"
+              skipped << id
             else
               raise e
             end
@@ -125,11 +126,12 @@ module DataMagic
         end
         num_rows += 1
         if options[:limit_rows] and num_rows == options[:limit_rows]
-          logger.info "done now"
+          logger.info "done now, limiting rows to #{num_rows}"
           break
         end
       end
 
+    logger.info "skipped (missing parent id): #{skipped.join(',')}" unless skipped.empty?
     rescue Exception => e
         if e.class == ArgumentError && e.message == "invalid byte sequence in UTF-8"
           Config.logger.error e.message
