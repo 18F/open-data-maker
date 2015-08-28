@@ -18,7 +18,7 @@ describe DataMagic::QueryBuilder do
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
   end
 
-  let(:expected_meta) { { from:0, size:20 } }
+  let(:expected_meta) { { from:0, size:20, _source: { exclude: [ "_*" ]}}}
   let(:options) { { } }
   let(:query_hash) { DataMagic::QueryBuilder.from_params(subject, options, DataMagic.config) }
 
@@ -39,14 +39,23 @@ describe DataMagic::QueryBuilder do
   end
 
   describe "can exact match on a field" do
-    subject { {zip: "35762"} }
-    let(:expected_query) { { match: {"zip" => {query: "35762"} } } }
+    subject { {state: "CA"} }
+    let(:expected_query) { { match: {"state" => {query: "CA"} } } }
     it_correctly "builds a query"
   end
 
   describe "can exact match on a nested field" do
     subject { {'school.zip': "35762"} }
     let(:expected_query) { { match: {"school.zip" => {query: "35762"} } } }
+    it_correctly "builds a query"
+  end
+
+  describe "can case-insensitive match on a field" do
+    before do
+      allow(DataMagic.config).to receive(:field_type).with(:city).and_return("name")
+    end
+    subject { {city: "new YORK"} }
+    let(:expected_query) { { wildcard: { "_city" => { value: "new* york*" } } } }
     it_correctly "builds a query"
   end
 
@@ -67,7 +76,7 @@ describe DataMagic::QueryBuilder do
   describe "can handle pagination" do
     subject { { page: 3, per_page: 11 } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 33, size: 11 } }
+    let(:expected_meta)  { { from: 33, size: 11, _source: { exclude: [ "_*" ]}}}
     it_correctly "builds a query"
   end
 
@@ -75,7 +84,9 @@ describe DataMagic::QueryBuilder do
     subject { { } }
     let(:options) { { sort: "population:asc" } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 0, size: 20, sort: [{ "population" => {order: "asc"} }] } }
+    let(:expected_meta)  { { from: 0, size: 20,
+                             _source: { exclude: [ "_*" ] },
+                             sort: [{ "population" => {order: "asc"} }] } }
     it_correctly "builds a query"
   end
 
@@ -83,7 +94,12 @@ describe DataMagic::QueryBuilder do
     subject { { } }
     let(:options) { { sort: "state:desc, population:asc,name" } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 0, size: 20, sort: [{'state' => {order: 'desc'}}, { "population" => {order: "asc"} }, { 'name' => {order: 'asc'}}] } }
+    let(:expected_meta)  { { from: 0, size: 20,
+                             _source: { exclude: [ "_*" ] },
+                             sort: [{'state' => {order: 'desc'}},
+                                    { "population" => {order: "asc"} },
+                                    { 'name' => {order: 'asc'}}]
+                          } }
     it_correctly "builds a query"
   end
 

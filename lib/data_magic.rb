@@ -153,7 +153,11 @@ module DataMagic
 
   # convert the types from data.yaml to Elasticsearch-specific types
   def self.es_field_types(field_types)
-    custom_type = { 'literal' => {type: 'string', index:'not_analyzed'} }
+    custom_type = {
+      'literal' => {type: 'string', index:'not_analyzed'},
+      'name' => {type: 'string', index:'not_analyzed'},
+      'lowercase_name' => {type: 'string', index:'not_analyzed', store: false},
+   }
     field_types.each_with_object({}) do |(key, type), result|
       result[key] = custom_type[type]
       result[key] ||= { type: type }

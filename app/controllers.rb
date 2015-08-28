@@ -72,8 +72,16 @@ def output_data_as_csv(results)
     CSV.generate(force_quotes: true, headers: true) do |csv|
       results.each_with_index do |row, row_num|
         row = NestedHash.new(row).withdotkeys
-        csv << row.keys if row_num == 0
-        csv << row
+        # make the order match data.yaml order
+        output = DataMagic.config.field_types.each_with_object({}) do |(name, type), output|
+          output[name] = row[name] unless row[name].nil?
+          if name == "location"
+            output["location.lat"] = row["location.lat"] unless row["location.lat"].nil?
+            output["location.lon"] = row["location.lon"] unless row["location.lon"].nil?
+          end
+        end
+        csv << output.keys if row_num == 0
+        csv << output
       end
     end
   end
