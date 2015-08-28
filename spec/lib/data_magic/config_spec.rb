@@ -82,7 +82,8 @@ describe DataMagic::Config do
         "files" => [{ "name" => "cities100.csv" }],
         "data_path" => "./sample-data",
         "options" => {:search=>"dictionary_only"},
-        "unique" => ["name"]
+        "unique" => ["name"],
+        "data_path" => "./sample-data"
       }
       expect(config.data.keys).to include('dictionary')
       dictionary = config.data.delete 'dictionary'

@@ -21,7 +21,8 @@ describe 'app', type: 'feature' do
     expect(last_response.body).to include '<a href="/v1/cities">cities</a>'
   end
 
-  it "renders a list of categories" do
+  it "should display a list of categories" do
+    get '/'
     expect(last_response.body).to include('Browse Data Details by Category')
     expect(last_response.body).to include('General') #category name
     expect(last_response.body).to include('general information about the city, including standard identifiers')
