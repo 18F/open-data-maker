@@ -6,6 +6,9 @@ module DataMagic
         per_page = params.delete(:per_page) || config.page_size
         page = params.delete(:page).to_i || 0
         query_hash = {
+          _source: {
+            exclude: [ "_*" ]
+          },
           from:   page * per_page.to_i,
           size:   per_page.to_i
         }
