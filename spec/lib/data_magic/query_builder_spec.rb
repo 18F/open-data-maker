@@ -39,14 +39,23 @@ describe DataMagic::QueryBuilder do
   end
 
   describe "can exact match on a field" do
-    subject { {zip: "35762"} }
-    let(:expected_query) { { match: {"zip" => {query: "35762"} } } }
+    subject { {state: "CA"} }
+    let(:expected_query) { { match: {"state" => {query: "CA"} } } }
     it_correctly "builds a query"
   end
 
   describe "can exact match on a nested field" do
     subject { {'school.zip': "35762"} }
     let(:expected_query) { { match: {"school.zip" => {query: "35762"} } } }
+    it_correctly "builds a query"
+  end
+
+  describe "can case-insensitive match on a field" do
+    before do
+      allow(DataMagic.config).to receive(:field_type).with(:city).and_return("name")
+    end
+    subject { {city: "new YORK"} }
+    let(:expected_query) { { wildcard: { "_city" => { value: "new* york*" } } } }
     it_correctly "builds a query"
   end
 
