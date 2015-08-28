@@ -108,8 +108,9 @@ describe 'api', type: 'feature' do
         end
         let(:expected_results) do
           [
-            { "state" => "IL", "name" => "Chicago", "population" => 2695598,
-              "land_area" => 227.635, # later we'll make this a float
+            { "state" => "IL", "id"=>"1714000", "code"=>"00428803",
+              "name" => "Chicago", "population" => 2695598,
+              "area"=> { "land" => 227.635, "water" => 6.479 },
               "location" => { "lat" => 41.837551, "lon" => -87.681844 }
             }
           ]
@@ -140,8 +141,8 @@ describe 'api', type: 'feature' do
 
           expect(result.length).to eq 2
 
-          expect(result[0]).to eq %w(state name population land_area location.lat location.lon)
-          expect(result[1]).to eq %w(IL Chicago 2695598 227.635 41.837551 -87.681844)
+          expect(result[0]).to eq %w(state id code name population area.land area.water location.lat location.lon)
+          expect(result[1]).to eq %w(IL 1714000 00428803 Chicago 2695598 227.635 6.479 41.837551 -87.681844)
         end
       end
 
@@ -156,11 +157,11 @@ describe 'api', type: 'feature' do
 
       describe "with float" do
         before do
-          get '/v1/cities?land_area=302.643'
+          get '/v1/cities?area.land=302.643'
         end
         let(:expected_results) do
           [ { "state" => "NY", "name" => "New York",
-              "population" => 8175133, "land_area" => 302.643,
+              "population" => 8175133, "area"=> { "land" => 302.643, "water" => 165.841 },
               "location" => { "lat" => 40.664274, "lon" => -73.9385 } } ]
         end
 
@@ -176,8 +177,9 @@ describe 'api', type: 'feature' do
           get '/v1/cities?_zip=94132&_distance=30mi'
         end
         let(:expected_results) do
-          [{"state"=>"CA", "name"=>"Oakland", "population"=>390724,
-            "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}} ]
+          [{"state"=>"CA", "id"=>"0653000", "code"=>"02411292", "name"=>"Oakland",
+            "population"=>390724, "area"=>{"land"=>55.786,"water"=>22.216},
+            "location"=>{"lat"=>37.769857, "lon"=>-122.22564}} ]
         end
 
         it "can find an attribute from an imported file" do
