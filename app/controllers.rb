@@ -4,7 +4,8 @@ OpenDataMaker::App.controllers do
     render :home, layout: true, locals: {
       'title' => 'Open Data Maker',
       'endpoints' => DataMagic.config.api_endpoint_names,
-      'examples' => DataMagic.config.examples
+      'examples' => DataMagic.config.examples,
+      'categories' => DataMagic.config.data['categories'].to_json
     }
   end
 end
