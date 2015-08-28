@@ -26,6 +26,14 @@ module DataMagic
       end
     end
 
+    def options
+      @data['options']
+    end
+
+    def dictionary_only_search?
+      options[:search] == 'dictionary_only'
+    end
+
     def examples
       if @examples.nil?
         api = api_endpoint_names[0]
@@ -283,7 +291,7 @@ module DataMagic
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
         DataMagic.client.indices.delete index: index_name if index_exists
         DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
-        DataMagic.client.index index: index_name, type:'config', id: 1, body: @data
+        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
         updated = true
       end
       updated

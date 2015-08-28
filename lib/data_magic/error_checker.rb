@@ -13,7 +13,8 @@ module DataMagic
       private
 
       def report_nonexistent_params(params, config)
-        params.keys.reject { |p| config.field_types.key?(p.sub(/__\w+$/, '')) }.
+        return [] unless config.dictionary_only_search?
+        params.keys.reject { |p| config.field_type(p.sub(/__\w+$/, '')) }.
           map { |p| build_error(error: 'parameter_not_found', input: p.sub(/__\w+$/, '')) }
       end
 
@@ -26,8 +27,8 @@ module DataMagic
       end
 
       def report_nonexistent_fields(fields, config)
-        if fields && !fields.empty?
-          fields.reject { |f| config.field_types.key?(f.to_s) }.
+        if fields && !fields.empty? && config.dictionary_only_search?
+          fields.reject { |f| config.field_type(f.to_s) }.
             map { |f| build_error(error: 'field_not_found', input: f.to_s) }
         else
           []

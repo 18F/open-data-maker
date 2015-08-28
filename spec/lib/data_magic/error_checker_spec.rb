@@ -27,6 +27,12 @@ describe 'API errors', type: 'feature' do
     end
   end
 
+  shared_examples "does not return an error" do
+    it "" do
+      expect(errors).to eq []
+    end
+  end
+
   describe "are returned" do
     context "when an unknown parameter is provided" do
       let(:params) { { "frog" => "toad" } }
@@ -37,7 +43,15 @@ describe 'API errors', type: 'feature' do
           input: 'frog'
         }]
       end
-      it_correctly "returns an error"
+      context "and dictionary-only-search is on" do
+        before do
+          allow(config).to receive(:dictionary_only_search?).and_return(true)
+        end
+        it_correctly "returns an error"
+      end
+      context "and dictionary-only-search is off" do
+        it_correctly "does not return an error"
+      end
     end
 
     context "when an unknown field is specified in the field list" do
@@ -49,7 +63,15 @@ describe 'API errors', type: 'feature' do
           message: "The input field 'marjorie' (in the fields parameter) is not a field in this dataset."
         }]
       end
-      it_correctly "returns an error"
+      context "and dictionary-only-search is on" do
+        before do
+          allow(config).to receive(:dictionary_only_search?).and_return(true)
+        end
+        it_correctly "returns an error"
+      end
+      context "and dictionary-only-search is off" do
+        it_correctly "does not return an error"
+      end
     end
 
     context "when an unknown operator is used" do
@@ -114,6 +136,9 @@ describe 'API errors', type: 'feature' do
             parameter: 'population'
           }
         ]
+      end
+      before do
+        allow(config).to receive(:dictionary_only_search?).and_return(true)
       end
       # NOTE: This currently also asserts the ordering of errors in the JSON
       # response, which it shouldn't, because that doesn't matter.
