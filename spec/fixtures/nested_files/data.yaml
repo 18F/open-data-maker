@@ -10,7 +10,7 @@ dictionary:
     type: literal
   city: CITY_MAIN
   state: STABBR_MAIN
-  zip: ZIP_MAIN
+  zipcode: ZIP_MAIN
   sat_average: SAT_AVG
   location.lat: LATITUDE_MAIN
   location.lon: LONGITUDE_MAIN
