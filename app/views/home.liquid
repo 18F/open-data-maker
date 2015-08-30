@@ -27,8 +27,11 @@
   var categories = {{ categories }} ;
   var oneColumn = "";
   for (var i in categories) {
-    oneColumn = oneColumn + "<div class=\"category__name\">" + categories[i].title + "</div>" +
-      "<p>" + categories[i].description + "</p>";
+    oneColumn = oneColumn +
+      "<div class=\"category\">" +      // put box around category block
+      "<div class=\"category__name\">" + categories[i].title + "</div>" +
+      "<p>" + categories[i].description + "</p>" +
+      "</div>";
   }
 //  alert(oneColumn);
   document.getElementById("categories-list").innerHTML=oneColumn;
