@@ -9,6 +9,7 @@
   display: inline-block;
   width: 49%;
   vertical-align: top;
+/*   -webkit-column-count: 3; */
 }
 
 .category__name {
