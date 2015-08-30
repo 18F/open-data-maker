@@ -105,4 +105,31 @@ describe DataMagic::DocumentBuilder do
     end
   end
 
+  context "with options[:only]" do
+    before do
+      config.dictionary = { id: 'ID',
+                            state: 'STABBR',
+                            city: {
+                                  source: 'CITY',
+                                  type: 'name'
+                              }
+                           }
+    end
+    let(:fields) { config.field_mapping }
+
+    context "specify two vanilla columns" do
+      let(:options) {{ only: %w[id state] }}
+      subject {{ ID: 'ABC', STABBR: 'NY', CITY: 'New York' }}
+      let(:expected_document) {{ 'id' => 'ABC', 'state' => 'NY'}}
+      it_correctly "creates a document"
+    end
+
+    context "specify name column" do
+      let(:options) {{ only: %w[city] }}
+      subject {{ ID: 'ABC', STABBR: 'NY', CITY: 'New York' }}
+      let(:expected_document) {{ 'city' => 'New York', '_city' => 'new york'}}
+      it_correctly "creates a document"
+    end
+  end
+
 end

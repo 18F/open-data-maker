@@ -13,6 +13,7 @@ module DataMagic
       def parse_row(row, fields, config, options={}, additional=nil)
         row = csv_row = row.to_hash
         # logger.debug "row #{row.inspect[0..255]}"
+        # logger.debug "fields #{fields.inspect[0..255]}"
         # logger.debug "column_field_types #{config.column_field_types.inspect[0..255]}"
         row = map_field_names(row, fields, config, options) unless fields.empty?
         row = row.merge(calculated_fields(csv_row, config))
@@ -24,8 +25,8 @@ module DataMagic
         row = row.merge(additional) if additional
         doc = NestedHash.new.add(row)
         doc = parse_nested(doc, options) if options[:nest]
-        doc = doc.select {|key, value| options[:only].include?(key) } unless options[:only].nil?
-        # logger.debug "doc #{doc.inspect[0..255]}"
+        doc = select_only_fields(doc, options[:only]) unless options[:only].nil?
+        #logger.debug "doc #{doc.inspect[0..255]}"
         doc
       end
 
@@ -140,6 +141,19 @@ module DataMagic
           end
         end
         mapped
+      end
+
+      # select top-level fields from a hash
+      # if there are name types, also select _name
+      # doc: hash with string keys
+      # only_keys: array of keys
+      def select_only_fields(doc, only_keys)
+        doc = doc.select do |key, value|
+          key = key.to_s
+          # if key has _ prefix, select if key present without _
+          key = key[1..-1] if key[0] == '_'
+          only_keys.include?(key)
+        end
       end
 
     end # class methods
