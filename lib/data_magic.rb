@@ -41,7 +41,7 @@ module DataMagic
   def self.s3
     if @s3.nil?
       if ENV['VCAP_APPLICATION']
-        s3cred = ::CF::App::Credentials.find_by_service_name('bservice')
+        s3cred = ::CF::App::Credentials.find_by_service_name(ENV['s3_bucket_service'] || 'bservice')
       else
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
       end
@@ -200,7 +200,7 @@ module DataMagic
       if @client.nil?
         if ENV['VCAP_APPLICATION']    # Cloud Foundry
           logger.info "connect to Cloud Foundry elasticsearch service"
-          eservice = ::CF::App::Credentials.find_by_service_name('eservice')
+          eservice = ::CF::App::Credentials.find_by_service_name(ENV['es_service'] || 'eservice')
           logger.info "eservice: #{eservice.inspect}"
           service_uri = eservice['url'] || eservice['uri']
           logger.info "service_uri: #{service_uri}"
