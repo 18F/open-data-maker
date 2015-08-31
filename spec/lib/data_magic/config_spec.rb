@@ -99,11 +99,6 @@ describe DataMagic::Config do
       expect(config.page_size).to eq(DataMagic::DEFAULT_PAGE_SIZE)
     end
 
-    it "has can parse expressions" do
-      expr = "ONE or TWO"
-      expect(config.parse_expression(expr)).to eq(%w(ONE TWO))
-    end
-
     describe "#update_indexed_config" do # rename ... or do this in load_config or something
       context "after loading config" do
         let(:fixture_path) { "./spec/fixtures/import_with_dictionary" }
@@ -136,7 +131,31 @@ describe DataMagic::Config do
     end
   end
 
-  context "helper method" do
+  context ".calculated_field_list" do
+    let(:config) { DataMagic::Config.new(load_datayaml: false) }
+    it "finds fields with 'calculate' property" do
+      allow(config).to receive(:dictionary).and_return(
+        {
+          one: {
+            source: 'column1',
+            type: 'float'
+          },
+          two: {
+            source: 'column2',
+            type: 'float'
+          },
+          all: {
+                calculate: 'column1 or column2',
+                type: 'float',
+                description: 'something'
+            }
+        }
+      )
+      expect(config.calculated_field_list).to eq(['all'])
+    end
+  end
+
+  context ".only_field_list" do
     let(:config) { DataMagic::Config.new(load_datayaml: false) }
     let(:simple_fields) do
       { 'one' => 'column1', 'two' => 'column2', 'three' => 'column3' }
@@ -145,13 +164,13 @@ describe DataMagic::Config do
       { 'one' => 'column1', 'two.a' => 'column2a', 'two.b' => 'column2b' }
     end
 
-    it ".only_field_list selects a subset" do
+    it "selects a subset" do
       expect(config.only_field_list(%w(one two), simple_fields)).to eq(
         'one' => 'column1', 'two' => 'column2'
       )
     end
 
-    it ".only_field_list selects fields with dots" do
+    it "selects fields with dots" do
       expect(config.only_field_list(%w(two), fields_with_dots)).to eq(
         'two.a' => 'column2a', 'two.b' => 'column2b'
       )
