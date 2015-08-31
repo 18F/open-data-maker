@@ -160,9 +160,10 @@ describe 'api', type: 'feature' do
           get '/v1/cities?area.land=302.643'
         end
         let(:expected_results) do
-          [ { "state" => "NY", "name" => "New York",
-              "population" => 8175133, "area"=> { "land" => 302.643, "water" => 165.841 },
-              "location" => { "lat" => 40.664274, "lon" => -73.9385 } } ]
+          [ { "area"=> { "land" => 302.643, "water" => 165.841 },
+              "code"=>"02395220", "name"=>"New York",
+              "location" => { "lat" => 40.664274, "lon" => -73.9385 },
+              "state"=>"NY", "id"=>"3651000", "population"=>8175133 } ]
         end
 
         it "responds with json" do
