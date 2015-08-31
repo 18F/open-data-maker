@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'data_magic'
 
-describe "unique key(s)" do
+describe "calculated columns" do
 
   before :example do
     DataMagic.destroy

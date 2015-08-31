@@ -34,6 +34,12 @@ module DataMagic
       options[:search] == 'dictionary_only'
     end
 
+    # what are the valid types for the configured dictionary to have
+    # we allow type to be blank (nil), which will be interpreted as a String
+    def valid_types
+      @valid_type_config ||= DataMagic.valid_types + [nil]
+    end
+
     def examples
       if @examples.nil?
         api = api_endpoint_names[0]
@@ -188,49 +194,18 @@ module DataMagic
       @field_mapping
     end
 
-    def parse_expression(expression, field_name='unknown')
-      match = /\s*(\w+)\s+or\s+(\w+)\s*/.match expression
-      # logger.debug("parse_expression #{match.inspect}")
-      if match.nil? or match[1].nil? or match[2].nil?
-        raise ArgumentError,
-          "can't interpret #{expression.inspect} for #{field_name}"
-      end
-      [match[1], match[2]]
-    end
-
-    # currently we just support 'or' operations on two columns
-    def calculate(field_name, row)
-      item = dictionary[field_name]
-      #logger.debug("row #{row.inspect}")
-      #logger.debug("calculate item #{item.inspect}")
-      expr = item['calculate']
-      raise ArgumentError, "expected to calculate #{field_name}" if expr.nil?
-      cols = parse_expression(expr, field_name) #if expr.is_a? String
-      cols = cols.map { |c| row[c.to_sym] }
-      cols = cols.map { |value| value == 'NULL' ? nil : value }
-      a, b = cols.map { |c| (DataMagic::fix_field_type(item['type'], c)) }
-      #logger.debug("final: data #{cols.inspect} #{a.inspect} #{b.inspect} #{(a || b).inspect}")
-      a || b
-    end
-
-    def calculated_field_list(row)
+    def calculated_field_list
       if @calculated_field_list.nil?
         @calculated_field_list = []
         dictionary.each do |field_name, info|
-          if info.is_a? Hash and info['calculate']
-            @calculated_field_list << field_name
+          if info.is_a? Hash
+            if info['calculate'] or info[:calculate]
+              @calculated_field_list << field_name.to_s
+            end
           end
         end
       end
       @calculated_field_list
-    end
-
-    def calculated_fields(row)
-      result = {}
-      calculated_field_list(row).each do |name|
-        result[name] = calculate(name, row)
-      end
-      result
     end
 
     def field_type(field_name)
@@ -396,6 +371,10 @@ module DataMagic
       File.basename(uri.hostname || uri.path).gsub(/[^0-9a-z]+/, '-')
     end
 
+    def null_value
+      @data['null_value'] || 'NULL'
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -408,7 +387,6 @@ module DataMagic
         logger.debug "load config #{directory_path.inspect}"
         @data = load_yaml(directory_path)
         @data['unique'] ||= []
-        @null_value = @data['null_value'] || 'NULL'
         logger.debug "config: #{@data.inspect[0..600]}"
         @data['index'] ||= clean_index(@data_path)
         endpoint = @data['api'] || clean_index(@data_path)

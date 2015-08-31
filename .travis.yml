@@ -4,9 +4,8 @@ rvm:
 script: bundle exec rake spec
 services:
 - elasticsearch
-before_script:
-- sleep 10
-sudo: required
+sudo: false
+cache: bundler
 deploy:
   edge: true
   provider: cloudfoundry
