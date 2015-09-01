@@ -81,7 +81,7 @@ describe DataMagic::Config do
         "index" => "city-data", "api" => "cities",
         "files" => [{ "name" => "cities100.csv" }],
         "data_path" => "./sample-data",
-        "options" => {},
+        "options" => {:search=>"dictionary_only"},
         "unique" => ["name"]
       }
       expect(config.data.keys).to include('dictionary')
