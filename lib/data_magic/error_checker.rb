@@ -39,7 +39,7 @@ module DataMagic
           p =~ /__range$/ and
             v !~ / ^(\d+(\.\d+)?)? # optional starting number
                    \.\.           # range dots
-                   (\d+(\.\d+))?  # optional ending number
+                   (\d+(\.\d+)?)?  # optional ending number
                    (,(\d+(\.\d+)?)?\.\.(\d+(\.\d+)?)?)* # and more, with commas
                    $/x
         end

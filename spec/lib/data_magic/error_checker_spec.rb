@@ -119,17 +119,23 @@ describe 'API errors', type: 'feature' do
       end
     end
 
-    context "when a range is specified incorrectly" do
-      let(:params) { { "population__range" => "kevin..3" } }
-      let(:expected_errors) do
-        [{
-          error: 'range_format_error',
-          message: "The range 'kevin..3' supplied to parameter 'population' isn't in the correct format.",
-          input: 'kevin..3',
-          parameter: 'population'
-        }]
+    context "when a range is specified" do
+      context "in the wrong format" do
+        let(:params) { { "population__range" => "kevin..3" } }
+        let(:expected_errors) do
+          [{
+            error: 'range_format_error',
+            message: "The range 'kevin..3' supplied to parameter 'population' isn't in the correct format.",
+            input: 'kevin..3',
+            parameter: 'population'
+          }]
+        end
+        it_correctly "returns an error"
       end
-      it_correctly "returns an error"
+      context "in the right format" do
+        let(:params) { { "population__range" => "2..3" } }
+        it_correctly "does not return an error"
+      end
     end
 
     context "when multiple errors occur" do
