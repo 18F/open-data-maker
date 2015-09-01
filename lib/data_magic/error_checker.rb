@@ -35,10 +35,6 @@ module DataMagic
         end
       end
 
-      def report_bad_sort_argument(options)
-        []
-      end
-
       def report_bad_range_argument(params)
         ranges = params.select do |p,v|
           p =~ /__range$/ and
