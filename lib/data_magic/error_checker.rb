@@ -5,7 +5,6 @@ module DataMagic
         report_nonexistent_params(params, config) +
           report_nonexistent_operators(params) +
           report_nonexistent_fields(options[:fields], config) +
-          report_bad_sort_argument(options) +
           report_bad_range_argument(params) +
           report_wrong_field_type(params, config)
       end
