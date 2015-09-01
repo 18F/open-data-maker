@@ -3,13 +3,17 @@
   padding: 15px;
   border: solid 1px silver;
   word-wrap: break-word;
+  display: inline-block;
+  width: 92%;
 }
 
 .categories__column {
   display: inline-block;
-  width: 49%;
+  width: 100%;
   vertical-align: top;
-/*   -webkit-column-count: 3; */
+  -webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-count: 2;
 }
 
 .category__name {

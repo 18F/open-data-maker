@@ -72,6 +72,28 @@ categories:
       purposes does not constitute a determination of jurisdictional authority
       or rights of ownership or entitlement.
     fields: [location, area.land, area.water]
+  general2:
+    title: General2
+    description: >
+      general information about the city, including standard
+      identifiers and actual census summary data about the population of the city.
+    fields: [id, code, name, state, population]
+  general3:
+    title: General3
+    description: >
+      short
+    fields: [id, code, name, state, population]
+  general4:
+    title: General4
+    description: >
+      short
+    fields: [id, code, name, state, population]
+  general5:
+    title: General5
+    description: >
+      general information about the city, including standard
+      identifiers and actual census summary data about the population of the city.
+    fields: [id, code, name, state, population]
 
 files:
   - name: cities100.csv
