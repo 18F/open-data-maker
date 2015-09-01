@@ -14,8 +14,8 @@ module DataMagic
 
       def report_nonexistent_params(params, config)
         return [] unless config.dictionary_only_search?
-        params.keys.reject { |p| config.field_type(p.sub(/__\w+$/, '')) }.
-          map { |p| build_error(error: 'parameter_not_found', input: p.sub(/__\w+$/, '')) }
+        params.keys.reject { |p| config.field_type(strip_op(p)) }.
+          map { |p| build_error(error: 'parameter_not_found', input: strip_op(p)) }
       end
 
       def report_nonexistent_operators(params)
@@ -49,13 +49,23 @@ module DataMagic
                    $/x
         end
         ranges.map do |p,v|
-          param = p.sub("__range",'')
-          build_error(error: 'range_format_error', parameter: param, input: v)
+          build_error(error: 'range_format_error', parameter: strip_op(p), input: v)
         end
       end
 
       def report_wrong_field_type(params, config)
-        []
+        bad_fields = params.select do |p, v|
+          next false if p =~ /__range$/
+          param_type = config.field_type(strip_op(p))
+          value_type = guess_value_type(v)
+          (param_type == "float" && value_type != "float" && value_type != "integer") or
+            (param_type == "integer" && value_type != "integer")
+        end
+        bad_fields.map do |p, v|
+          build_error(error: 'parameter_type_error', parameter: p, input: v,
+                      expected_type: config.field_type(strip_op(p)),
+                      input_type: guess_value_type(v))
+        end
       end
 
       def build_error(opts)
@@ -73,6 +83,21 @@ module DataMagic
             "The range '#{opts[:input]}' supplied to parameter '#{opts[:parameter]}' isn't in the correct format."
           end
         opts
+      end
+
+      def guess_value_type(value)
+        case value.to_s
+        when /^-?\d+$/
+          "integer"
+        when /^-?\d+\.\d+$/
+          "float"
+        else
+          "string"
+        end
+      end
+
+      def strip_op(param)
+        param.sub(/__\w+$/, '')
       end
     end
   end

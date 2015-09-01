@@ -88,19 +88,35 @@ describe 'API errors', type: 'feature' do
     end
 
     context "when a value of the wrong type is provided for a field" do
-      let(:params) { { "population" => "kevin" } }
-      let(:expected_errors) do
-        [{
-          error: 'parameter_type_error',
-          message: "The parameter 'population' expects an integer, but received a string.",
-          input: 'kevin',
-          parameter: 'population',
-          expected_type: 'integer',
-          input_type: 'string'
-        }]
+      context "providing a string for an integer" do
+        let(:params) { { "population" => "kevin" } }
+        let(:expected_errors) do
+          [{
+            error: 'parameter_type_error',
+            message: "The parameter 'population' expects a value of type integer, but received 'kevin' which is a value of type string.",
+            input: 'kevin',
+            parameter: 'population',
+            expected_type: 'integer',
+            input_type: 'string'
+          }]
+        end
+        it_correctly "returns an error"
       end
-      # Pending
-      # it_correctly "returns an error"
+
+      context "providing a float for an integer, with negation" do
+        let(:params) { { "population__not" => "-123.00" } }
+        let(:expected_errors) do
+          [{
+            error: 'parameter_type_error',
+            message: "The parameter 'population__not' expects a value of type integer, but received '-123.00' which is a value of type float.",
+            input: '-123.00',
+            parameter: 'population__not',
+            expected_type: 'integer',
+            input_type: 'float'
+          }]
+        end
+        it_correctly "returns an error"
+      end
     end
 
     context "when a range is specified incorrectly" do
