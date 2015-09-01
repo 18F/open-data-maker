@@ -30,7 +30,7 @@ describe "unique key(s)" do
       end
     end
     it "and doesn't include extra field" do
-      expect(first['zip']).to be(nil)
+      expect(first['zipcode']).to be(nil)
     end
   end
 

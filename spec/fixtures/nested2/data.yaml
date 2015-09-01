@@ -8,6 +8,7 @@ options:
 #  columns: all
   limit_files: 1
   limit_rows: 100
+  search: dictionary_only
 
 dictionary:
   id:
