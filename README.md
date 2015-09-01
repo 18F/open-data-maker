@@ -53,6 +53,30 @@ export DATA_PATH='./data'
         1. If data.yaml not provided, all fields and fields will be imported with folder or bucket name used as the API endpoint (name is 'slugified' with dashes replacing spaces)
 1. api endpoint to get the data /api=endpoint?field_or_column_name=value
 
+## More Configuration Options
+
+Often while you are developing an API and data dictionary,
+it is helpful to include all the columns in the csv.  If you add the following to
+data.yaml, the field names and types from the dictionary will be used and any
+unspecified columns will simply use the column name as the field name.
+
+```
+options:
+  columns: all
+```
+
+You can use the dictionary to provide nice errors to developers who use the API.
+This can be used in conjunction with the above ```columns: all``` which will
+make it so that columns that are not referenced in the dictionary are not
+searchable, but will make it so that unspecified fields cause errors to be
+reported.
+
+```
+options:
+  search: dictionary_only
+```
+
+
 ## Help Wanted
 
 1. Try out importing multiple data sets with different endpoints and data.yaml configuration

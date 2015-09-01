@@ -18,35 +18,34 @@ describe DataMagic::QueryBuilder do
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
   end
 
-  let(:expected_meta) { { from:0, size:20, _source: { exclude: [ "_*" ]}}}
-  let(:options) { { } }
+  let(:expected_meta) { { from: 0, size: 20, _source: { exclude: ["_*"] } } }
+  let(:options) { {} }
   let(:query_hash) { DataMagic::QueryBuilder.from_params(subject, options, DataMagic.config) }
 
   shared_examples "builds a query" do
-
     it "with a query section" do
       expect(query_hash[:query]).to eql expected_query
     end
     it "with query metadata" do
-      expect(query_hash.reject {|k,v| k == :query }).to eql expected_meta
+      expect(query_hash.reject { |k, _| k == :query }).to eql expected_meta
     end
   end
 
   describe "can issue a blank query" do
-    subject { { } }
+    subject { {} }
     let(:expected_query) { { match_all: {} } }
     it_correctly "builds a query"
   end
 
   describe "can exact match on a field" do
-    subject { {state: "CA"} }
-    let(:expected_query) { { match: {"state" => {query: "CA"} } } }
+    subject { { zipcode: "35762" } }
+    let(:expected_query) { { match: { "zipcode" => { query: "35762" } } } }
     it_correctly "builds a query"
   end
 
   describe "can exact match on a nested field" do
-    subject { {'school.zip': "35762"} }
-    let(:expected_query) { { match: {"school.zip" => {query: "35762"} } } }
+    subject { { 'school.zip': "35762" } }
+    let(:expected_query) { { match: { "school.zip" => { query: "35762" } } } }
     it_correctly "builds a query"
   end
 
@@ -54,13 +53,14 @@ describe DataMagic::QueryBuilder do
     before do
       allow(DataMagic.config).to receive(:field_type).with(:city).and_return("name")
     end
-    subject { {city: "new YORK"} }
+    subject { { city: "new YORK" } }
     let(:expected_query) { { wildcard: { "_city" => { value: "new* york*" } } } }
     it_correctly "builds a query"
   end
 
   describe "can search within a location" do
-    subject { { zip: "94132", distance: "30mi" } }
+    subject { {} }
+    let(:options) { { zip: "94132", distance: "30mi" } }
     let(:expected_query) do {
       filtered: {
         query: { match_all: {} },
@@ -74,32 +74,38 @@ describe DataMagic::QueryBuilder do
   end
 
   describe "can handle pagination" do
-    subject { { page: 3, per_page: 11 } }
+    subject { {} }
+    let(:options) { { page: 3, per_page: 11 } }
     let(:expected_query) { { match_all: {} } }
     let(:expected_meta)  { { from: 33, size: 11, _source: { exclude: [ "_*" ]}}}
     it_correctly "builds a query"
   end
 
   describe "can specify sort order" do
-    subject { { } }
+    subject { {} }
     let(:options) { { sort: "population:asc" } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 0, size: 20,
-                             _source: { exclude: [ "_*" ] },
-                             sort: [{ "population" => {order: "asc"} }] } }
+    let(:expected_meta)  do
+      { from: 0, size: 20,
+        _source: { exclude: ["_*"] },
+        sort: [{ "population" => { order: "asc" } }]
+      }
+    end
     it_correctly "builds a query"
   end
 
   describe "can sort by multiple fields" do
-    subject { { } }
+    subject { {} }
     let(:options) { { sort: "state:desc, population:asc,name" } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 0, size: 20,
-                             _source: { exclude: [ "_*" ] },
-                             sort: [{'state' => {order: 'desc'}},
-                                    { "population" => {order: "asc"} },
-                                    { 'name' => {order: 'asc'}}]
-                          } }
+    let(:expected_meta)  do
+      { from: 0, size: 20,
+        _source: { exclude: ["_*"] },
+        sort: [{ 'state' => { order: 'desc' } },
+               { "population" => { order: "asc" } },
+               { 'name' => { order: 'asc' } }]
+      }
+    end
     it_correctly "builds a query"
   end
 
@@ -110,8 +116,8 @@ describe DataMagic::QueryBuilder do
         filtered: {
           query: { match_all: {} },
           filter: {
-            or: [ { range: { age: { gte: 10 } } } ]
-        } } }
+            or: [{ range: { age: { gte: 10 } } }]
+          } } }
       end
       it_correctly "builds a query"
     end
@@ -122,8 +128,8 @@ describe DataMagic::QueryBuilder do
         filtered: {
           query: { match_all: {} },
           filter: {
-            or: [ { range: { age: { lte: 10 } } } ]
-        } } }
+            or: [{ range: { age: { lte: 10 } } }]
+          } } }
       end
       it_correctly "builds a query"
     end
@@ -134,7 +140,7 @@ describe DataMagic::QueryBuilder do
         filtered: {
           query: { match_all: {} },
           filter: {
-            or: [ { range: { age: { gte: 10, lte: 20 } } } ]
+            or: [{ range: { age: { gte: 10, lte: 20 } } }]
         } } }
       end
       it_correctly "builds a query"
@@ -150,7 +156,7 @@ describe DataMagic::QueryBuilder do
               { range: { age: { gte: 10, lte: 20 } } },
               { range: { age: { gte: 30, lte: 40 } } }
             ]
-        } } }
+          } } }
       end
       it_correctly "builds a query"
     end

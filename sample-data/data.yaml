@@ -8,6 +8,10 @@ version: cities100-2010
 index: city-data
 api: cities
 unique: ['name']
+
+options:
+  search: dictionary_only   # API provides error when requesting fields not in dictionary
+
 dictionary:
   id:
     source: GEOID

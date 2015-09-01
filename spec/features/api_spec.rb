@@ -69,6 +69,21 @@ describe 'api', type: 'feature' do
       expect(json_response).to eq(expected)
     end
 
+    it "raises a 400 on a bad query" do
+      expected = {
+        "errors" => [{
+          "error" => 'operator_not_found',
+          "parameter" => "frog",
+          "input" => "blah",
+          "message" => "The input operator 'blah' (appended to the parameter 'frog') is not known or supported. (Known operators: range, ne, not)"
+        }]
+      }
+      get "/v1/cities?frog__blah=toad"
+      expect(last_response.status).to eq(400)
+      expect(last_response.content_type).to eq('application/json')
+      expect(json_response).to eq(expected)
+    end
+
     describe "data description" do
       before do
         get '/v1/data.json'

@@ -24,13 +24,13 @@ describe "unique key(s)" do
 
   context "can import a subset of fields" do
     context "and when searching for a field value" do
-      let(:query) { {zip: "35762"} }
+      let(:query) { {zipcode: "35762"} }
       it "and doesn't find column" do
         expect(total).to eq(0)
       end
     end
     it "and doesn't include extra field" do
-      expect(first['zip']).to be(nil)
+      expect(first['zipcode']).to be(nil)
     end
   end
 

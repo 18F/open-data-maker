@@ -120,7 +120,7 @@ module DataMagic
 
     #logger.debug("field_mapping: #{field_mapping.inspect}")
     options[:mapping] = config.field_mapping
-    options = options.merge(config.data['options'])
+    options = options.merge(config.options)
 
     es_index_name = self.config.load_datayaml(options[:data_path])
     logger.info "creating #{es_index_name}"   # TO DO: fix #14

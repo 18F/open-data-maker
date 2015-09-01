@@ -34,7 +34,7 @@ OpenDataMaker::App.controllers :v1 do
   end
 
   get :index, with: :endpoint, provides: [:json, :csv] do
-    (endpoint, sort, fields, format) = get_search_args_from_params(params)
+    (endpoint, options, format) = get_search_args_from_params(params)
     content_type format.to_sym if format
     DataMagic.logger.debug "-----> APP GET #{params.inspect}"
 
@@ -45,7 +45,8 @@ OpenDataMaker::App.controllers :v1 do
       }.to_json
     end
 
-    data = DataMagic.search(params, sort: sort, api: endpoint, fields: fields)
+    data = DataMagic.search(params, options)
+    halt 400, data.to_json if data.key?(:errors)
 
     if format == 'csv'
       output_data_as_csv(data['results'])
@@ -57,10 +58,17 @@ end
 
 def get_search_args_from_params(params)
   endpoint = params.delete("endpoint")
-  sort = params.delete("sort")
-  fields = (params.delete('fields') || "").split(',')
+  options = {
+    api: endpoint,
+    sort: params.delete("sort"),
+    zip: params.delete("zip"),
+    distance: params.delete("distance"),
+    fields: (params.delete('fields') || "").split(','),
+    per_page: params.delete("per_page") || DataMagic.config.page_size,
+    page: params.delete("page").to_i || 0
+  }
   format = params.delete('format')
-  [endpoint, sort, fields, format]
+  [endpoint, options, format]
 end
 
 def output_data_as_csv(results)

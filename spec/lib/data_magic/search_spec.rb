@@ -70,7 +70,7 @@ describe "DataMagic #search" do
 
 
       it "supports pagination" do
-        result = DataMagic.search({address: "Lane", page:1, per_page: 3})
+        result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
         expect(result['metadata']["per_page"]).to eq(3)
         expect(result['metadata']["page"]).to eq(1)
         expect(result["results"].length).to eq(1)
@@ -117,14 +117,14 @@ describe "DataMagic #search" do
     end
 
     it "#search can find an attribute" do
-      sfo_location = { lat: 37.615223, lon:-122.389977 }
+      sfo_location = { lat: 37.615223, lon: -122.389977 }
       DataMagic.logger.debug "sfo_location[:lat] #{sfo_location[:lat].class} #{sfo_location[:lat].inspect}"
-      search_terms = {distance:"100mi", zip:"94102"}
-      result = DataMagic.search(search_terms)
+      search_options = { distance: "100mi", zip: "94102" }
+      result = DataMagic.search({}, search_options)
       result["results"] = result["results"].sort_by { |k| k["city"] }
       expected["results"] = [
-        {"city" => "San Francisco", "location"=>{"lat"=>37.727239, "lon"=>-123.032229}},
-        {"city" => "San Jose",      "location"=>{"lat"=>37.296867, "lon"=>-121.819306}}
+        { "city" => "San Francisco", "location" => { "lat" => 37.727239, "lon" => -123.032229 } },
+        { "city" => "San Jose",      "location" => { "lat" => 37.296867, "lon" => -121.819306 } }
       ]
       expected['metadata']["total"] = expected["results"].length
       expect(result).to eq(expected)

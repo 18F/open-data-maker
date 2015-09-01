@@ -26,6 +26,14 @@ module DataMagic
       end
     end
 
+    def options
+      @data['options']
+    end
+
+    def dictionary_only_search?
+      options[:search] == 'dictionary_only'
+    end
+
     # what are the valid types for the configured dictionary to have
     # we allow type to be blank (nil), which will be interpreted as a String
     def valid_types
@@ -258,7 +266,7 @@ module DataMagic
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
         DataMagic.client.indices.delete index: index_name if index_exists
         DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
-        DataMagic.client.index index: index_name, type:'config', id: 1, body: @data
+        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
         updated = true
       end
       updated

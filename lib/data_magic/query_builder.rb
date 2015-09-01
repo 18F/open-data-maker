@@ -3,16 +3,16 @@ module DataMagic
     class << self
       # Creates query from parameters passed into endpoint
       def from_params(params, options, config)
-        per_page = params.delete(:per_page) || config.page_size
-        page = params.delete(:page).to_i || 0
+        per_page = options[:per_page] || config.page_size || DataMagic::DEFAULT_PAGE_SIZE
+        page = options[:page] || 0
         query_hash = {
           _source: {
-            exclude: [ "_*" ]
+            exclude: ["_*"]
           },
           from:   page * per_page.to_i,
           size:   per_page.to_i
         }
-        query_hash[:query] = generate_squery(params, config).to_search
+        query_hash[:query] = generate_squery(params, options, config).to_search
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
         query_hash[:sort] = get_sort_order(options[:sort]) if options[:sort] && !options[:sort].empty?
         query_hash
@@ -20,9 +20,9 @@ module DataMagic
 
       private
 
-      def generate_squery(params, config)
+      def generate_squery(params, options, config)
         squery = Stretchy.query(type: 'document')
-        squery = search_location(squery, params)
+        squery = search_location(squery, options)
         search_fields_and_ranges(squery, params, config)
       end
 
@@ -85,9 +85,9 @@ module DataMagic
       end
 
       # Handles location (currently only uses SFO location)
-      def search_location(squery, params)
-        distance = params[:distance]
-        location = Zipcode.latlon(params[:zip])
+      def search_location(squery, options)
+        distance = options[:distance]
+        location = Zipcode.latlon(options[:zip])
 
         if distance && !distance.empty?
           # default to miles if no distance given
@@ -95,8 +95,6 @@ module DataMagic
           distance = "#{distance}mi" if unit != "km" and unit != "mi"
 
           squery = squery.geo('location', distance: distance, lat: location[:lat], lng: location[:lon])
-          params.delete(:distance)
-          params.delete(:zip)
         end
         squery
       end
