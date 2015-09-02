@@ -33,10 +33,11 @@ OpenDataMaker::App.controllers :v1 do
     data.to_json
   end
 
-  get :index, with: :endpoint, provides: [:json, :csv] do
+  get :index, with: ':endpoint(/:_command)', provides: [:json, :csv] do
+    # Optional parameter format discovered at http://jorgennilsson.com/article/optional-named-parameters-in-padrino-routes
     (endpoint, options, format) = get_search_args_from_params(params)
     content_type format.to_sym if format
-    DataMagic.logger.debug "-----> APP GET #{params.inspect}"
+    DataMagic.logger.debug "-----> APP GET #{params.inspect} with options #{options.inspect}"
 
     if not DataMagic.config.api_endpoints.keys.include? endpoint
       halt 404, {
@@ -65,8 +66,13 @@ def get_search_args_from_params(params)
     distance: params.delete("distance"),
     fields: (params.delete('fields') || "").split(','),
     per_page: params.delete("per_page") || DataMagic.config.page_size,
-    page: params.delete("page").to_i || 0
+    page: params.delete("page").to_i || 0,
+    add_aggregations: params.delete("_command") == 'stats' ? true : false,
+    metrics: (params.delete("_metrics") || "").split(/\s*,\s*/)
   }
+
+  # Ignore the aggregations endpoint if we don't have fields to aggregate on
+  options[:add_aggregations] &&= (options[:fields].size > 0)
   format = params.delete('format')
   [endpoint, options, format]
 end

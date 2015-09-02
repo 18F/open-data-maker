@@ -48,7 +48,8 @@ dictionary:
     type: integer
   location.lat: INTPTLAT
   location.lon: INTPTLONG
-  area.land:
+  land_area:
+    source: ALAND_SQMI
     description: Land Area (square miles)
     type: float
   area.water:

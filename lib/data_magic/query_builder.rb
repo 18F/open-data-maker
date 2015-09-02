@@ -13,6 +13,10 @@ module DataMagic
           size:   per_page.to_i
         }
         query_hash[:query] = generate_squery(params, options, config).to_search
+        if options[:add_aggregations]
+          query_hash.merge! add_aggregations(params, options, config)
+        end
+
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
         query_hash[:sort] = get_sort_order(options[:sort]) if options[:sort] && !options[:sort].empty?
         query_hash
@@ -24,6 +28,21 @@ module DataMagic
         squery = Stretchy.query(type: 'document')
         squery = search_location(squery, options)
         search_fields_and_ranges(squery, params, config)
+      end
+
+      def add_aggregations(params, options, config)
+        # Wrapper for Stretchy aggregation clause builder (which wraps ElasticSearch (ES) :aggs parameter)
+        # Extracts all extended_stats aggregations from ES, to be filtered later
+        # Is a no-op if no fields are specified, or none of them are numeric
+
+        agg_hash = options[:fields].inject({}) do |memo, f|
+          if config.column_field_types[f.to_s] && ["integer", "float"].include?(config.column_field_types[f.to_s])
+            memo[f.to_s] = { "extended_stats" => { "field" => f.to_s } }
+          end
+          memo
+        end
+
+        agg_hash != {} ? { "aggs" => agg_hash } : {}
       end
 
       def get_restrict_fields(options)

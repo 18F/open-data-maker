@@ -78,7 +78,8 @@ module DataMagic
     logger.info "FULL_QUERY: #{full_query.inspect}"
 
     result = client.search full_query
-    logger.info "result: #{result.inspect[0..500]}"
+    logger.info "result: #{result.inspect}"
+
     hits = result["hits"]
     total = hits["total"]
     results = []
@@ -94,13 +95,13 @@ module DataMagic
 
         found.keys.each { |key| found[key] = found[key][0] }
         # now it should look like this:
-        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace
+        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace"}
         found
       end
     end
 
     # assemble a simpler json document to return
-    {
+    simple_result = {
       "metadata" => {
         "total" => total,
         "page" => query_body[:from] / query_body[:size],
@@ -108,6 +109,22 @@ module DataMagic
       },
       "results" => 	results
     }
+
+    if options[:add_aggregations]
+      # Remove metrics that weren't requested.
+      aggregations = result['aggregations']
+      aggregations.each do |f_name, values|
+        # Count is not an interesting statistic
+        values.delete 'count'
+        if options[:metrics] && options[:metrics].size > 0
+          aggregations[f_name] = values.reject { |k, v| !(options[:metrics].include? k) }
+        end
+      end
+
+      simple_result.merge!({"aggregations" => aggregations})
+    end
+
+    simple_result
   end
 
   private

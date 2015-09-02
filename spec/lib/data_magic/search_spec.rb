@@ -1,8 +1,16 @@
 require 'spec_helper'
 require 'data_magic'
 require 'fixtures/data.rb'
+require 'pry'
 
 describe "DataMagic #search" do
+  let (:springfield_residents) do
+    [
+      {"age" => 14, "height" => 2.0, "address"=>"1313 Mockingbird Lane"},
+      {"age" => 70, "height" => 142.0, "address"=>"742 Evergreen Terrace"}
+    ]
+  end
+
   let (:expected) do
     {
       "metadata" => {
@@ -27,22 +35,27 @@ describe "DataMagic #search" do
 
       it "can find document with one attribute" do
         result = DataMagic.search({name: "Marilyn"})
-        expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"}]
+        expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield",
+                                "age" => "14", "height" => "2"}]
         expect(result).to eq(expected)
       end
 
       it "can find document with multiple search terms" do
         result = DataMagic.search({name: "Paul", city:"Liverpool"})
-        expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
+        expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool",
+                                "age" => "10", "height" => "142"}]
         expect(result).to eq(expected)
       end
 
       it "can find a document with a set of values delimited by commas" do
         result = DataMagic.search({name: "Paul,Marilyn"})
         expected['metadata']["total"] = 3
-        expect(result["results"]).to include({"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"})
-        expect(result["results"]).to include({"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"})
-        expect(result["results"]).to include({"name" => "Paul", "address" => "19 N Square", "city" => "Boston"})
+        expect(result["results"]).to include({"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield",
+                                              "age" => "14", "height" => "2"})
+        expect(result["results"]).to include({"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool",
+                                              "age" => "10", "height" => "142"})
+        expect(result["results"]).to include({"name" => "Paul", "address" => "19 N Square", "city" => "Boston",
+                                              "age" => "70", "height" => "55.2"})
       end
 
       it "can return a single attribute" do
@@ -67,7 +80,6 @@ describe "DataMagic #search" do
         expected['metadata']["total"] = 2
         expect(result).to eq(expected)
       end
-
 
       it "supports pagination" do
         result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
@@ -99,9 +111,51 @@ describe "DataMagic #search" do
 
 
     end
-
-
   end
+
+  describe "with numeric data" do
+    before (:all) do
+      ENV['DATA_PATH'] = './spec/fixtures/numeric_data'
+      DataMagic.init(load_now: false)
+      num_rows, fields = DataMagic.import_csv(address_data)
+    end
+    after(:all) do
+        DataMagic.destroy
+    end
+
+    it "can correctly compute filtered statistics" do
+      expected["metadata"]["total"] = 2
+      result = DataMagic.search({city: "Springfield"}, add_aggregations: true, fields: ["age", "height", "address"],
+                                metrics: ['max', 'avg'])
+      result["results"] = result["results"].sort_by { |k| k["age"] }
+
+      expected["results"] = springfield_residents
+      expected["aggregations"] = {
+        "age" => { "max" => 70.0, "avg" => 42.0},
+        "height" => {"max"=>142.0, "avg"=>72.0}
+      }
+
+      expect(result).to eq(expected)
+    end
+
+    it "can correctly compute unfiltered statistics" do
+      expected["metadata"]["total"] = 2
+      result = DataMagic.search({city: "Springfield"}, add_aggregations: true, fields: ["age", "height", "address"])
+      result["results"] = result["results"].sort_by { |k| k["age"] }
+
+      expected["results"] = springfield_residents
+      expected["aggregations"] = {
+        "age"=>{
+          "min"=>14.0, "max"=>70.0, "avg"=>42.0, "sum"=>84.0, "sum_of_squares"=>5096.0, "variance"=>784.0, "std_deviation"=>28.0, "std_deviation_bounds"=>{"upper"=>98.0, "lower"=>-14.0}},
+        "height"=>{
+          "min"=>2.0, "max"=>142.0, "avg"=>72.0, "sum"=>144.0, "sum_of_squares"=>20168.0, "variance"=>4900.0, "std_deviation"=>70.0, "std_deviation_bounds"=>{"upper"=>212.0, "lower"=>-68.0}
+        }
+      }
+
+      expect(result).to eq(expected)
+    end
+  end
+
   describe "with geolocation" do
     before (:all) do
       ENV['DATA_PATH'] = './spec/fixtures/geo_no_files'

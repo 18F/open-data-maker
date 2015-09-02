@@ -1,0 +1,20 @@
+# cities100.txt
+# Test YAML file
+index: numeric-data
+
+dictionary:
+  name:
+    source: name
+    type: string
+  address:
+    source: address
+    type: string
+  city:
+    source: city
+    type: string
+  age:
+    source: age
+    type: integer
+  height:
+    source: height
+    type: float
