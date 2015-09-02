@@ -99,8 +99,8 @@ module DataMagic
         a, b = Expression.new(expr, field_name).variables
                .map { |c| row[c.to_sym] }
                .map { |value| value == 'NULL' ? nil : value }
-               .map { |c| (fix_field_type(item['type'], c)) }
-        a || b
+               .map { |c| fix_field_type(item['type'] || item[:type], c) }
+        (a == 0 || a == 0.0) ? b : (a || b)
       end
 
       # row: a hash  (keys may be strings or symbols)
