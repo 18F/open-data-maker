@@ -58,7 +58,7 @@ describe DataMagic::DocumentBuilder do
       it_correctly "creates a document"
     end
 
-    describe "expressions" do
+    describe "float expressions" do
       before do
         allow(config).to receive(:column_field_types).and_return(
           one: 'float', two: 'float', one_or_two:'float')
@@ -75,7 +75,7 @@ describe DataMagic::DocumentBuilder do
         it "reports calculated fields" do
           expect(
             DataMagic::DocumentBuilder.calculated_fields(subject, config)
-          ).to eq('one_or_two' => "0.12")
+          ).to eq('one_or_two' => 0.12)
         end
         it_correctly "creates a document"
       end
@@ -83,6 +83,18 @@ describe DataMagic::DocumentBuilder do
       context "with first value NULL" do
         subject {{ one: 'NULL', two: '0.45' }}
         let(:expected_document)  { { 'one' => nil, 'two' => 0.45, 'one_or_two' => 0.45 } }
+        it_correctly "creates a document"
+      end
+
+      context "and zero evaluates to false" do
+        subject {{ one: '0.0', two: '0.45' }}
+        let(:expected_document)  { { 'one' => 0.0, 'two' => 0.45, 'one_or_two' => 0.45 } }
+        it_correctly "creates a document"
+      end
+
+      context "and zero evaluates to false and stays zero" do
+        subject {{ one: '0.0', two: '0.0' }}
+        let(:expected_document)  { { 'one' => 0.0, 'two' => 0.0, 'one_or_two' => 0.0 } }
         it_correctly "creates a document"
       end
 
@@ -101,6 +113,29 @@ describe DataMagic::DocumentBuilder do
     end
   end
 
+  describe "integer expressions" do
+    before do
+      allow(config).to receive(:column_field_types).and_return(
+        one: 'integer', two: 'integer', one_or_two:'integer')
+      allow(config).to receive(:dictionary).and_return(
+        one_or_two: {
+          calculate: 'one or two',
+          type: 'integer',
+          description: 'a whole number'
+        })
+    end
+    context "zero evaluates to false" do
+      subject {{ one: '0', two: '4' }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 4, 'one_or_two' => 4 } }
+      it_correctly "creates a document"
+    end
+
+    context "zero evaluates to false and stays zero" do
+      subject {{ one: '0', two: '0' }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 0, 'one_or_two' => 0 } }
+      it_correctly "creates a document"
+    end
+  end
   context "with options[:only]" do
     before do
       config.dictionary = { id: 'ID',
