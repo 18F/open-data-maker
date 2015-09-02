@@ -28,9 +28,11 @@
   var oneColumn = "";
   for (var i in categories) {
     oneColumn = oneColumn +
-      "<div class=\"category\">" +      // put box around category block
-      "<div class=\"category__name\">" + categories[i].title + "</div>" +
-      "<p>" + categories[i].description + "</p>" +
+      "<div class=\"category\">" +    // put box around category block
+      "<a href=\"/categories/" + i + "\">" +    // make whole div into a link
+        "<div class=\"category__name\">" + categories[i].title + "</div>" +
+        "<p>" + categories[i].description + "</p>" +
+      "</a>" +
       "</div>";
   }
 //  alert(oneColumn);
