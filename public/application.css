@@ -7,6 +7,15 @@
   width: 92%;
 }
 
+.categories .category a {
+  color: black;
+  text-decoration: none;
+}
+
+.categories .category a:visited {
+  color: black;
+}
+
 .categories__column {
   display: inline-block;
   width: 100%;
