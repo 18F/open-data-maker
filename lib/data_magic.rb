@@ -134,6 +134,29 @@ module DataMagic
     begin
       logger.info "====> creating index with type mapping: #{es_types.inspect[0..500]}"
       client.indices.create index: es_index_name, body: {
+        settings: {
+          analysis: {
+            filter: {
+              autocomplete_filter: {
+                type: 'edge_ngram',
+                min_gram: 3,
+                max_gram: 25
+              }
+            },
+            analyzer: {
+              autocomplete_index: {
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop', 'autocomplete_filter'],
+                type: 'custom'
+              },
+              autocomplete_search: {
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop'],
+                type: 'custom'
+              }
+            }
+          }
+        },
         mappings: {
           document: {    # type 'document' is always used for external indexed docs
             properties: es_types
@@ -157,6 +180,10 @@ module DataMagic
       'literal' => {type: 'string', index:'not_analyzed'},
       'name' => {type: 'string', index:'not_analyzed'},
       'lowercase_name' => {type: 'string', index:'not_analyzed', store: false},
+      'autocomplete' => { type: 'string',
+                          index_analyzer: 'autocomplete_index',
+                          search_analyzer: 'autocomplete_search'
+      },
    }
     field_types.each_with_object({}) do |(key, type), result|
       result[key] = custom_type[type]
