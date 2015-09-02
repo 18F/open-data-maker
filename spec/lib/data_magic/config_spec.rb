@@ -91,7 +91,7 @@ describe DataMagic::Config do
       expect(dictionary.keys.sort).to eq %w(id code name state population
         location.lat location.lon area.land area.water).sort
       categories = config.data.delete 'categories'
-      expect(categories.keys.sort).to eq %w(general geographic).sort
+      expect(categories.keys.sort).to eq %w(general general2 general3 general4 general5 geographic).sort
       expect(config.data).to eq(default_config)
     end
 
