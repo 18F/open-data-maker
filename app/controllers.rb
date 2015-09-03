@@ -34,11 +34,12 @@ OpenDataMaker::App.controllers :v1 do
   end
 
   get :index, with: :endpoint, provides: [:json, :csv] do
-    (endpoint, options, format) = get_search_args_from_params(params)
-    content_type format.to_sym if format
+    options = get_search_args_from_params(params)
+    endpoint = options[:endpoint]
+    content_type options[:format].to_sym if options[:format]
     DataMagic.logger.debug "-----> APP GET #{params.inspect}"
 
-    if not DataMagic.config.api_endpoints.keys.include? endpoint
+    unless DataMagic.config.api_endpoints.keys.include? endpoint
       halt 404, {
         error: 404,
         message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
@@ -48,7 +49,7 @@ OpenDataMaker::App.controllers :v1 do
     data = DataMagic.search(params, options)
     halt 400, data.to_json if data.key?(:errors)
 
-    if format == 'csv'
+    if content_type == :csv
       output_data_as_csv(data['results'])
     else
       data.to_json
@@ -56,19 +57,22 @@ OpenDataMaker::App.controllers :v1 do
   end
 end
 
+# TODO: Use of non-underscore-prefixed option parameters is still
+# supported but deprecated, and should be removed at some point soon
+SUPPORT_DEPRECATED_OPTION_SYNTAX = true
 def get_search_args_from_params(params)
-  endpoint = params.delete("endpoint")
   options = {
-    api: endpoint,
-    sort: params.delete("sort"),
-    zip: params.delete("zip"),
-    distance: params.delete("distance"),
-    fields: (params.delete('fields') || "").split(','),
-    per_page: params.delete("per_page") || DataMagic.config.page_size,
-    page: params.delete("page").to_i || 0
+    endpoint: params.delete("endpoint"),
+    format:   params.delete("format")
   }
-  format = params.delete('format')
-  [endpoint, options, format]
+  %w(sort fields zip distance page per_page).each do |opt|
+    options[opt.to_sym] = params.delete("_#{opt}") ||
+                          (SUPPORT_DEPRECATED_OPTION_SYNTAX && params.delete(opt))
+  end
+  options[:fields]   = (options[:fields]   || "").split(',')
+  options[:per_page] = (options[:per_page] || DataMagic.config.page_size).to_i
+  options[:page]     = (options[:page]     || 0).to_i
+  options
 end
 
 def output_data_as_csv(results)

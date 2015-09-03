@@ -166,16 +166,16 @@ module DataMagic
 
 
   # get the real index name when given either
-  # api: api endpoint configured in data.yaml
+  # endpoint: api endpoint configured in data.yaml
   # index: index name
   def self.index_name_from_options(options)
-    options[:api] = options['api'].to_sym if options['api']
+    api = options[:endpoint]
     options[:index] = options['index'].to_sym if options['index']
-    logger.info "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
-    if options[:api]
-      index_name = config.find_index_for(options[:api])
+    logger.info "WARNING: DataMagic.search options api will override index, only one expected"  if api and options[:index]
+    if api
+      index_name = config.find_index_for(api)
       if index_name.nil?
-        raise ArgumentError, "no configuration found for '#{options[:api]}', available endpoints: #{self.config.api_endpoint_names.inspect}"
+        raise ArgumentError, "no configuration found for '#{api}', available endpoints: #{self.config.api_endpoint_names.inspect}"
       end
     else
       index_name = options[:index]
