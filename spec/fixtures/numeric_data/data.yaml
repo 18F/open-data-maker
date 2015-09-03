@@ -1,6 +1,7 @@
 # cities100.txt
 # Test YAML file
 index: numeric-data
+api: cities
 
 dictionary:
   name:

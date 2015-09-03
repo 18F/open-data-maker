@@ -310,4 +310,45 @@ describe 'api', type: 'feature' do
       end
     end
   end
+  
+  context "with residents CSV data" do
+    before do
+      ENV['DATA_PATH'] = './spec/fixtures/numeric_data'
+      DataMagic.init(load_now: false)
+      num_rows, fields = DataMagic.import_csv(address_data)
+    end
+
+    after do
+      DataMagic.destroy
+    end
+  
+    describe "when using the stats command" do
+      let(:springfield_residents) do
+        [
+          {"age" => 14, "height" => 2.0, "address"=>"1313 Mockingbird Lane"},
+          {"age" => 70, "height" => 142.0, "address"=>"742 Evergreen Terrace"}
+        ]
+      end
+        
+      let(:expected_results) do
+        { "metadata" => {      "total" => 2,
+                               "page" => 0,
+                               "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+                        },
+          "results" => springfield_residents,
+          "aggregations" => {
+            "age" => { "max" => 70.0, "avg" => 42.0},
+            "height" => {"max"=>142.0, "avg"=>72.0}
+          }
+        }
+      end
+
+      it "returns the correct results for Springfield residents" do
+        get '/v1/cities/stats?city=Springfield&fields=address,age,height&_metrics=max,avg'
+        expect(last_response).to be_ok
+        json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
+        expect(json_response).to eq(expected_results)
+      end
+    end
+  end
 end
