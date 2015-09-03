@@ -1,0 +1,10 @@
+version: 0
+index: name-data
+api: names
+dictionary:
+  id: ID
+  school.name: NAME
+  school.state: STATE
+
+files:
+  - name: school_names.csv
