@@ -56,6 +56,16 @@ module DataMagic
         params.each do |field, value|
           if config.field_type(field) == "name"
             squery = include_name_query(squery, field, value)
+          elsif config.field_type(field) == "autocomplete"
+              squery = squery.match.query(
+                common: {
+                  field => {
+                    query: value,
+                    cutoff_frequency: 0.001,
+                    low_freq_operator: "and"
+                  }
+                }
+              )
           elsif match = /(.+)__(range|ne|not)\z/.match(field)
             var_name, operator = match.captures.map(&:to_sym)
             if operator == :ne or operator == :not  # field negation

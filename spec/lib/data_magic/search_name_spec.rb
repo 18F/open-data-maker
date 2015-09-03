@@ -24,7 +24,9 @@ describe "DataMagic intuitive search" do
   shared_examples "finds" do
     it "correct results " do
       expect(response['results']
-              .map { |i| i['school.name'] } ).to eql expected_match
+              .map { |i| i['school.name'] }
+              .sort )
+              .to eql expected_match
     end
     it "correct metadata" do
       expect(response.reject { |k, _| k == 'results' }).to eql expected_meta

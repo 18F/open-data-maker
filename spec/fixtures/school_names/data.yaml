@@ -5,7 +5,7 @@ dictionary:
   id: ID
   school.name:
     source: NAME
-    type: name
+    type: autocomplete
   school.state: STATE
 
 files:
