@@ -72,6 +72,10 @@ describe 'api', type: 'feature' do
     it "raises a 400 on a bad query" do
       expected = {
         "errors" => [{
+          "error" => "parameter_not_found",
+          "input" => "frog",
+          "message" => "The input parameter 'frog' is not known in this dataset."
+        }, {
           "error" => 'operator_not_found',
           "parameter" => "frog",
           "input" => "blah",
@@ -144,7 +148,7 @@ describe 'api', type: 'feature' do
       describe "with options" do
         let(:expected_results) { [{ "name" => "Boston", "population" => 617594 }] }
         it "can return a subset of fields" do
-          get '/v1/cities?state=MA&fields=name,population'
+          get '/v1/cities?state=MA&_fields=name,population'
           expect(last_response).to be_ok
           expect(json_response).to eq(expected)
         end
@@ -169,7 +173,7 @@ describe 'api', type: 'feature' do
 
       describe "near zipcode" do
         before do
-          get '/v1/cities?zip=94132&distance=30mi'
+          get '/v1/cities?_zip=94132&_distance=30mi'
         end
         let(:expected_results) do
           [{"state"=>"CA", "name"=>"Oakland", "population"=>390724,
@@ -186,14 +190,14 @@ describe 'api', type: 'feature' do
       # @todo add example with multi words
       describe "with sort" do
         it 'returns the data sorted by population in ascending order' do
-          get '/v1/cities?sort=population:asc'
+          get '/v1/cities?_sort=population:asc'
           expect(last_response).to be_ok
           expect(json_response["results"][0]['name']).to eq("Rochester")
         end
 
         context 'when :sort is "name"' do
           it 'returns the data sorted by name in descending order' do
-            get '/v1/cities?sort=name:desc&per_page=100'
+            get '/v1/cities?_sort=name:desc&_per_page=100'
             expect(last_response).to be_ok
             expect(json_response["results"][0]['name']).to eq("Winston-Salem")
             expect(json_response["results"][-1]['name']).to eq("Albuquerque")
@@ -308,6 +312,49 @@ describe 'api', type: 'feature' do
         expect(last_response).to be_ok
         expect(json_response).to eq(expected)
       end
+    end
+  end
+
+  describe "deprecated option syntax" do
+    before do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/sample-data'
+      DataMagic.init(load_now: true)
+    end
+    after do
+      DataMagic.destroy
+    end
+
+    # TODO: This should fail once the old non-prefixed option syntax
+    #       is turned off
+    it "still works" do
+      get '/v1/cities?zip=94132&distance=30mi'
+      expected_results = [
+        {"state"=>"CA", "name"=>"Oakland", "population"=>390724,
+          "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}
+      ]
+      expect(last_response).to be_ok
+      json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
+      expect(json_response["results"]).to eq(expected_results)
+    end
+
+    # TODO: ... and vice versa
+    xit "no longer works" do
+      expected = {
+        "errors" => [{
+          "error" => 'parameter_not_found',
+          "message" => "The input parameter 'zip' is not known in this dataset.",
+          "input" => 'zip'
+        }, {
+          "error" => 'parameter_not_found',
+          "message" => "The input parameter 'distance' is not known in this dataset.",
+          "input" => 'distance'
+        }]
+      }
+      get '/v1/cities?zip=94132&distance=30mi'
+      expect(last_response.status).to eq(400)
+      expect(last_response.content_type).to eq('application/json')
+      expect(json_response).to eq(expected)
     end
   end
 end

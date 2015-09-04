@@ -34,6 +34,10 @@ describe 'API errors', type: 'feature' do
   end
 
   describe "are returned" do
+    before do
+      allow(config).to receive(:dictionary_only_search?).and_return(false)
+    end
+
     context "when an unknown parameter is provided" do
       let(:params) { { "frog" => "toad" } }
       let(:expected_errors) do
