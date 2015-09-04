@@ -19,8 +19,7 @@ OpenDataMaker::App.controllers :v1 do
     headers 'Access-Control-Allow-Origin' => '*',
             'Access-Control-Allow-Methods' => ['GET'],
             'Surrogate-Control' => "max-age=#{CACHE_TTL}"
-    expires(CACHE_TTL)
-    cache_control(max_age: CACHE_TTL, s_max_age:CACHE_TTL)
+    cache_control :public, max_age: CACHE_TTL
   end
 
   get :endpoints do
