@@ -58,20 +58,18 @@ OpenDataMaker::App.controllers :v1 do
 end
 
 # TODO: Use of non-underscore-prefixed option parameters is still
-# supported but deprecated, and should be removed at some point soon
-SUPPORT_DEPRECATED_OPTION_SYNTAX = true
+# supported but deprecated, and should be removed at some point soon -
+# see comment in method body
 def get_search_args_from_params(params)
-  options = {
-    endpoint: params.delete("endpoint"),
-    format:   params.delete("format")
-  }
+  options = {}
   %w(sort fields zip distance page per_page).each do |opt|
-    options[opt.to_sym] = params.delete("_#{opt}") ||
-                          (SUPPORT_DEPRECATED_OPTION_SYNTAX && params.delete(opt))
+    options[opt.to_sym] = params.delete("_#{opt}")
+    # TODO: remove next line to end support for un-prefixed option parameters
+    options[opt.to_sym] ||= params.delete(opt)
   end
+  options[:endpoint] = params.delete("endpoint") # these two params are
+  options[:format]   = params.delete("format")   # supplied by Padrino
   options[:fields]   = (options[:fields]   || "").split(',')
-  options[:per_page] = (options[:per_page] || DataMagic.config.page_size).to_i
-  options[:page]     = (options[:page]     || 0).to_i
   options
 end
 
