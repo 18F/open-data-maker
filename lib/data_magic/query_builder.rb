@@ -4,7 +4,7 @@ module DataMagic
       # Creates query from parameters passed into endpoint
       def from_params(params, options, config)
         per_page = options[:per_page] || config.page_size || DataMagic::DEFAULT_PAGE_SIZE
-        page = options[:page] || 0
+        page = options[:page].to_i || 0
         query_hash = {
           _source: {
             exclude: ["_*"]
