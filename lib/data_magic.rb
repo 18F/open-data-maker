@@ -128,19 +128,33 @@ module DataMagic
     logger.info "create_index field_types: #{field_types.inspect[0..500]}"
     es_index_name ||= self.config.scoped_index_name
     field_types['location'] = 'geo_point'
-    es_types = es_field_types(field_types)
-    es_types = NestedHash.new.add(es_types)
+    es_types = NestedHash.new.add(es_field_types(field_types))
     nested_object_type(es_types)
     begin
       logger.info "====> creating index with type mapping: #{es_types.inspect[0..500]}"
-      client.indices.create index: es_index_name, body: {
+      client.indices.create base_index_hash(es_index_name, es_types)
+    rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
+      if error.message.include? "IndexAlreadyExistsException"
+        logger.debug "create_index failed: #{es_index_name} already exists"
+      else
+        logger.error error.to_s
+        raise error
+      end
+    end
+    es_index_name
+  end
+
+  def self.base_index_hash(es_index_name, es_types)
+    {
+      index: es_index_name,
+      body: {
         settings: {
           analysis: {
             filter: {
               autocomplete_filter: {
-                type: 'edge_ngram',
-                min_gram: 3,
-                max_gram: 25
+                  type: 'edge_ngram',
+                  min_gram: 3,
+                  max_gram: 25
               }
             },
             analyzer: {
@@ -158,20 +172,12 @@ module DataMagic
           }
         },
         mappings: {
-          document: {    # type 'document' is always used for external indexed docs
+          document: { # type 'document' is always used for external indexed docs
             properties: es_types
           }
         }
       }
-    rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
-      if error.message.include? "IndexAlreadyExistsException"
-        logger.debug "create_index failed: #{es_index_name} already exists"
-      else
-        logger.error error.to_s
-        raise error
-      end
-    end
-    es_index_name
+    }
   end
 
   # convert the types from data.yaml to Elasticsearch-specific types
