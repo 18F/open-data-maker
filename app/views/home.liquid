@@ -25,15 +25,19 @@
 
 <script>
   var categories = {{ categories }} ;
-  var oneColumn = "";
-  for (var i in categories) {
-    oneColumn = oneColumn +
-      "<div class=\"category\">" +    // put box around category block
-      "<a href=\"/categories/" + i + "\">" +    // make whole div into a link
-        "<div class=\"category__name\">" + categories[i].title + "</div>" +
-        "<p>" + categories[i].description + "</p>" +
-      "</a>" +
-      "</div>";
+  if (categories === null)
+    var oneColumn = "Sorry, no categories have been added yet.";
+  else {
+    var oneColumn = "";
+    for (var i in categories) {
+      oneColumn = oneColumn +
+        "<div class=\"category\">" +    // put box around category block
+        "<a href=\"/category/" + i + "\">" +    // make whole div into a link
+          "<div class=\"category__name\">" + categories[i].title + "</div>" +
+          "<p>" + categories[i].description + "</p>" +
+        "</a>" +
+        "</div>";
+    }
   }
 //  alert(oneColumn);
   document.getElementById("categories-list").innerHTML=oneColumn;
