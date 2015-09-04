@@ -204,6 +204,24 @@ describe 'api', type: 'feature' do
           end
         end
       end
+
+      describe "with pagination" do
+        it "can specify both page and page size" do
+          get '/v1/cities?_page=1&_per_page=3'
+          expect(last_response).to be_ok
+          expect(json_response['metadata']["per_page"].to_i).to eq(3)
+          expect(json_response['metadata']["page"].to_i).to eq(1)
+          expect(json_response["results"].length).to eq(3)
+        end
+
+        it "can use a default page size" do
+          get '/v1/cities?_page=1'
+          expect(last_response).to be_ok
+          expect(json_response['metadata']["per_page"].to_i).to eq(DataMagic::DEFAULT_PAGE_SIZE)
+          expect(json_response['metadata']["page"].to_i).to eq(1)
+          expect(json_response["results"].length).to eq(DataMagic::DEFAULT_PAGE_SIZE)
+        end
+      end
     end
 
   end

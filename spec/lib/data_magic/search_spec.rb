@@ -69,11 +69,20 @@ describe "DataMagic #search" do
       end
 
 
-      it "supports pagination" do
-        result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
-        expect(result['metadata']["per_page"]).to eq(3)
-        expect(result['metadata']["page"]).to eq(1)
-        expect(result["results"].length).to eq(1)
+      describe "supports pagination" do
+        it "can specify both page and page size" do
+          result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
+          expect(result['metadata']["per_page"]).to eq(3)
+          expect(result['metadata']["page"]).to eq(1)
+          expect(result["results"].length).to eq(1)
+        end
+
+        it "can use a default page size" do
+          result = DataMagic.search({}, page:1)
+          expect(result['metadata']["per_page"]).to eq(DataMagic::DEFAULT_PAGE_SIZE)
+          expect(result['metadata']["page"]).to eq(1)
+          expect(result["results"].length).to eq(0)
+        end
       end
 
     end
