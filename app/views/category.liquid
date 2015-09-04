@@ -1,0 +1,25 @@
+<h2>Data Details</h2>
+
+<div class="category">
+  <div id="category-details" class="category"></div>
+</div>
+
+<script>
+  var category_details = {{ category_details }} ;
+  var category_fields = category_details['fields'] ;
+  var oneColumn = "<div class=\"category__name\">" + category_details.title + "</div>" +
+    "<p>" + category_details.description + "</p>" +
+    "<ul class=\"category__fields\">" +
+    "<hr/>";
+  category_fields.forEach(function (field) {
+    oneColumn = oneColumn +
+      "<li class=\"category__fields\">" +
+        "<div class=\"category__field-name\">" + field + "</div>" +
+        "<div> lorem ipsum... (field description placeholder) </div>" +
+        "<hr/>" +
+      "</li>" +
+     "</ul>";
+  });
+//  alert(oneColumn);
+  document.getElementById("category-details").innerHTML=oneColumn;
+</script>

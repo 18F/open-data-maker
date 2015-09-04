@@ -34,3 +34,14 @@ body {
   font-weight: bold;
   margin-bottom: 10px;
 }
+ 
+.category__fields {
+  list-style: none;
+  padding: 0;
+}
+ 
+.category__field-name {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}

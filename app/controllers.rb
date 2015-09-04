@@ -10,6 +10,16 @@ OpenDataMaker::App.controllers do
   end
 end
 
+# Category page
+OpenDataMaker::App.controllers do
+  get :category, :with => :id do
+    category_id = params['id'].to_s
+    render :category, layout: true, locals: {
+      'category_details' => DataMagic.config.data['categories'][category_id].to_json
+    }
+  end
+end
+
 CACHE_TTL = 300
 
 # All API requests are prefixed by the API version
