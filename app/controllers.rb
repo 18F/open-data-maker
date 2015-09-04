@@ -9,13 +9,17 @@ OpenDataMaker::App.controllers do
   end
 end
 
+CACHE_TTL = 300
+
 # All API requests are prefixed by the API version
 # in this case, "v1" - e.g. "/vi/endpoints" etc.
 OpenDataMaker::App.controllers :v1 do
   before do
     content_type :json
     headers 'Access-Control-Allow-Origin' => '*',
-            'Access-Control-Allow-Methods' => ['GET']
+            'Access-Control-Allow-Methods' => ['GET'],
+            'Surrogate-Control' => "max-age=#{CACHE_TTL}"
+    cache_control :public, max_age: CACHE_TTL
   end
 
   get :endpoints do
