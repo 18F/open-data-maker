@@ -128,18 +128,11 @@ module DataMagic
     logger.info "create_index field_types: #{field_types.inspect[0..500]}"
     es_index_name ||= self.config.scoped_index_name
     field_types['location'] = 'geo_point'
-    es_types = es_field_types(field_types)
-    es_types = NestedHash.new.add(es_types)
+    es_types = NestedHash.new.add(es_field_types(field_types))
     nested_object_type(es_types)
     begin
       logger.info "====> creating index with type mapping: #{es_types.inspect[0..500]}"
-      client.indices.create index: es_index_name, body: {
-        mappings: {
-          document: {    # type 'document' is always used for external indexed docs
-            properties: es_types
-          }
-        }
-      }
+      client.indices.create base_index_hash(es_index_name, es_types)
     rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
       if error.message.include? "IndexAlreadyExistsException"
         logger.debug "create_index failed: #{es_index_name} already exists"
@@ -151,12 +144,52 @@ module DataMagic
     es_index_name
   end
 
+  def self.base_index_hash(es_index_name, es_types)
+    {
+      index: es_index_name,
+      body: {
+        settings: {
+          analysis: {
+            filter: {
+              autocomplete_filter: {
+                  type: 'edge_ngram',
+                  min_gram: 3,
+                  max_gram: 25
+              }
+            },
+            analyzer: {
+              autocomplete_index: {
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop', 'autocomplete_filter'],
+                type: 'custom'
+              },
+              autocomplete_search: {
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop'],
+                type: 'custom'
+              }
+            }
+          }
+        },
+        mappings: {
+          document: { # type 'document' is always used for external indexed docs
+            properties: es_types
+          }
+        }
+      }
+    }
+  end
+
   # convert the types from data.yaml to Elasticsearch-specific types
   def self.es_field_types(field_types)
     custom_type = {
       'literal' => {type: 'string', index:'not_analyzed'},
       'name' => {type: 'string', index:'not_analyzed'},
       'lowercase_name' => {type: 'string', index:'not_analyzed', store: false},
+      'autocomplete' => { type: 'string',
+                          index_analyzer: 'autocomplete_index',
+                          search_analyzer: 'autocomplete_search'
+      },
    }
     field_types.each_with_object({}) do |(key, type), result|
       result[key] = custom_type[type]

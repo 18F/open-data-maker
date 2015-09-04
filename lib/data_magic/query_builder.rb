@@ -44,32 +44,49 @@ module DataMagic
         value =~ /\./ ? value.to_f : value.to_i
       end
 
+      def search_fields_and_ranges(squery, params, config)
+        params.each do |param, value|
+          if config.field_type(param) == "name"
+            squery = include_name_query(squery, param, value)
+          elsif config.field_type(param) == "autocomplete"
+            squery = autocomplete_query(squery, param, value)
+          elsif match = /(.+)__(range|ne|not)\z/.match(param)
+            field, operator = match.captures.map(&:to_sym)
+            squery = range_query(squery, operator, field, value)
+          else # field equality
+            squery = squery.where(param => value)
+          end
+        end
+        squery
+      end
+
       def include_name_query(squery, field, value)
         value = value.split(' ').map { |word| "#{word}*"}.join(' ')
-        squery = squery.match.query(
+        squery.match.query(
           # we store lowercase name in field with prefix _
           "wildcard": { "_#{field}" => { "value": value.downcase } }
         )
       end
 
-      def search_fields_and_ranges(squery, params, config)
-        params.each do |field, value|
-          if config.field_type(field) == "name"
-            squery = include_name_query(squery, field, value)
-          elsif match = /(.+)__(range|ne|not)\z/.match(field)
-            var_name, operator = match.captures.map(&:to_sym)
-            if operator == :ne or operator == :not  # field negation
-              squery = squery.where.not(var_name => value)
-            else  # field range
-              squery = squery.filter(
-                or: build_ranges(var_name, value.split(','))
-              )
-            end
-          else # field equality
-            squery = squery.where(field => value)
-          end
+      def range_query(squery, operator, field, value)
+        if operator == :ne or operator == :not # field negation
+          squery.where.not(field => value)
+        else # field range
+          squery.filter(
+            or: build_ranges(field, value.split(','))
+          )
         end
-        squery
+      end
+
+      def autocomplete_query(squery, field, value)
+        squery.match.query(
+          common: {
+            field => {
+              query: value,
+              cutoff_frequency: 0.001,
+              low_freq_operator: "and"
+            }
+          })
       end
 
       def build_ranges(var_name, range_strings)
@@ -98,9 +115,6 @@ module DataMagic
         end
         squery
       end
-
     end
-
   end
-
 end

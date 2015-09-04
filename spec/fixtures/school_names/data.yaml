@@ -1,0 +1,12 @@
+version: 0
+index: name-data
+api: names
+dictionary:
+  id: ID
+  school.name:
+    source: NAME
+    type: autocomplete
+  school.state: STATE
+
+files:
+  - name: school_names.csv
