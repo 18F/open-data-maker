@@ -153,5 +153,13 @@ describe "DataMagic #search" do
       response = DataMagic.search({}, sort: "population:asc")
       expect(response["results"][0]['name']).to eq("Rochester")
     end
+
+    it "can match a field on several given integer values" do
+      response = DataMagic.search({population: "8175133,3792621,2695598,"}, sort: "population:desc")
+      expect(response["results"].length).to eq(3)
+      expect(response["results"][0]['name']).to eq("New York")
+      expect(response["results"][1]['name']).to eq("Los Angeles")
+      expect(response["results"][2]['name']).to eq("Chicago")
+    end
   end
 end

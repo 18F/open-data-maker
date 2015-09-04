@@ -84,6 +84,8 @@ module DataMagic
         case value.to_s
         when /^-?\d+$/
           "integer"
+        when /^(-?\d+,?)+$/ # list of integers
+          "integer"
         when /^-?\d+\.\d+$/
           "float"
         else
