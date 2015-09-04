@@ -46,13 +46,16 @@ module DataMagic
 
       def search_fields_and_ranges(squery, params, config)
         params.each do |param, value|
-          if config.field_type(param) == "name"
+          field_type = config.field_type(param)
+          if field_type == "name"
             squery = include_name_query(squery, param, value)
-          elsif config.field_type(param) == "autocomplete"
+          elsif field_type == "autocomplete"
             squery = autocomplete_query(squery, param, value)
           elsif match = /(.+)__(range|ne|not)\z/.match(param)
             field, operator = match.captures.map(&:to_sym)
             squery = range_query(squery, operator, field, value)
+          elsif field_type == "integer" && value.is_a?(String) && /,/.match(value) # list of integers
+            squery = integer_list_query(squery, param, value)
           else # field equality
             squery = squery.where(param => value)
           end
@@ -89,14 +92,21 @@ module DataMagic
           })
       end
 
-      def build_ranges(var_name, range_strings)
+      def integer_list_query(squery, field, value)
+        squery.filter(
+          terms: {
+            field => value.split(',').map(&:to_i) }
+        )
+      end
+
+      def build_ranges(field, range_strings)
         range_strings.map do |range|
           min, max = range.split('..')
           values = {}
           values[:gte] = to_number(min) unless min.empty?
           values[:lte] = to_number(max) if max
           {
-            range: { var_name => values }
+            range: { field => values }
           }
         end
       end

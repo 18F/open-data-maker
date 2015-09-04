@@ -58,6 +58,21 @@ describe DataMagic::QueryBuilder do
     it_correctly "builds a query"
   end
 
+  describe "can exact match from a list of integers" do
+    before do
+      allow(DataMagic.config).to receive(:field_type).with(:age).and_return("integer")
+    end
+    subject { { age: '10,20,40' } }
+    let(:expected_query) do {
+        filtered: {
+            query: { match_all: {} },
+            filter: {
+                terms: { age: [10,20,40] }
+            } } }
+    end
+    it_correctly "builds a query"
+  end
+
   describe "can search within a location" do
     subject { {} }
     let(:options) { { zip: "94132", distance: "30mi" } }
