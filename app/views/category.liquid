@@ -1,4 +1,14 @@
-<h2>Data Details</h2>
+<section>
+  <div class="header">
+    <img class="logo" style="float: left" src="https://18f.gsa.gov/assets/images/logo-18f.png">
+    <br/>
+    <h1 class="title">{{ title }}</h1>
+    <div style="clear: both"></div>
+  </div>
+  </br>
+</section>
+
+<h2 class="bottom-margin">Data Details for the <span id="category-name"></span> Category</h2>
 
 <div class="category">
   <div id="category-details" class="category"></div>
@@ -7,8 +17,7 @@
 <script>
   var category_details = {{ category_details }} ;
   var category_fields = category_details['fields'] ;
-  var oneColumn = "<div class=\"category__name\">" + category_details.title + "</div>" +
-    "<p>" + category_details.description + "</p>" +
+  var oneColumn = "<p>" + category_details.description + "</p>" +
     "<ul class=\"category__fields\">" +
     "<hr/>";
   category_fields.forEach(function (field) {
@@ -22,4 +31,5 @@
   });
 //  alert(oneColumn);
   document.getElementById("category-details").innerHTML=oneColumn;
+  document.getElementById("category-name").innerHTML=category_details.title;
 </script>

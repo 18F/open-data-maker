@@ -15,6 +15,7 @@ OpenDataMaker::App.controllers do
   get :category, :with => :id do
     category_id = params['id'].to_s
     render :category, layout: true, locals: {
+      'title' => 'Open Data Maker',
       'category_details' => DataMagic.config.data['categories'][category_id].to_json
     }
   end
