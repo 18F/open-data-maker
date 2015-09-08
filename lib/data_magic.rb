@@ -106,7 +106,7 @@ module DataMagic
       "page" => query_body[:from] / query_body[:size],
       "per_page" => query_body[:size]
     }
-    metadata["search_time"] = search_time if options.has_key? :debug
+    metadata["search_time"] = search_time if options[:debug]
 
     # assemble a simpler json document to return
     {
