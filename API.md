@@ -40,8 +40,7 @@ In this query URL:
  * `https://ccapi-production.18f.gov/` is the URL Path.
  * `v1` is the API Version String, followed by `/`, which separates it from the Endpoint.
  * `schools` is the Endpoint. Note the plural.
- * `.json` is the Format. Note the dot between the Endpoint and Format. Note
- that, since JSON is the default output format, it doesn't have to be specified.
+ * `.json` is the Format. Note the dot between the Endpoint and Format. Also note that, since JSON is the default output format, we didn't _have_ to specify it.
  * In keeping with standard [URI Query String syntax](https://en.wikipedia.org/wiki/Query_string), the `?` and `&` characters are used to begin and separate the list of query parameters.
  * `school.degrees_awarded.predominant=2,3` is a Field Parameter. In this case,
  it's searching for records which have a `school.degrees_awarded.predominant`
@@ -75,8 +74,9 @@ in response to the above query:
       "id": 420574,
       "school.name":"Arizona State University-Polytechnic",
       "2013.student.size": 3305
-    },
-    ... (further results removed) ...
+    }
+
+    // ... (further results removed) ...
   ]
 }
 ```
@@ -188,6 +188,8 @@ You can even supply a list of ranges, separated by commas. For example, For exam
 You can perform extra refinement and organisation of search results using **option parameters**. These special parameters have names beginning with an underscore character (`_`).
 
 ### Limiting Returned Fields with `_fields`
+
+
 
 ### Pagination with `_page` and `_per_page`
 
