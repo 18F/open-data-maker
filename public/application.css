@@ -73,6 +73,7 @@ img {
   word-wrap: break-word;
   display: inline-block;
   width: 92%;
+  background-color: #ffc;
 }
 
 .categories .category a {
@@ -91,6 +92,9 @@ img {
   -webkit-column-count: 2;
   -moz-column-count: 2;
   column-count: 2;
+  column-gap: .2em;
+  -webkit-column-gap: .2em;
+  -moz-column-gap: .2em;
 }
 
 .category__name {
