@@ -12,26 +12,30 @@
 
 <div class="category">
   <div id="category-details" class="category"></div>
+  <div id="field-details" class="category"></div>
 </div>
 
 <a href="/">Back to the list of Categories</a>
 
 <script>
   var category_details = {{ category_details }} ;
+  var dictionary = {{ field_details }} ;
   var category_fields = category_details['fields'] ;
   var oneColumn = "<p>" + category_details.description + "</p>" +
     "<ul class=\"category__fields\">" +
     "<hr/>";
   category_fields.forEach(function (field) {
+    var field_description = dictionary[field].description
     oneColumn = oneColumn +
       "<li class=\"category__fields\">" +
         "<div class=\"category__field-name\">" + field + "</div>" +
-        "<div> lorem ipsum... (field description placeholder) </div>" +
+        "<div>" + field_description + "</div>" +
         "<hr/>" +
       "</li>" +
      "</ul>";
   });
 //  alert(oneColumn);
-  document.getElementById("category-details").innerHTML=oneColumn;
-  document.getElementById("category-name").innerHTML=category_details.title;
+  document.getElementById("category-name").innerHTML = category_details.title;
+  document.getElementById("category-details").innerHTML = oneColumn;
+  document.getElementById("field-details").innerHTML = field_details;
 </script>

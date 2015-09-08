@@ -53,6 +53,7 @@ img {
 
 .bottom-margin {
   margin-bottom: 0.5em;
+  color: #c00;
 }
 
 .title {
@@ -101,6 +102,7 @@ img {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 5px;
+  color: #c00;
 }
  
 .category__fields {
@@ -112,4 +114,5 @@ img {
   font-size: 15px;
   font-weight: bold;
   margin-bottom: 2px;
+  color: #c00;
 }
