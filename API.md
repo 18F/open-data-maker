@@ -137,9 +137,9 @@ Parameter names _without_ an underscore prefix are assumed to be field names in 
 
 For example: Use the parameter `school.region_id=6` to only fetch records with a `school.region_id` value of `6`.
 
-### Word and substring matches on name fields
+### Word and substring matches on `autocomplete` fields
 
-Certain text fields in the dataset - those with the `name` or `autcomplete` data type - allow querying with a list of words. To search for a given word or string of words in those fields, simply provide a list of space-separated words. This will return all records where the given field contains the given words as part of a string. **Note that all given words have to be at least three characters long.**
+Certain text fields in the dataset - those with the `autocomplete` data type - allow querying with a list of words. To search for a given word or string of words in those fields, just provide a list of space-separated words. This will return all records where the given field contains the given words as part of a string. **Note that all given words have to be at least three characters long.**
 
 For example: To search for school names containing the words `New York`, use this parameter: `school.name=New%20York` (`%20` is a URL-encoded space) This will match all of these names:
 
