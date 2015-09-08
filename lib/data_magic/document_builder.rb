@@ -50,7 +50,7 @@ module DataMagic
             type = field_types[key.to_sym] || field_types[key.to_s]
             if valid_types.include? type
               mapped[key] = fix_field_type(type, value, key)
-              mapped["_#{key}"] = value.downcase if type == "name"
+              mapped["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"
             else
               fail InvalidDictionary, "unexpected type '#{type.inspect}' for field '#{key}'"
             end
@@ -82,7 +82,7 @@ module DataMagic
                     when "integer"
                       value.to_i
                     when "lowercase_name"
-                      value.to_s.downcase   # used for searching
+                      value.to_s.downcase
                     else # "string"
                       value.to_s
         end

@@ -195,6 +195,15 @@ describe 'api', type: 'feature' do
           expect(json_response["results"][0]['name']).to eq("Rochester")
         end
 
+        it 'returns the data sorted by name in ascending order' do
+          get '/v1/cities?_sort=name'
+          expect(last_response).to be_ok
+          csv_path = File.expand_path "../../sample-data/cities100.csv", __dir__
+          data = CSV.read(csv_path).slice(1..-1)
+          data = data.map { |row| row[3] }.sort.slice(0,20)
+          expect(json_response["results"].map { |r| r['name'] }).to eq(data)
+        end
+
         context 'when :sort is "name"' do
           it 'returns the data sorted by name in descending order' do
             get '/v1/cities?_sort=name:desc&_per_page=100'

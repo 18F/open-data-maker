@@ -14,7 +14,7 @@ module DataMagic
         }
         query_hash[:query] = generate_squery(params, options, config).to_search
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
-        query_hash[:sort] = get_sort_order(options[:sort]) if options[:sort] && !options[:sort].empty?
+        query_hash[:sort] = get_sort_order(options[:sort], config) if options[:sort] && !options[:sort].empty?
         query_hash
       end
 
@@ -33,9 +33,12 @@ module DataMagic
       # @description turns a string like "state,population:desc" into [{'state' => {order: 'asc'}},{ "population" => {order: "desc"} }]
       # @param [String] sort_param
       # @return [Array]
-      def get_sort_order(sort_param)
+      def get_sort_order(sort_param, config)
         sort_param.to_s.scan(/(\w+[\.\w]*):?(\w*)/).map do |field_name, direction|
           direction = 'asc' if direction.empty?
+          type = config.field_type(field_name)
+          # for 'autocomplete' search on lowercase not analyzed indexed in _name
+          field_name = "_#{field_name}" if type  == 'autocomplete'
           { field_name => { order: direction } }
         end
       end

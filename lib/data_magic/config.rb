@@ -235,7 +235,7 @@ module DataMagic
           type = nil if field_name == 'location.lat' || field_name == 'location.lon'
           #logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
-          if type == 'name'
+          if type == 'name' || type == 'autocomplete'
             @field_types["_#{field_name}"] = 'lowercase_name'
           end
         end
