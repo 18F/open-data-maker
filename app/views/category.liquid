@@ -15,18 +15,19 @@
   <div id="field-details" class="category"></div>
 </div>
 
+</br>
 <a href="/">Back to the list of Categories</a>
 
 <script>
-  var category_details = {{ category_details }} ;
-  var dictionary = {{ field_details }} ;
-  var category_fields = category_details['fields'] ;
-  var oneColumn = "<p>" + category_details.description + "</p>" +
+  var category_entry = {{ category_entry }} ;
+  var field_details = {{ field_details }} ;
+  var category_details_div = "<p>" + category_entry.description + "</p>" +
     "<ul class=\"category__fields\">" +
     "<hr/>";
-  category_fields.forEach(function (field) {
-    var field_description = dictionary[field].description
-    oneColumn = oneColumn +
+  var field_details_div = ""
+  category_entry.fields.forEach(function (field) {
+    var field_description = field_details[field].description
+    field_details_div = field_details_div +
       "<li class=\"category__fields\">" +
         "<div class=\"category__field-name\">" + field + "</div>" +
         "<div>" + field_description + "</div>" +
@@ -34,8 +35,7 @@
       "</li>" +
      "</ul>";
   });
-//  alert(oneColumn);
-  document.getElementById("category-name").innerHTML = category_details.title;
-  document.getElementById("category-details").innerHTML = oneColumn;
-  document.getElementById("field-details").innerHTML = field_details;
+  document.getElementById("category-name").innerHTML = category_entry.title;
+  document.getElementById("category-details").innerHTML = category_details_div;
+  document.getElementById("field-details").innerHTML = field_details_div;
 </script>

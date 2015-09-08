@@ -13,18 +13,13 @@ end
 # Category page
 OpenDataMaker::App.controllers do
   get :category, :with => :id do
-    category_id = params['id'].to_s
-    dictionary = DataMagic.config.data['dictionary']
-    category = DataMagic.config.data['categories'][category_id]
-    category_fields = {}
-    category['fields'].each do |field_name|
-      category_fields[field_name] = dictionary[field_name] || { description: "" }
-    end
+    category_entry = Category.new(params['id']).category_entry
+    field_details = Category.new(params['id']).field_details
 
     render :category, layout: true, locals: {
       'title' => 'Open Data Maker',
-      'category_details' => category.to_json,
-      'field_details' => category_fields.to_json
+      'category_entry' => category_entry.to_json,
+      'field_details' => field_details.to_json
     }
   end
 end
