@@ -3,15 +3,15 @@ module DataMagic
     class << self
       # Creates query from parameters passed into endpoint
       def from_params(params, options, config)
-        per_page = options[:per_page] || config.page_size || DataMagic::DEFAULT_PAGE_SIZE
+        per_page = (options[:per_page] || config.page_size || DataMagic::DEFAULT_PAGE_SIZE).to_i
         page = options[:page].to_i || 0
         per_page = DataMagic::MAX_PAGE_SIZE if per_page > DataMagic::MAX_PAGE_SIZE
         query_hash = {
           _source: {
             exclude: ["_*"]
           },
-          from:   page * per_page.to_i,
-          size:   per_page.to_i
+          from:   page * per_page,
+          size:   per_page
         }
         query_hash[:query] = generate_squery(params, options, config).to_search
         query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
