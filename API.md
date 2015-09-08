@@ -137,21 +137,21 @@ Parameter names _without_ an underscore prefix are assumed to be field names in 
 
 For example: Use the parameter `school.region_id=6` to only fetch records with a `school.region_id` value of `6`.
 
-### Wildcard matches on text strings
+### Word and substring matches on name fields
 
-To search for a given word or string of words in a text field, use an asterisk to perform a wildcard search. This will return all records where the given field contains the given words as part of a string.
+Certain text fields in the dataset - those with the `name` or `autcomplete` data type - allow querying with a list of words. To search for a given word or string of words in those fields, simply provide a list of space-separated words. This will return all records where the given field contains the given words as part of a string. **Note that all given words have to be at least three characters long.**
 
-For example: To search for school names containing the words `New York`, use this parameter: `school.name=New%20York*` (`%20` is a URL-encoded space) This will match all of these names:
+For example: To search for school names containing the words `New York`, use this parameter: `school.name=New%20York` (`%20` is a URL-encoded space) This will match all of these names:
 
 * `New York College of Health Professions`
 * `American Academy of Dramatic Arts-New York`
 * `School of Professional Horticulture at the New York Botanical Garden`
 * `The New College of York` (because the parameter words don't have to be found together)
+* `Royal College of New Yorkminster` (because parameter words are matched as parts of other words)
 
-but not these names:
+but not this name:
 
 * `New England School of Arts` (because `York` is missing)
-* `Royal College of New Yorkminster` (because parameter words are not matched as parts of other words)
 
 ### Value Lists
 
