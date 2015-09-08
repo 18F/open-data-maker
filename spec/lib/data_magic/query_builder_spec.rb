@@ -96,6 +96,15 @@ describe DataMagic::QueryBuilder do
     it_correctly "builds a query"
   end
 
+  describe "limits maximum page size" do
+    subject { {} }
+    let(:options) { { page: 0, per_page: 2000 } }
+    let(:expected_query) { { match_all: {} } }
+    let(:expected_meta)  { { from: 0, size: 100, _source: { exclude: [ "_*" ]}}}
+    it_correctly "builds a query"
+  end
+
+
   describe "can specify sort order" do
     subject { {} }
     let(:options) { { sort: "population:asc" } }
