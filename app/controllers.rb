@@ -66,7 +66,7 @@ end
 # see comment in method body
 def get_search_args_from_params(params)
   options = {}
-  %w(sort fields zip distance page per_page).each do |opt|
+  %w(sort fields zip distance page per_page debug).each do |opt|
     options[opt.to_sym] = params.delete("_#{opt}")
     # TODO: remove next line to end support for un-prefixed option parameters
     options[opt.to_sym] ||= params.delete(opt)

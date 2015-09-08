@@ -77,8 +77,10 @@ module DataMagic
 
     logger.info "FULL_QUERY: #{full_query.inspect}"
 
+    time_start = Time.now.to_f
     result = client.search full_query
-    logger.info "result: #{result.inspect[0..500]}"
+    search_time = Time.now.to_f - time_start
+    logger.info "ES query time (s): #{search_time} ; result: #{result.inspect[0..500]}"
     hits = result["hits"]
     total = hits["total"]
     results = []
@@ -99,13 +101,16 @@ module DataMagic
       end
     end
 
+    metadata = {
+      "total" => total,
+      "page" => query_body[:from] / query_body[:size],
+      "per_page" => query_body[:size]
+    }
+    metadata["search_time"] = search_time if options.has_key? :debug
+
     # assemble a simpler json document to return
     {
-      "metadata" => {
-        "total" => total,
-        "page" => query_body[:from] / query_body[:size],
-        "per_page" => query_body[:size]
-      },
+      "metadata" => metadata,
       "results" => 	results
     }
   end
