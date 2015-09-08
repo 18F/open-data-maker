@@ -5,7 +5,7 @@ module DataMagic
       def from_params(params, options, config)
         per_page = options[:per_page] || config.page_size || DataMagic::DEFAULT_PAGE_SIZE
         page = options[:page].to_i || 0
-        per_page = DataMagic::MAX_PAGE_SIZE if page > DataMagic::MAX_PAGE_SIZE
+        per_page = DataMagic::MAX_PAGE_SIZE if per_page > DataMagic::MAX_PAGE_SIZE
         query_hash = {
           _source: {
             exclude: ["_*"]
