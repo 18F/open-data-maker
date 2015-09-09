@@ -186,15 +186,3 @@ You can even supply a list of ranges, separated by commas. For example, For exam
 ## Option Parameters
 
 You can perform extra refinement and organisation of search results using **option parameters**. These special parameters have names beginning with an underscore character (`_`).
-
-### Limiting Returned Fields with `_fields`
-
-
-
-### Pagination with `_page` and `_per_page`
-
-### Sorting with `_sort`
-
-### Geographic Filtering with `_zip` and `_distance`
-
-## Considerations when using the `api.data.gov` proxy
