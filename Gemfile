@@ -21,6 +21,7 @@ gem 'safe_yaml'
 gem 'aws-sdk', '~> 2'
 gem 'actionview'
 gem 'dotenv'
+gem 'oj'
 
 # Project requirements
 gem 'rake'

@@ -108,6 +108,7 @@ GEM
       multi_json (~> 1.3)
       multi_xml (~> 0.5)
       rack (~> 1.2)
+    oj (2.12.13)
     padrino (0.12.5)
       padrino-admin (= 0.12.5)
       padrino-cache (= 0.12.5)
@@ -234,6 +235,7 @@ DEPENDENCIES
   liquid (= 3.0.3)
   liquify
   newrelic_rpm
+  oj
   padrino (= 0.12.5)
   pry
   pry-byebug
@@ -247,4 +249,4 @@ DEPENDENCIES
   unicorn
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

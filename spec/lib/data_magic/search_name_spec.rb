@@ -22,6 +22,14 @@ describe "DataMagic intuitive search" do
   let(:response) {  DataMagic.search(
                     {'school.name' => subject}, fields:['school.name']) }
 
+  context "full request" do
+    let(:response) {  DataMagic.search({id: 1}) }
+    let(:expected_match) { [{"id"=>"1", "school"=>{"state"=>"AL", "name"=>"Stillman College"}}]}
+    it "provides expected document" do
+      expect(response['results']).to eql expected_match
+    end
+  end
+
   context "sort" do
      shared_examples "returns" do
        it "sorted results " do
@@ -30,7 +38,7 @@ describe "DataMagic intuitive search" do
        end
      end
 
-     context "with list of name" do
+     context "with list of names" do
        let(:response) {  DataMagic.search({}, fields:['school.name'],
                           sort: 'school.name') }
                           # fields:['name'],
