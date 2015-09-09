@@ -7,14 +7,14 @@ module DataMagic
         page = options[:page].to_i || 0
         per_page = DataMagic::MAX_PAGE_SIZE if per_page > DataMagic::MAX_PAGE_SIZE
         query_hash = {
-          _source: {
-            exclude: ["_*"]
-          },
           from:   page * per_page,
           size:   per_page
         }
         query_hash[:query] = generate_squery(params, options, config).to_search
-        query_hash[:fields] = get_restrict_fields(options) if options[:fields] && !options[:fields].empty?
+        if options[:fields] && !options[:fields].empty?
+          query_hash[:fields] = get_restrict_fields(options)
+          query_hash[:_source] = false
+        end
         query_hash[:sort] = get_sort_order(options[:sort], config) if options[:sort] && !options[:sort].empty?
         query_hash
       end
