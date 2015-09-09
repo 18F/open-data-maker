@@ -21,9 +21,11 @@
 <script>
   var category_entry = {{ category_entry }} ;
   var field_details = {{ field_details }} ;
+
   var category_details_div = "<p>" + category_entry.description + "</p>" +
     "<ul class=\"category__fields\">" +
     "<hr/>";
+
   var field_details_div = ""
   category_entry.fields.forEach(function (field) {
     var field_description = field_details[field].description
@@ -35,6 +37,7 @@
       "</li>" +
      "</ul>";
   });
+
   document.getElementById("category-name").innerHTML = category_entry.title;
   document.getElementById("category-details").innerHTML = category_details_div;
   document.getElementById("field-details").innerHTML = field_details_div;

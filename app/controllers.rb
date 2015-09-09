@@ -13,13 +13,11 @@ end
 # Category page
 OpenDataMaker::App.controllers do
   get :category, :with => :id do
-    category_entry = Category.new(params['id']).category_entry
-    field_details = Category.new(params['id']).field_details
-
+    category_entry = Category.new(params['id']).assemble
     render :category, layout: true, locals: {
       'title' => 'Open Data Maker',
       'category_entry' => category_entry.to_json,
-      'field_details' => field_details.to_json
+      'field_details' => category_entry['field_details'].to_json
     }
   end
 end
