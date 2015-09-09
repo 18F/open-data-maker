@@ -186,3 +186,30 @@ You can even supply a list of ranges, separated by commas. For example, For exam
 ## Option Parameters
 
 You can perform extra refinement and organisation of search results using **option parameters**. These special parameters have names beginning with an underscore character (`_`).
+
+need to add the following sections to API.md
+
+### Limiting Returned Fields with `_fields`
+
+Requesting specific fields in the response will significantly improve performance and is recommended.
+
+### Pagination with `_page` and `_per_page`
+
+By default, `_page` is 0 (first page) and `_per_page` is 20, meaning that the first 20
+results are delivered.  Decreasing `_page_page` will increase response time.  Maximim
+`_per_page` is 100.
+
+### Sorting with `_sort`
+
+Specify `_sort=field_name` to sort a field ascending (which is the same as
+  `_sort=field_name:asc`). For descending order:   `_sort=field_name:desc`.
+The default `string` type does not support sorting.  For effective sorting,
+use types `integer`, `float`, `autocomplete` or `name`.
+
+### Geographic Filtering with `_zip` and `_distance`
+
+When the dataset includes a `location` at the root level (`location.lat` and
+`location.lon`) then the documents will be indexed with a geocode.  In this
+case, searching with `_zip=12345` and `_distance=10mi` will search for all
+documents within 10 miles of the given zip code.  (Note: `_distance=10` will
+default to miles.  `distance=10km` is also supported for Kilometers.)
