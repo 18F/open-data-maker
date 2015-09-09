@@ -360,9 +360,9 @@ describe 'api', type: 'feature' do
     it "still works" do
       get '/v1/cities?zip=94132&distance=30mi'
       expected_results = [
-        {"state"=>"CA", "name"=>"Oakland", "population"=>390724,
-          "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}
-      ]
+        {"area"=>{"land"=>55.786, "water"=>22.216}, "code"=>"02411292", "name"=>"Oakland", 
+          "location"=>{"lon"=>-122.22564, "lat"=>37.769857}, "state"=>"CA", "id"=>"0653000", 
+          "population"=>390724}      ]
       expect(last_response).to be_ok
       json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
       expect(json_response["results"]).to eq(expected_results)
