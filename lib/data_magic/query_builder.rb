@@ -14,6 +14,10 @@ module DataMagic
         if options[:fields] && !options[:fields].empty?
           query_hash[:fields] = get_restrict_fields(options)
           query_hash[:_source] = false
+        else
+          query_hash[:_source] = {
+                      exclude: ["_*"]
+                    }
         end
         query_hash[:sort] = get_sort_order(options[:sort], config) if options[:sort] && !options[:sort].empty?
         query_hash

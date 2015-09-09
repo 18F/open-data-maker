@@ -18,7 +18,7 @@ describe DataMagic::QueryBuilder do
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
   end
 
-  let(:expected_meta) { { from: 0, size: 20 } }
+  let(:expected_meta) { { from: 0, size: 20, _source: {:exclude=>["_*"]}} }
   let(:options) { {} }
   let(:query_hash) { DataMagic::QueryBuilder.from_params(subject, options, DataMagic.config) }
 
@@ -92,7 +92,7 @@ describe DataMagic::QueryBuilder do
     subject { {} }
     let(:options) { { page: 3, per_page: 11 } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 33, size: 11 }}
+    let(:expected_meta)  { { from: 33, size: 11, _source: {:exclude=>["_*"]} }}
     it_correctly "builds a query"
   end
 
@@ -100,7 +100,7 @@ describe DataMagic::QueryBuilder do
     subject { {} }
     let(:options) { { page: 0, per_page: 2000 } }
     let(:expected_query) { { match_all: {} } }
-    let(:expected_meta)  { { from: 0, size: 100 }}
+    let(:expected_meta)  { { from: 0, size: 100, _source: {:exclude=>["_*"]} }}
     it_correctly "builds a query"
   end
 
@@ -122,6 +122,7 @@ describe DataMagic::QueryBuilder do
     let(:expected_query) { { match_all: {} } }
     let(:expected_meta)  do
       { from: 0, size: 20,
+        _source: {:exclude=>["_*"]},
         sort: [{ "population" => { order: "asc" } }]
       }
     end
@@ -134,6 +135,7 @@ describe DataMagic::QueryBuilder do
     let(:expected_query) { { match_all: {} } }
     let(:expected_meta)  do
       { from: 0, size: 20,
+        _source: {:exclude=>["_*"]},
         sort: [{ 'state' => { order: 'desc' } },
                { "population" => { order: "asc" } },
                { 'name' => { order: 'asc' } }]
