@@ -1,7 +1,7 @@
 ---
 applications:
 -  name: ccapi-staging
-   command: bundle exec unicorn -p $PORT -c ./config/unicorn.rb
+   command: bundle exec puma -C ./config/puma.rb
    memory: 3G
    services:
    - bservice
