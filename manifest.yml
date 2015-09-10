@@ -7,6 +7,7 @@ applications:
    services:
    - bservice
    - eservice
+   - elk-logger
    env:
      MAX_THREADS: 5
      WEB_CONCURRENCY: 3
