@@ -84,7 +84,7 @@ A successful query will return a JSON with two top-level elements:
  * **`metadata`**: A JSON Object containing information about the results returned. The metadata fields are:
    * `total`: The total number of records matching the query
    * `page`: The page number for this result set
-   * `per_page`: The number of records returned in a single result set. (For more information about the `page` and `per_page` fields, see the section on [Pagination](#pagination))
+   * `per_page`: The number of records returned in a single result set. (For more information about the `page` and `per_page` fields, see the section on [Pagination](#pagination-with-_page-and-_per_page))
  * **`results`**: A JSON Array of record objects. Due to the use of the `_fields` option in this query, there are only three fields in each record - the three fields specified in the `_fields` parameter. When the `_fields` parameter is omitted, the full record is provided.
 
 ### Error Example
