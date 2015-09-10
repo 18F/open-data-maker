@@ -26,12 +26,22 @@
     "<ul class=\"category__fields\">" +
     "<hr/>";
 
-  var field_details_div = ""
+  var field_details_div = "" ;
   category_entry.fields.forEach(function (field) {
-    var field_description = field_details[field].description
+    var field_description = field_details[field].description ;
+    var field_type = field_details[field].type ;
+    if ( field_type ) {
+      field_type = "[" + field_type + "]" ;
+    }
+    else {
+      field_type = "" ;
+    }
+
     field_details_div = field_details_div +
       "<li class=\"category__fields\">" +
-        "<div class=\"category__field-name\">" + field + "</div>" +
+        "<div class=\"category__field-name\">" + field +
+          "<span class=\"category__field-type\">" + field_type + "</span>" +
+          "</div>" +
         "<div>" + field_description + "</div>" +
         "<hr/>" +
       "</li>" +

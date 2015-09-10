@@ -104,15 +104,24 @@ img {
   margin-bottom: 5px;
   color: #c00;
 }
- 
+
 .category__fields {
   list-style: none;
   padding: 0;
 }
- 
+
 .category__field-name {
   font-size: 15px;
   font-weight: bold;
   margin-bottom: 2px;
   color: #c00;
+  width: 80%;
+}
+
+.category__field-type {
+  font-size: 15px;
+  font-weight: bold;
+  color: #c00;
+  width: 10%;
+  float: right;
 }

@@ -34,5 +34,6 @@ describe 'app', type: 'feature' do
     expect(last_response.body).to include('category_entry = {"title":"General"')
     expect(last_response.body).to include('population') # a field name
     expect(last_response.body).to include('The name of the city') # a field description
+    expect(last_response.body).to include('literal') # field type
   end
 end
