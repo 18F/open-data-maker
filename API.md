@@ -12,8 +12,8 @@ This document explains:
 Each query is expressed as a URL, containing:
 
  * The **URL Path** to the Open Data Maker service, e.g.
- `https://college-choice.18f.gov/` (for Open Data Maker running its own
- server), or  `https://https://api.data.gov/TEST/ed/production` (for Open
+ `https://collegescorecard.ed.gov/` (for Open Data Maker running its own
+ server), or  `https://api.data.gov/ed/collegescorecard/v1/` (for Open
  Data Maker proxied through an API gateway)
  * The **API Version String**. Currently the only supported version string is: `v1`
  * The **Endpoint** representing a particular dataset, e.g. `schools`. Endpoint
@@ -32,12 +32,12 @@ Each query is expressed as a URL, containing:
 Here's an example query URL:
 
 ```
-https://ccapi-production.18f.gov/v1/schools.json?school.degrees_awarded.predominant=2,3&_fields=id,school.name,2013.student.size
+https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=2,3&_fields=id,school.name,2013.student.size
 ```
 
 In this query URL:
 
- * `https://ccapi-production.18f.gov/` is the URL Path.
+ * `https://api.data.gov/ed/collegescorecard/v1/` is the URL Path.
  * `v1` is the API Version String, followed by `/`, which separates it from the Endpoint.
  * `schools` is the Endpoint. Note the plural.
  * `.json` is the Format. Note the dot between the Endpoint and Format. Also note that, since JSON is the default output format, we didn't _have_ to specify it.
@@ -94,7 +94,7 @@ A successful query will return a JSON with two top-level elements:
 Let's change the query so as to generate an error when it's executed:
 
 ```
-https://ccapi-production.18f.gov/v1/schools.json?school.degrees_awarded.predominant=frog&_fields=id,school.name,wombat
+https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=frog&_fields=id,school.name,wombat
 ```
 
 This is the JSON document returned:
