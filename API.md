@@ -42,10 +42,8 @@ In this query URL:
  * `schools` is the Endpoint. Note the plural.
  * `.json` is the Format. Note the dot between the Endpoint and Format. Also note that, since JSON is the default output format, we didn't _have_ to specify it.
  * In keeping with standard [URI Query String syntax](https://en.wikipedia.org/wiki/Query_string), the `?` and `&` characters are used to begin and separate the list of query parameters.
- * `school.degrees_awarded.predominant=2,3` is a Field Parameter. In this case,
- it's searching for records which have a `school.degrees_awarded.predominant`
- value of either `2` or `3`.
- * `_fields=id,school.name,2013.student.size` is an Option Parameter, as denoted by the initial underscore character. `_fields` is used to limit the output fields to those in the given list.
+ * `school.degrees_awarded.predominant=2,3` is a Field Parameter. In this case, it's searching for records which have a `school.degrees_awarded.predominant` value of either `2` or `3`.
+ * `_fields=id,school.name,2013.student.size` is an Option Parameter, as denoted by the initial underscore character. `_fields` is used to limit the output fields to those in the given list. We strongly recommend using the `_fields` parameter to reduce the amount of data returned by the API, thus increasing performance.
 
 ### JSON Output Example
 
@@ -86,7 +84,7 @@ A successful query will return a JSON with two top-level elements:
  * **`metadata`**: A JSON Object containing information about the results returned. The metadata fields are:
    * `total`: The total number of records matching the query
    * `page`: The page number for this result set
-   * `per_page`: The number of records returned in a single result set. (For more information about the `page` and `per_page` fields, see the section on [Pagination](#pagination))
+   * `per_page`: The number of records returned in a single result set. (For more information about the `page` and `per_page` fields, see the section on [Pagination](#pagination-with-_page-and-_per_page))
  * **`results`**: A JSON Array of record objects. Due to the use of the `_fields` option in this query, there are only three fields in each record - the three fields specified in the `_fields` parameter. When the `_fields` parameter is omitted, the full record is provided.
 
 ### Error Example
@@ -177,7 +175,7 @@ Open-ended ranges can be performed by omitting one side of the range. For exampl
 
 You can even supply a list of ranges, separated by commas. For example, For example: `2013.student.size__range=..100,1000..2000,5000..` matches on schools which had under 100 students, between 1000 and 2000 students, or over 5000 students.
 
-**Additional Notes:**
+#### Additional Notes on Ranges
 
 * Both integer and floating-point ranges are supported.
 * The left-hand number in a range must be lower than the right-hand number.
@@ -186,3 +184,34 @@ You can even supply a list of ranges, separated by commas. For example, For exam
 ## Option Parameters
 
 You can perform extra refinement and organisation of search results using **option parameters**. These special parameters have names beginning with an underscore character (`_`).
+
+### Limiting Returned Fields with `_fields`
+
+By default, records returned in the query response include all their stored fields. However, you can limit the fields returned with the `_fields` option parameter. This parameter takes a comma-separated list of field names. For example: `_fields=id,school.name,school.state` will return result records that only contain those three fields.
+
+Requesting specific fields in the response will significantly improve performance and reduce JSON traffic, and is recommended.
+
+### Pagination with `_page` and `_per_page`
+
+By default, results are returned in pages of 20 records at a time. To retrieve pages after the first, set the `_page` option parameter to the number of the page you wish to retrieve. Page numbers start at zero; so, to return records 21 through 40, use `_page=1`. Remember that the total number of records available for a given query is given in the `total` field of the top-level `metadata` object.
+
+You can also change the number of records returned per page using the `_per_page` option parameter, up to a maximum of 100 records. Bear in mind, however, that large result pages will increase the amount of JSON returned and reduce the performance of the API.
+
+### Sorting with `_sort`
+
+To sort results by a given field, use the `_sort` option parameter. For example, `_sort=population` will return records sorted by population size, in ascending order.
+
+By default, using the `_sort_` option returns records sorted into ascending order, but you can specify ascending or descending order by appending `:asc` or `:desc` to the field name. For example: `_sort=population:desc`
+
+**Note:** Sorting is only availble on fields with the data type `integer`, `float`, `autocomplete` or `name`.
+
+### Geographic Filtering with `_zip` and `_distance`
+
+When the dataset includes a `location` at the root level (`location.lat` and
+`location.lon`) then the documents will be indexed geographically. You can use the `_zip` and `_distance` options to narrow query results down to those within a geographic area. For example, `_zip=12345&_distance=10mi` will return only those results within 10 miles of the center of the given zip code.
+
+#### Additional Notes on Geographic Filtering
+
+* By default, any number passed in the `_distance` parameter is treated as a number of miles, but you can specify miles or kilometers by appending `mi` or `km` respectively.
+* Distances are calculated from the center of the given zip code, not the boundary.
+* Only U.S. zip codes are supported.
