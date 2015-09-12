@@ -1,6 +1,12 @@
 # Open Data Maker HTTP API
 
-Open Data Maker exposes a read-only HTTP API for querying available datasets.
+Open Data Maker exposes a read-only HTTP API for querying available datasets. 
+
+The College Scorecard API requires an API key. To register for a key, visit `https://api.data.gov/signup`. You will receive a key via email. Append the key to the end of your API requests with the parameter:
+```
+&api_key=xxxxxxxxxxxxxx
+```
+
 This document explains:
  * How to define and execute queries as URLs
  * Refining query results using option parameters
