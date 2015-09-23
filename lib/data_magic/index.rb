@@ -28,8 +28,9 @@ module DataMagic
 
   # data could be a String or an io stream
   def self.import_csv(data, options={})
-    es_index_name = self.create_index
-    Config.logger.debug "Indexing data -- index_name: #{es_index_name}" #options: #{options}"
+    self.create_index unless config.index_exists?
+    es_index_name = self.config.scoped_index_name
+
     additional_fields = options[:mapping] || {}
     additional_data = options[:add_data]
     Config.logger.debug "additional_data: #{additional_data.inspect}"
@@ -123,8 +124,11 @@ module DataMagic
     options = options.merge(config.options)
 
     es_index_name = self.config.load_datayaml(options[:data_path])
-    logger.info "creating #{es_index_name}"   # TO DO: fix #14
-    create_index es_index_name, config.field_types
+    unless config.index_exists?(es_index_name)
+      logger.info "creating #{es_index_name}"   # TO DO: fix #14
+      create_index es_index_name, config.field_types
+    end
+
     logger.info "files: #{self.config.files}"
     config.files.each_with_index do |filepath, index|
       fname = filepath.split('/').last
