@@ -72,6 +72,10 @@ describe 'api', type: 'feature' do
     it "raises a 400 on a bad query" do
       expected = {
         "errors" => [{
+          "error" => "parameter_not_found",
+          "input" => "frog",
+          "message" => "The input parameter 'frog' is not known in this dataset."
+        }, {
           "error" => 'operator_not_found',
           "parameter" => "frog",
           "input" => "blah",
@@ -144,7 +148,7 @@ describe 'api', type: 'feature' do
       describe "with options" do
         let(:expected_results) { [{ "name" => "Boston", "population" => 617594 }] }
         it "can return a subset of fields" do
-          get '/v1/cities?state=MA&fields=name,population'
+          get '/v1/cities?state=MA&_fields=name,population'
           expect(last_response).to be_ok
           expect(json_response).to eq(expected)
         end
@@ -169,7 +173,7 @@ describe 'api', type: 'feature' do
 
       describe "near zipcode" do
         before do
-          get '/v1/cities?zip=94132&distance=30mi'
+          get '/v1/cities?_zip=94132&_distance=30mi'
         end
         let(:expected_results) do
           [{"state"=>"CA", "name"=>"Oakland", "population"=>390724,
@@ -186,18 +190,45 @@ describe 'api', type: 'feature' do
       # @todo add example with multi words
       describe "with sort" do
         it 'returns the data sorted by population in ascending order' do
-          get '/v1/cities?sort=population:asc'
+          get '/v1/cities?_sort=population:asc'
           expect(last_response).to be_ok
           expect(json_response["results"][0]['name']).to eq("Rochester")
         end
 
+        it 'returns the data sorted by name in ascending order' do
+          get '/v1/cities?_sort=name'
+          expect(last_response).to be_ok
+          csv_path = File.expand_path "../../sample-data/cities100.csv", __dir__
+          data = CSV.read(csv_path).slice(1..-1)
+          data = data.map { |row| row[3] }.sort.slice(0,20)
+          expect(json_response["results"].map { |r| r['name'] }).to eq(data)
+        end
+
         context 'when :sort is "name"' do
           it 'returns the data sorted by name in descending order' do
-            get '/v1/cities?sort=name:desc&per_page=100'
+            get '/v1/cities?_sort=name:desc&_per_page=100'
             expect(last_response).to be_ok
             expect(json_response["results"][0]['name']).to eq("Winston-Salem")
             expect(json_response["results"][-1]['name']).to eq("Albuquerque")
           end
+        end
+      end
+
+      describe "with pagination" do
+        it "can specify both page and page size" do
+          get '/v1/cities?_page=1&_per_page=3'
+          expect(last_response).to be_ok
+          expect(json_response['metadata']["per_page"].to_i).to eq(3)
+          expect(json_response['metadata']["page"].to_i).to eq(1)
+          expect(json_response["results"].length).to eq(3)
+        end
+
+        it "can use a default page size" do
+          get '/v1/cities?_page=1'
+          expect(last_response).to be_ok
+          expect(json_response['metadata']["per_page"].to_i).to eq(DataMagic::DEFAULT_PAGE_SIZE)
+          expect(json_response['metadata']["page"].to_i).to eq(1)
+          expect(json_response["results"].length).to eq(DataMagic::DEFAULT_PAGE_SIZE)
         end
       end
     end
@@ -311,7 +342,7 @@ describe 'api', type: 'feature' do
     end
   end
   
-  context "with residents CSV data" do
+  describe "With residents CSV data" do
     before do
       ENV['DATA_PATH'] = './spec/fixtures/numeric_data'
       DataMagic.init(load_now: false)
@@ -322,33 +353,74 @@ describe 'api', type: 'feature' do
       DataMagic.destroy
     end
   
-    describe "when using the stats command" do
-      let(:springfield_residents) do
-        [
-          {"age" => 14, "height" => 2.0, "address"=>"1313 Mockingbird Lane"},
-          {"age" => 70, "height" => 142.0, "address"=>"742 Evergreen Terrace"}
-        ]
-      end
+    let(:springfield_residents) do
+      [
+        {"age" => 14, "height" => 2.0, "address"=>"1313 Mockingbird Lane"},
+        {"age" => 70, "height" => 142.0, "address"=>"742 Evergreen Terrace"}
+      ]
+    end
         
-      let(:expected_results) do
-        { "metadata" => {      "total" => 2,
-                               "page" => 0,
-                               "per_page" => DataMagic::DEFAULT_PAGE_SIZE
-                        },
-          "results" => springfield_residents,
-          "aggregations" => {
-            "age" => { "max" => 70.0, "avg" => 42.0},
-            "height" => {"max"=>142.0, "avg"=>72.0}
-          }
+    let(:expected_results) do
+      { "metadata" => {      "total" => 2,
+                             "page" => 0,
+                             "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+                      },
+        "results" => springfield_residents,
+        "aggregations" => {
+          "age" => { "max" => 70.0, "avg" => 42.0},
+          "height" => {"max"=>142.0, "avg"=>72.0}
         }
-      end
+      }
+    end
 
-      it "returns the correct results for Springfield residents" do
-        get '/v1/cities/stats?city=Springfield&fields=address,age,height&_metrics=max,avg'
-        expect(last_response).to be_ok
-        json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
-        expect(json_response).to eq(expected_results)
-      end
+    it "/stats returns the correct results for Springfield residents" do
+      get '/v1/cities/stats?city=Springfield&fields=address,age,height&_metrics=max,avg'
+      expect(last_response).to be_ok
+      json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
+      expect(json_response).to eq(expected_results)
+    end
+  end
+
+  describe "deprecated option syntax" do
+    before do
+      DataMagic.destroy
+      ENV['DATA_PATH'] = './spec/fixtures/sample-data'
+      DataMagic.init(load_now: true)
+    end
+    after do
+      DataMagic.destroy
+    end
+
+    # TODO: This should fail once the old non-prefixed option syntax
+    #       is turned off
+    it "still works" do
+      get '/v1/cities?zip=94132&distance=30mi'
+      expected_results = [
+        {"state"=>"CA", "name"=>"Oakland", "population"=>390724,
+          "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}
+      ]
+      expect(last_response).to be_ok
+      json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
+      expect(json_response["results"]).to eq(expected_results)
+    end
+
+    # TODO: ... and vice versa
+    xit "no longer works" do
+      expected = {
+        "errors" => [{
+          "error" => 'parameter_not_found',
+          "message" => "The input parameter 'zip' is not known in this dataset.",
+          "input" => 'zip'
+        }, {
+          "error" => 'parameter_not_found',
+          "message" => "The input parameter 'distance' is not known in this dataset.",
+          "input" => 'distance'
+        }]
+      }
+      get '/v1/cities?zip=94132&distance=30mi'
+      expect(last_response.status).to eq(400)
+      expect(last_response.content_type).to eq('application/json')
+      expect(json_response).to eq(expected)
     end
   end
 end

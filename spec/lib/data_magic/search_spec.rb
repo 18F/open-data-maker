@@ -81,14 +81,23 @@ describe "DataMagic #search" do
         expect(result).to eq(expected)
       end
 
-      it "supports pagination" do
-        result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
-        expect(result['metadata']["per_page"]).to eq(3)
-        expect(result['metadata']["page"]).to eq(1)
-        expect(result["results"].length).to eq(1)
-      end
+      describe "supports pagination" do
+        it "can specify both page and page size" do
+          result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
+          expect(result['metadata']["per_page"]).to eq(3)
+          expect(result['metadata']["page"]).to eq(1)
+          expect(result["results"].length).to eq(1)
+        end
 
+        it "can use a default page size" do
+          result = DataMagic.search({}, page:1)
+          expect(result['metadata']["per_page"]).to eq(DataMagic::DEFAULT_PAGE_SIZE)
+          expect(result['metadata']["page"]).to eq(1)
+          expect(result["results"].length).to eq(0)
+        end
+      end
     end
+    
     describe "with mapping" do
       before (:all) do
         ENV['DATA_PATH']="./no-data"
@@ -197,6 +206,14 @@ describe "DataMagic #search" do
     it "can sort" do
       response = DataMagic.search({}, sort: "population:asc")
       expect(response["results"][0]['name']).to eq("Rochester")
+    end
+
+    it "can match a field on several given integer values" do
+      response = DataMagic.search({population: "8175133,3792621,2695598,"}, sort: "population:desc")
+      expect(response["results"].length).to eq(3)
+      expect(response["results"][0]['name']).to eq("New York")
+      expect(response["results"][1]['name']).to eq("Los Angeles")
+      expect(response["results"][2]['name']).to eq("Chicago")
     end
   end
 end

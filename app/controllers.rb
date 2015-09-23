@@ -9,13 +9,17 @@ OpenDataMaker::App.controllers do
   end
 end
 
+CACHE_TTL = 300
+
 # All API requests are prefixed by the API version
 # in this case, "v1" - e.g. "/vi/endpoints" etc.
 OpenDataMaker::App.controllers :v1 do
   before do
     content_type :json
     headers 'Access-Control-Allow-Origin' => '*',
-            'Access-Control-Allow-Methods' => ['GET']
+            'Access-Control-Allow-Methods' => ['GET'],
+            'Surrogate-Control' => "max-age=#{CACHE_TTL}"
+    cache_control :public, max_age: CACHE_TTL
   end
 
   get :endpoints do
@@ -35,11 +39,12 @@ OpenDataMaker::App.controllers :v1 do
 
   get :index, with: ':endpoint(/:_command)', provides: [:json, :csv] do
     # Optional parameter format discovered at http://jorgennilsson.com/article/optional-named-parameters-in-padrino-routes
-    (endpoint, options, format) = get_search_args_from_params(params)
-    content_type format.to_sym if format
+    options = get_search_args_from_params(params)
+    endpoint = options[:endpoint]
+    content_type options[:format].to_sym if options[:format]
     DataMagic.logger.debug "-----> APP GET #{params.inspect} with options #{options.inspect}"
 
-    if not DataMagic.config.api_endpoints.keys.include? endpoint
+    unless DataMagic.config.api_endpoints.keys.include? endpoint
       halt 404, {
         error: 404,
         message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
@@ -49,7 +54,7 @@ OpenDataMaker::App.controllers :v1 do
     data = DataMagic.search(params, options)
     halt 400, data.to_json if data.key?(:errors)
 
-    if format == 'csv'
+    if content_type == :csv
       output_data_as_csv(data['results'])
     else
       data.to_json
@@ -57,24 +62,21 @@ OpenDataMaker::App.controllers :v1 do
   end
 end
 
+# TODO: Use of non-underscore-prefixed option parameters is still
+# supported but deprecated, and should be removed at some point soon -
+# see comment in method body
 def get_search_args_from_params(params)
-  endpoint = params.delete("endpoint")
-  options = {
-    api: endpoint,
-    sort: params.delete("sort"),
-    zip: params.delete("zip"),
-    distance: params.delete("distance"),
-    fields: (params.delete('fields') || "").split(','),
-    per_page: params.delete("per_page") || DataMagic.config.page_size,
-    page: params.delete("page").to_i || 0,
-    add_aggregations: params.delete("_command") == 'stats' ? true : false,
-    metrics: (params.delete("_metrics") || "").split(/\s*,\s*/)
-  }
-
-  # Ignore the aggregations endpoint if we don't have fields to aggregate on
+  options = {}
+  %w(sort fields zip distance page per_page debug).each do |opt|
+    options[opt.to_sym] = params.delete("_#{opt}")
+    # TODO: remove next line to end support for un-prefixed option parameters
+    options[opt.to_sym] ||= params.delete(opt)
+  end
+  options[:endpoint] = params.delete("endpoint") # these two params are
+  options[:format]   = params.delete("format")   # supplied by Padrino
+  options[:fields]   = (options[:fields]   || "").split(',')
   options[:add_aggregations] &&= (options[:fields].size > 0)
-  format = params.delete('format')
-  [endpoint, options, format]
+  options
 end
 
 def output_data_as_csv(results)

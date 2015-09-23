@@ -1,0 +1,102 @@
+commit eabfb903751cc5b7bc9ae0affeb15ad020e1d783
+Merge: 0b017e5 a5c5a18
+Author: Yoz Grahame <yoz@yoz.com>
+Date:   Tue Sep 8 17:53:20 2015 -0700
+
+    Merge pull request #198 from 18F/source-false
+    
+    Use `_source: false` to limit JSON coming back from ES
+
+commit a5c5a18381214d3a51ab54152b463727bb3f79bc
+Author: Sarah Allen <sarah.allen@gsa.gov>
+Date:   Tue Sep 8 17:41:21 2015 -0700
+
+    exclude fields starting with _
+    
+    when the whole source is returned
+    when we’re not specifying fields
+    we need to explicitly exclude _names
+
+commit 94bef492dca538f3e27f20824712f47793f8ab8c
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 17:05:28 2015 -0700
+
+    Also record "took" MS value from ES result
+
+commit 2205dce984c52a50382030d37edeefbcd4316873
+Merge: df7f98b 0b017e5
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 17:02:09 2015 -0700
+
+    Merge branch 'dev' into source-false
+
+commit df7f98b216163eb1f27a038a535817ac95aea742
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 17:01:20 2015 -0700
+
+    Use `_source: false` for proper field exclusion
+    
+    also the "oj" gem for faster JSON
+
+commit 0b017e56e3a6ed7c9549214a52ed6c2b568c4746
+Merge: 9761906 e4f6dfd
+Author: Sarah Allen <sarah@ultrasaurus.com>
+Date:   Tue Sep 8 17:00:48 2015 -0700
+
+    Merge pull request #197 from 18F/log-query-time
+    
+    Log ES query time, and show with "debug" option
+
+commit e4f6dfd219b514a3d4523d836ad083005848186c
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 16:58:55 2015 -0700
+
+    No, THAT's how you test a hash value
+
+commit 97619061da0badde70890ed1f26912c0355c5245
+Merge: 9c1e04e 63ead03
+Author: Sarah Allen <sarah@ultrasaurus.com>
+Date:   Tue Sep 8 16:25:19 2015 -0700
+
+    Merge pull request #196 from 18F/max-page-size
+    
+    Only allow up to MAX_PAGE_SIZE per page
+
+commit 63ead033b40c619ac143065d36be3a4427458d68
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 16:01:54 2015 -0700
+
+    String-to-int bugfix
+
+commit f85c981da6622d8d8925037325822ada4c4bfce1
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 15:32:57 2015 -0700
+
+    Added MAX_PAGE_SIZE test
+
+commit 4ba1cedcf73a8ff7e6415ab54dcbdf80ff6d211c
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 15:25:21 2015 -0700
+
+    Only allow up to MAX_PAGE_SIZE per page
+
+commit 226fb43f73268c91e4044118f84ceca707cceadb
+Author: Yoz (Jeremy) Grahame <jeremy.grahame@gsa.gov>
+Date:   Tue Sep 8 15:04:03 2015 -0700
+
+    Log ES query time, and show with "debug" option
+
+commit 9c1e04ecf2d25c505941c55d71868c2894102983
+Merge: 6461581 99a490b
+Author: Yoz Grahame <yoz@yoz.com>
+Date:   Tue Sep 8 09:13:40 2015 -0700
+
+    Merge pull request #194 from 18F/dev-sort
+    
+    autocomplete type alpha sort
+
+commit 99a490b1b12046895b49f9b3001c05f30b2dfa82
+Author: Sarah Allen <sarah.allen@gsa.gov>
+Date:   Tue Sep 8 01:51:27 2015 -0700
+
+    autocomplete type alpha sort

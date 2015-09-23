@@ -5,7 +5,11 @@ module OpenDataMaker
     register SassInitializer
     register Padrino::Helpers
 
-    enable :sessions
+    # This app is stateless and session cookies prevent caching of API responses
+    disable :sessions
+
+    # This app has no sensitive bits and csrf protection requires sessions
+    disable :protect_from_csrf
 
     if ENV['DATA_AUTH'] and not ENV['DATA_AUTH'].empty?
       auth = ENV['DATA_AUTH']

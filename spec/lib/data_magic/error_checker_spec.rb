@@ -34,6 +34,10 @@ describe 'API errors', type: 'feature' do
   end
 
   describe "are returned" do
+    before do
+      allow(config).to receive(:dictionary_only_search?).and_return(false)
+    end
+
     context "when an unknown parameter is provided" do
       let(:params) { { "frog" => "toad" } }
       let(:expected_errors) do
@@ -116,6 +120,13 @@ describe 'API errors', type: 'feature' do
           }]
         end
         it_correctly "returns an error"
+      end
+    end
+
+    context "when a value of the correct type is provided for a field" do
+      context "providing a comma-separated list of integers for an integer field" do
+        let(:params) { { "population" => "10,20,30"} }
+        it_correctly "does not return an error"
       end
     end
 

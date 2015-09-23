@@ -31,6 +31,7 @@ module DataMagic
   end
 
   DEFAULT_PAGE_SIZE = 20
+  MAX_PAGE_SIZE = 100
   DEFAULT_EXTENSIONS = ['.csv']
   DEFAULT_PATH = './sample-data'
   class InvalidData < StandardError
@@ -77,8 +78,11 @@ module DataMagic
 
     logger.info "FULL_QUERY: #{full_query.inspect}"
 
+    time_start = Time.now.to_f
     result = client.search full_query
-    logger.info "result: #{result.inspect}"
+
+    search_time = Time.now.to_f - time_start
+    logger.info "ES query time (ms): #{result["took"]} ; Query fetch time (s): #{search_time} ; result: #{result.inspect}"
 
     hits = result["hits"]
     total = hits["total"]
@@ -100,13 +104,28 @@ module DataMagic
       end
     end
 
+    metadata = {
+      "total" => total,
+      "page" => query_body[:from] / query_body[:size],
+      "per_page" => query_body[:size]
+    }
+    if options[:debug]
+      metadata["search_time"] = search_time
+      metadata["ES_took_ms"] = result["took"]
+    end
+
     # assemble a simpler json document to return
+<<<<<<< HEAD
     simple_result = {
       "metadata" => {
         "total" => total,
         "page" => query_body[:from] / query_body[:size],
         "per_page" => query_body[:size]
       },
+=======
+    {
+      "metadata" => metadata,
+>>>>>>> dev
       "results" => 	results
     }
 
@@ -145,18 +164,11 @@ module DataMagic
     logger.info "create_index field_types: #{field_types.inspect[0..500]}"
     es_index_name ||= self.config.scoped_index_name
     field_types['location'] = 'geo_point'
-    es_types = es_field_types(field_types)
-    es_types = NestedHash.new.add(es_types)
+    es_types = NestedHash.new.add(es_field_types(field_types))
     nested_object_type(es_types)
     begin
       logger.info "====> creating index with type mapping: #{es_types.inspect[0..500]}"
-      client.indices.create index: es_index_name, body: {
-        mappings: {
-          document: {    # type 'document' is always used for external indexed docs
-            properties: es_types
-          }
-        }
-      }
+      client.indices.create base_index_hash(es_index_name, es_types)
     rescue Elasticsearch::Transport::Transport::Errors::BadRequest => error
       if error.message.include? "IndexAlreadyExistsException"
         logger.debug "create_index failed: #{es_index_name} already exists"
@@ -168,12 +180,52 @@ module DataMagic
     es_index_name
   end
 
+  def self.base_index_hash(es_index_name, es_types)
+    {
+      index: es_index_name,
+      body: {
+        settings: {
+          analysis: {
+            filter: {
+              autocomplete_filter: {
+                  type: 'edge_ngram',
+                  min_gram: 3,
+                  max_gram: 25
+              }
+            },
+            analyzer: {
+              autocomplete_index: {
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop', 'autocomplete_filter'],
+                type: 'custom'
+              },
+              autocomplete_search: {
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop'],
+                type: 'custom'
+              }
+            }
+          }
+        },
+        mappings: {
+          document: { # type 'document' is always used for external indexed docs
+            properties: es_types
+          }
+        }
+      }
+    }
+  end
+
   # convert the types from data.yaml to Elasticsearch-specific types
   def self.es_field_types(field_types)
     custom_type = {
       'literal' => {type: 'string', index:'not_analyzed'},
       'name' => {type: 'string', index:'not_analyzed'},
       'lowercase_name' => {type: 'string', index:'not_analyzed', store: false},
+      'autocomplete' => { type: 'string',
+                          index_analyzer: 'autocomplete_index',
+                          search_analyzer: 'autocomplete_search'
+      },
    }
     field_types.each_with_object({}) do |(key, type), result|
       result[key] = custom_type[type]
@@ -183,16 +235,16 @@ module DataMagic
 
 
   # get the real index name when given either
-  # api: api endpoint configured in data.yaml
+  # endpoint: api endpoint configured in data.yaml
   # index: index name
   def self.index_name_from_options(options)
-    options[:api] = options['api'].to_sym if options['api']
+    api = options[:endpoint]
     options[:index] = options['index'].to_sym if options['index']
-    logger.info "WARNING: DataMagic.search options api will override index, only one expected"  if options[:api] and options[:index]
-    if options[:api]
-      index_name = config.find_index_for(options[:api])
+    logger.info "WARNING: DataMagic.search options api will override index, only one expected"  if api and options[:index]
+    if api
+      index_name = config.find_index_for(api)
       if index_name.nil?
-        raise ArgumentError, "no configuration found for '#{options[:api]}', available endpoints: #{self.config.api_endpoint_names.inspect}"
+        raise ArgumentError, "no configuration found for '#{api}', available endpoints: #{self.config.api_endpoint_names.inspect}"
       end
     else
       index_name = options[:index]
