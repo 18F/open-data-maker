@@ -5,7 +5,7 @@ OpenDataMaker::App.controllers do
       'title' => 'Open Data Maker',
       'endpoints' => DataMagic.config.api_endpoint_names,
       'examples' => DataMagic.config.examples,
-      'categories' => DataMagic.config.data['categories'].to_json
+      'categories' => DataMagic.config.categories
     }
   end
 end
@@ -13,7 +13,7 @@ end
 # Category page
 OpenDataMaker::App.controllers do
   get :category, :with => :id do
-    category_entry = Category.new(params['id']).assemble
+    category_entry = DataMagic.config.category_by_id(params[:id])
     render :category, layout: true, locals: {
       'title' => 'Open Data Maker',
       'category_entry' => category_entry.to_json,
