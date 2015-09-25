@@ -163,4 +163,22 @@ describe DataMagic::DocumentBuilder do
     end
   end
 
+  describe "boolean expressions" do
+    before do
+      allow(config).to receive(:column_field_types).and_return(
+        accredited: 'boolean')
+    end
+
+    context "the value is the string 'true'" do
+      subject {{ accredited: 'true'}}
+      let(:expected_document) {{ 'accredited' => true }}
+      it_correctly "creates a document"
+    end
+    
+    context "the value is the string 'false'" do
+      subject {{ accredited: 'false'}}
+      let(:expected_document) {{ 'accredited' => false }}
+      it_correctly "creates a document"
+    end
+  end
 end

@@ -83,12 +83,24 @@ module DataMagic
                       value.to_i
                     when "lowercase_name"
                       value.to_s.downcase
-                  
+                    when 'boolean'
+                      parse_boolean(value)
                     else # "string"
                       value.to_s
         end
         new_value = value.to_f if key and key.to_s.include? "location"
         new_value
+      end
+
+      def parse_boolean(value)
+        case value
+        when "true"
+          true
+        when "false"
+          false
+        else
+          fail InvalidDictionary, "unexpected value '#{value.inspect}' for type '#{type.inspect}' for field '#{key}'"
+        end
       end
 
       # currently we just support 'or' operations on two columns
