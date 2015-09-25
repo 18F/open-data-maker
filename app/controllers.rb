@@ -8,10 +8,7 @@ OpenDataMaker::App.controllers do
       'categories' => DataMagic.config.categories
     }
   end
-end
 
-# Category page
-OpenDataMaker::App.controllers do
   get :category, :with => :id do
     category_entry = DataMagic.config.category_by_id(params[:id])
     render :category, layout: true, locals: {
