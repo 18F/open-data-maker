@@ -1,10 +1,12 @@
 require 'spec_helper'
 
 describe Example do
-  let (:hash) {{ name: 'foo',
-          description: 'interesting thing',
-               params: 'a=1&b=something',
-             endpoint: 'api' }}
+  let(:hash) do
+    { name: 'foo',
+      description: 'interesting thing',
+      params: 'a=1&b=something',
+      endpoint: 'api' }
+  end
   subject(:e) { Example.new(hash) }
 
   it "has a name" do
@@ -21,7 +23,6 @@ describe Example do
   end
 
   it "has a link" do
-    expect(e.link).to eq("/#{e.endpoint}?#{e.params}")
+    expect(e.link).to eq("/v1/#{e.endpoint}?#{e.params}")
   end
-
 end

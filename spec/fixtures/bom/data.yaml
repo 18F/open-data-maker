@@ -1,0 +1,9 @@
+version: byte-order-mark
+index: test-data
+api: test
+dictionary:
+  id: UNITID
+  value: VAL
+
+files:
+  - name: bom.csv

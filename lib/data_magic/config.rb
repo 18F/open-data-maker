@@ -3,7 +3,8 @@ require_relative '../data_magic.rb'
 module DataMagic
   require_relative 'example.rb'
   class Config
-    attr_reader :data_path, :data, :dictionary, :files, :file_config, :s3, :api_endpoints
+    attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
+                :null_value, :file_config
     attr_accessor :page_size
 
     def initialize(options = {})
@@ -23,6 +24,20 @@ module DataMagic
       else
         load_datayaml
       end
+    end
+
+    def options
+      @data['options']
+    end
+
+    def dictionary_only_search?
+      options[:search] == 'dictionary_only'
+    end
+
+    # what are the valid types for the configured dictionary to have
+    # we allow type to be blank (nil), which will be interpreted as a String
+    def valid_types
+      @valid_type_config ||= DataMagic.valid_types + [nil]
     end
 
     def examples
@@ -104,17 +119,23 @@ module DataMagic
 
     # pull out all the fields that are specified in
     # only: [one, two, three]
-    # this means we should only take these fields from that file
+    # this means we should only take these fields from that file, or fields
+    # with the specified prefix
     def only_field_list(only_names, all_fields)
+      logger.info "only_field_list #{only_names.inspect}"
       selected = {}
       only_names.each do |name|
-        # select the exact match or all the fields with prefix "whatever."
-        selected.merge!(all_fields.select { |k,v| name == k || name =~ /#{k}\..*/ })
+        # pick all fields with given only_name as either exact match or prefix
+        named = all_fields.select do |k,v|
+          name == k || ((k =~ /#{name}.*/) == 0)
+        end
+        selected.merge! named
       end
       selected
     end
 
     # return new fields Hash, with fields that will turn into the nested hash
+    # based on the 'nest' option for a file
     def make_nested(nest_config, all_fields)
       new_fields = {}
       selected = []
@@ -147,6 +168,50 @@ module DataMagic
       @column_types
     end
 
+
+    # field_mapping[column_name] = field_name
+    def field_mapping
+      if @field_mapping.nil?
+        @field_mapping = {}
+        # field_name: name we want as the json key
+        dictionary.each do |field_name, info|
+          case info
+            when String
+              dictionary[field_name] = {'source' => field_name}
+              field_mapping[info] = field_name
+            when Hash
+              column_name = info['source']
+              unless column_name.nil? and info['calculate'] # skip calc columns
+                @field_mapping[column_name] = field_name
+              end
+            else
+              Config.logger.warn("unexpected dictionary field info " +
+                "for #{field_name}: #{info.inspect} -- expected String or Hash")
+          end
+        end
+
+      end
+      @field_mapping
+    end
+
+    def calculated_field_list
+      if @calculated_field_list.nil?
+        @calculated_field_list = []
+        dictionary.each do |field_name, info|
+          if info.is_a? Hash
+            if info['calculate'] or info[:calculate]
+              @calculated_field_list << field_name.to_s
+            end
+          end
+        end
+      end
+      @calculated_field_list
+    end
+
+    def field_type(field_name)
+      field_types[field_name]
+    end
+
     # this is a mapping of the fields that end up in the json doc
     # to their types, which might include nested documents
     # but at this stage, field names use dot syntax for nesting
@@ -154,7 +219,9 @@ module DataMagic
       if @field_types.nil?
         @field_types = {}
         fields = {}
+        logger.info "file_config #{file_config.inspect}"
         file_config.each do |f|
+          logger.info "f #{f.inspect}"
           if f.keys == ['name']   # only filename, use all the columns
             fields.merge!(dictionary)
           else
@@ -162,11 +229,15 @@ module DataMagic
             fields.merge!(make_nested(f['nest'], dictionary)) if f['nest']
           end
         end
+        logger.info "field_types #{fields.inspect}"
         fields.each do |field_name, info|
           type = info['type'] || "string"
           type = nil if field_name == 'location.lat' || field_name == 'location.lon'
           #logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
+          if type == 'name' || type == 'autocomplete'
+            @field_types["_#{field_name}"] = 'lowercase_name'
+          end
         end
       end
       @field_types
@@ -195,7 +266,7 @@ module DataMagic
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
         DataMagic.client.indices.delete index: index_name if index_exists
         DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
-        DataMagic.client.index index: index_name, type:'config', id: 1, body: @data
+        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
         updated = true
       end
       updated
@@ -300,6 +371,10 @@ module DataMagic
       File.basename(uri.hostname || uri.path).gsub(/[^0-9a-z]+/, '-')
     end
 
+    def null_value
+      @data['null_value'] || 'NULL'
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -319,7 +394,7 @@ module DataMagic
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
         @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, data['files'], data['options'])
+        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
 
         logger.debug "file_config: #{@data['files'].inspect}"
         logger.debug "no files found" if @data['files'].empty?

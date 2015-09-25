@@ -34,6 +34,11 @@ By default, data will be loaded from /sample-data
 
 When you run the app, you can query the dataset via json API, like: /cities?name=Chicago
 
+* http://localhost:3000/cities?name=Chicago
+* http://localhost:3000/cities?name=Chicago&state=IL
+* http://localhost:3000/cities?state=NY,MA
+* http://localhost:3000/cities?state=CA&fields=name,size
+
 To use your own data, you can set a different directory, for example:
 
 ```
@@ -47,6 +52,30 @@ export DATA_PATH='./data'
         1. Optionally import all the columns, not just ones specified in dictionary (see example: [import: all](spec/fixtures/import_with_options/data.yaml))
         1. If data.yaml not provided, all fields and fields will be imported with folder or bucket name used as the API endpoint (name is 'slugified' with dashes replacing spaces)
 1. api endpoint to get the data /api=endpoint?field_or_column_name=value
+
+## More Configuration Options
+
+Often while you are developing an API and data dictionary,
+it is helpful to include all the columns in the csv.  If you add the following to
+data.yaml, the field names and types from the dictionary will be used and any
+unspecified columns will simply use the column name as the field name.
+
+```
+options:
+  columns: all
+```
+
+You can use the dictionary to provide nice errors to developers who use the API.
+This can be used in conjunction with the above ```columns: all``` which will
+make it so that columns that are not referenced in the dictionary are not
+searchable, but will make it so that unspecified fields cause errors to be
+reported.
+
+```
+options:
+  search: dictionary_only
+```
+
 
 ## Help Wanted
 
@@ -62,10 +91,12 @@ Here's how it might look in the future:
 
 ![Download all the data or make choices to create a csv with a subset](/doc/csv-download.png)
 
+### Acknowledgements
+Zipcode latitude and longitude provided by [GeoNames](http://www.geonames.org/) under under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).
 
 ### Public domain
 
-This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
+Except as noted above, this project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
 
 > This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
 >

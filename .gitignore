@@ -10,9 +10,14 @@ db/*.db
 .env
 .*.env
 .cfignore
+.vagrant
+.idea/
 
 # expect people to put their own data in /data
 data
 
 # another commonly used data directory
 real-data
+
+# contains Google API tokens
+client_secret.json
