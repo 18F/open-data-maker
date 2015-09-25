@@ -53,7 +53,7 @@ module DataMagic
     end
 
     def categories
-      data['categories'].to_json
+      data['categories']
     end
 
     def category_by_id id

@@ -1,4 +1,3 @@
-#Category = Struct.new(:name, :description, :fields) do
 Category = Struct.new(:category_id) do
   def assemble
     category_entry = DataMagic.config.data['categories'][category_id]

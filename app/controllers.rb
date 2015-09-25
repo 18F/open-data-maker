@@ -5,7 +5,7 @@ OpenDataMaker::App.controllers do
       'title' => 'Open Data Maker',
       'endpoints' => DataMagic.config.api_endpoint_names,
       'examples' => DataMagic.config.examples,
-      'categories' => DataMagic.config.categories
+      'categories' => DataMagic.config.categories.to_json
     }
   end
 
