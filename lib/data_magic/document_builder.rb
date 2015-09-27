@@ -47,12 +47,7 @@ module DataMagic
           if value == null_value
             mapped[key] = nil
           else
-            tmp = {"age" => "integer", "height" => "float"}
-            if tmp.keys.include?(key)
-              type = tmp[key]
-            elsif
-              type = field_types[key.to_sym] || field_types[key.to_s]
-            end
+            type = field_types[key.to_sym] || field_types[key.to_s]
             if valid_types.include? type
               mapped[key] = fix_field_type(type, value, key)
               mapped["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"

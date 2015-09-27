@@ -352,32 +352,49 @@ describe 'api', type: 'feature' do
     after do
       DataMagic.destroy
     end
-  
-    let(:springfield_residents) do
-      [
-        {"age" => 14, "height" => 2.0, "address"=>"1313 Mockingbird Lane"},
-        {"age" => 70, "height" => 142.0, "address"=>"742 Evergreen Terrace"}
-      ]
-    end
-        
-    let(:expected_results) do
-      { "metadata" => {      "total" => 2,
-                             "page" => 0,
-                             "per_page" => DataMagic::DEFAULT_PAGE_SIZE
-                      },
-        "results" => springfield_residents,
-        "aggregations" => {
-          "age" => { "max" => 70.0, "avg" => 42.0},
-          "height" => {"max"=>142.0, "avg"=>72.0}
+
+    let(:all_aggregs) do
+      { "aggregations" => {
+          "age"=>{"count"=>2, "min"=>14.0, "max"=>70.0, "avg"=>42.0, "sum"=>84.0, "sum_of_squares"=>5096.0, "variance"=>784.0, "std_deviation"=>28.0, "std_deviation_bounds"=>{"upper"=>98.0, "lower"=>-14.0}},
+          "height"=>{"count"=>2, "min"=>2.0, "max"=>142.0, "avg"=>72.0, "sum"=>144.0, "sum_of_squares"=>20168.0, "variance"=>4900.0, "std_deviation"=>70.0, "std_deviation_bounds"=>{"upper"=>212.0, "lower"=>-68.0}}
         }
       }
     end
 
+    let(:max_avg_aggregs) do
+      { "aggregations" => {
+          "age"    => { "max" => 70.0,  "avg" => 42.0},
+          "height" => { "max" => 142.0, "avg" => 72.0}
+        }
+      }
+    end
+
+    let(:stats_envelope) do
+      { "metadata" => {      "total" => 2,
+                             "page" => 0,
+                             "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+                      },
+        "results" => []
+      }
+    end
+
     it "/stats returns the correct results for Springfield residents" do
-      get '/v1/cities/stats?city=Springfield&fields=address,age,height&_metrics=max,avg'
+      get '/v1/cities/stats?city=Springfield&_fields=address,age,height&_metrics=max,avg'
       expect(last_response).to be_ok
       json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
-      expect(json_response).to eq(expected_results)
+      expect(json_response).to eq(stats_envelope.merge(max_avg_aggregs))
+    end
+
+    it "/stats returns all metrics when none are specified" do
+      get '/v1/cities/stats?city=Springfield&_fields=address,age,height'
+      expect(last_response).to be_ok
+      json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
+      expect(json_response).to eq(stats_envelope.merge(all_aggregs))
+    end
+
+    it "/stats requires fields option" do
+      get '/v1/cities/stats?city=Springfield&_metrics=max,avg'
+      expect(last_response.status).to eq(400)
     end
   end
 

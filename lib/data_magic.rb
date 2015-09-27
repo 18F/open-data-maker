@@ -76,13 +76,19 @@ module DataMagic
       body: query_body
     }
 
+    # Per https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html:
+    # "the search_type and the query_cache must be passed as query-string parameters"
+    if options[:command] == 'stats'
+      full_query.merge! :search_type => 'count'
+    end
+
     logger.info "FULL_QUERY: #{full_query.inspect}"
 
     time_start = Time.now.to_f
     result = client.search full_query
 
     search_time = Time.now.to_f - time_start
-    logger.info "ES query time (ms): #{result["took"]} ; Query fetch time (s): #{search_time} ; result: #{result.inspect}"
+    logger.info "ES query time (ms): #{result["took"]} ; Query fetch time (s): #{search_time} ; result: #{result.inspect[0..500]}"
 
     hits = result["hits"]
     total = hits["total"]
@@ -115,28 +121,21 @@ module DataMagic
     end
 
     # assemble a simpler json document to return
-<<<<<<< HEAD
-    simple_result = {
-      "metadata" => {
-        "total" => total,
-        "page" => query_body[:from] / query_body[:size],
-        "per_page" => query_body[:size]
-      },
-=======
+    simple_result =
     {
       "metadata" => metadata,
->>>>>>> dev
       "results" => 	results
     }
 
-    if options[:add_aggregations]
+    if options[:command] == 'stats'
       # Remove metrics that weren't requested.
       aggregations = result['aggregations']
       aggregations.each do |f_name, values|
-        # Count is not an interesting statistic
-        values.delete 'count'
         if options[:metrics] && options[:metrics].size > 0
           aggregations[f_name] = values.reject { |k, v| !(options[:metrics].include? k) }
+        else
+          # Keep everything is no metric list is provided
+          aggregations[f_name] = values
         end
       end
 

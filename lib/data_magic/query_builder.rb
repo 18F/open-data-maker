@@ -8,11 +8,12 @@ module DataMagic
         per_page = DataMagic::MAX_PAGE_SIZE if per_page > DataMagic::MAX_PAGE_SIZE
         query_hash = {
           from:   page * per_page,
-          size:   per_page
+          size:   per_page,
         }
+
         query_hash[:query] = generate_squery(params, options, config).to_search
 
-        if options[:add_aggregations]
+        if options[:command] == 'stats'
           query_hash.merge! add_aggregations(params, options, config)
         end
 
@@ -36,19 +37,18 @@ module DataMagic
         search_fields_and_ranges(squery, params, config)
       end
 
+      # Wrapper for Stretchy aggregation clause builder (which wraps ElasticSearch (ES) :aggs parameter)
+      # Extracts all extended_stats aggregations from ES, to be filtered later
+      # Is a no-op if no fields are specified, or none of them are numeric
       def add_aggregations(params, options, config)
-        # Wrapper for Stretchy aggregation clause builder (which wraps ElasticSearch (ES) :aggs parameter)
-        # Extracts all extended_stats aggregations from ES, to be filtered later
-        # Is a no-op if no fields are specified, or none of them are numeric
-
         agg_hash = options[:fields].inject({}) do |memo, f|
           if config.column_field_types[f.to_s] && ["integer", "float"].include?(config.column_field_types[f.to_s])
-            memo[f.to_s] = { "extended_stats" => { "field" => f.to_s } }
+            memo[f.to_s] = { extended_stats: { "field" => f.to_s } }
           end
           memo
         end
 
-        agg_hash != {} ? { "aggs" => agg_hash } : {}
+        agg_hash.empty? ? {} : { aggs: agg_hash }
       end
 
       def get_restrict_fields(options)

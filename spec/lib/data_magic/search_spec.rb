@@ -1,16 +1,8 @@
 require 'spec_helper'
 require 'data_magic'
 require 'fixtures/data.rb'
-require 'pry'
 
 describe "DataMagic #search" do
-  let (:springfield_residents) do
-    [
-      {"age" => 14, "height" => 2.0, "address"=>"1313 Mockingbird Lane"},
-      {"age" => 70, "height" => 142.0, "address"=>"742 Evergreen Terrace"}
-    ]
-  end
-
   let (:expected) do
     {
       "metadata" => {
@@ -134,11 +126,11 @@ describe "DataMagic #search" do
 
     it "can correctly compute filtered statistics" do
       expected["metadata"]["total"] = 2
-      result = DataMagic.search({city: "Springfield"}, add_aggregations: true, fields: ["age", "height", "address"],
+      result = DataMagic.search({city: "Springfield"}, command: 'stats', fields: ["age", "height", "address"],
                                 metrics: ['max', 'avg'])
       result["results"] = result["results"].sort_by { |k| k["age"] }
 
-      expected["results"] = springfield_residents
+      expected["results"] = []
       expected["aggregations"] = {
         "age" => { "max" => 70.0, "avg" => 42.0},
         "height" => {"max"=>142.0, "avg"=>72.0}
@@ -149,15 +141,15 @@ describe "DataMagic #search" do
 
     it "can correctly compute unfiltered statistics" do
       expected["metadata"]["total"] = 2
-      result = DataMagic.search({city: "Springfield"}, add_aggregations: true, fields: ["age", "height", "address"])
+      result = DataMagic.search({city: "Springfield"}, command: 'stats', fields: ["age", "height", "address"])
       result["results"] = result["results"].sort_by { |k| k["age"] }
 
-      expected["results"] = springfield_residents
+      expected["results"] = []
       expected["aggregations"] = {
         "age"=>{
-          "min"=>14.0, "max"=>70.0, "avg"=>42.0, "sum"=>84.0, "sum_of_squares"=>5096.0, "variance"=>784.0, "std_deviation"=>28.0, "std_deviation_bounds"=>{"upper"=>98.0, "lower"=>-14.0}},
+          "count"=>2, "min"=>14.0, "max"=>70.0, "avg"=>42.0, "sum"=>84.0, "sum_of_squares"=>5096.0, "variance"=>784.0, "std_deviation"=>28.0, "std_deviation_bounds"=>{"upper"=>98.0, "lower"=>-14.0}},
         "height"=>{
-          "min"=>2.0, "max"=>142.0, "avg"=>72.0, "sum"=>144.0, "sum_of_squares"=>20168.0, "variance"=>4900.0, "std_deviation"=>70.0, "std_deviation_bounds"=>{"upper"=>212.0, "lower"=>-68.0}
+          "count"=>2, "min"=>2.0, "max"=>142.0, "avg"=>72.0, "sum"=>144.0, "sum_of_squares"=>20168.0, "variance"=>4900.0, "std_deviation"=>70.0, "std_deviation_bounds"=>{"upper"=>212.0, "lower"=>-68.0}
         }
       }
 
