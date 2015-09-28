@@ -1,0 +1,99 @@
+/* TEAM */
+
+	Chef:Sarah Allen
+	Contact: sarah [at] ultrasaurus.com
+	Github: ultrasaurus
+	From: San Francisco, California, USA
+
+	Developer: Yoz Grahame
+	Github: yozlet
+	From: San Francisco, California, USA
+
+	Developer: Shawn Allen
+	Github: shawnbot
+	From: San Francisco, California, USA
+
+	Developer: Joshua Carp
+	Github: jmcarp
+	From: San Francisco, California, USA
+
+	Developer: David Nesting
+	Github: dnesting
+	From: San Francisco, California, USA
+
+	Developer: Moncef Belyamani
+	Github: monfresh
+	From: San Francisco, California, USA
+
+	Developer: Andrew Cantino
+	Github: cantino
+	From: San Francisco, California, USA
+
+	Developer: Isa
+	Github: missherico
+	From: San Francisco, California, USA
+
+	Developer: Jacob Harris
+	Github: harrisj
+	From: San Francisco, California, USA
+
+	Developer: Karla Isabel Sandoval
+	Github: Karla-Isabel-Sandoval
+	From: San Francisco, California, USA
+
+	Developer: Ryan Buckley
+	Github: ridiculous
+	From: San Francisco, California, USA
+
+	Developer: Madebydna
+	Github: madebydna
+	From: San Francisco, California, USA
+
+	Developer: Angela Sy
+	Github: ange3
+	From: San Francisco, California, USA
+
+	Developer: Cameron Dutro
+	Github: camertron
+	From: San Francisco, California, USA
+
+	Developer: Holly Allen
+	Github: hollyallen
+	From: San Francisco, California, USA
+
+	Developer: Jeremy Morony
+	Github: shamus
+	From: San Francisco, California, USA
+
+	Developer: Melody Kramer
+	Github: melodykramer
+	From: San Francisco, California, USA
+
+	Developer: Ozzy Johnson
+	Github: ozzyjohnson
+	From: San Francisco, California, USA
+
+	Developer: Patty Gilbert
+	Github: pfgilbert
+	From: San Francisco, California, USA
+
+	Developer: Philip Arndt
+	Github: parndt
+	From: San Francisco, California, USA
+
+	Developer: Cherika
+	Github: cherika
+	From: San Francisco, California, USA
+
+	Developer: Andrew Evans
+	Github: agius
+	From: San Francisco, California, USA
+
+	Developer: Jen J Wong
+	Github: jenjwong
+	From: San Francisco, California, USA
+
+Full list of Contributors 
+JSON API: https://api.github.com/repos/18F/open-data-maker/contributors
+Updated as of September 24th, 2015
+
