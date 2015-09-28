@@ -56,7 +56,7 @@ and you should see the text `Welcome to Open Data Maker` with a link to
 the API created by the [sample data](sample-data).  
 
 You can verify that the import was successful by visiting
-http://127.0.0.1:3000/cities?name=Cleveland. You should see something like:
+http://127.0.0.1:3000/v1/cities?name=Cleveland. You should see something like:
 
 ```json
 {
