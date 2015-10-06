@@ -82,7 +82,8 @@ describe DataMagic::Config do
         "files" => [{ "name" => "cities100.csv" }],
         "data_path" => "./sample-data",
         "options" => {:search=>"dictionary_only"},
-        "unique" => ["name"]
+        "unique" => ["name"],
+        "data_path" => "./sample-data"
       }
       expect(config.data.keys).to include('dictionary')
       dictionary = config.data.delete 'dictionary'
@@ -90,7 +91,7 @@ describe DataMagic::Config do
       expect(dictionary.keys.sort).to eq %w(id code name state population
         location.lat location.lon area.land area.water).sort
       categories = config.data.delete 'categories'
-      expect(categories.keys.sort).to eq %w(general geographic).sort
+      expect(categories.keys.sort).to eq %w(general general2 general3 general4 general5 geographic).sort
       expect(config.data).to eq(default_config)
     end
 

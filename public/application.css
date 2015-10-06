@@ -1,2 +1,127 @@
 body {
+  -webkit-font-smoothing: antialiased;
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1em;
+  line-height: 1.5;
+  color: #333; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.1em;
+  margin: 0;
+  text-rendering: optimizeLegibility; }
+
+p {
+  margin: 0 0 0.75em; }
+
+hr {
+  border-bottom: 1px solid silver;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  margin: 1em 0; }
+
+img {
+  -webkit-user-select: none;
+  cursor: zoom-in;
+  margin: 0;
+  max-width: 50%; }
+
+.logo {
+  height: 150px;
+  width: 150px;
+  top: 50px;
+  left: 50px;
+  z-index: 20; }
+  @media screen and (max-width: 995px) {
+    .logo {
+      height: 100px;
+      width: 100px;
+      top: 40px;
+      left: 20px; } }
+  @media screen and (max-width: 785px) {
+    .logo {
+      height: 75px;
+      width: 75px; } }
+  @media screen and (max-width: 590px) {
+    .logo {
+      top: 73px; } }
+  @media screen and (max-width: 480px) {
+    .logo {
+      top: 16px;
+      left: 0px; } }
+
+.bottom-margin {
+  margin-bottom: 0.5em;
+  color: #c00;
+}
+
+.title {
+  text-align: center;
+  font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 2em;
+  line-height: 2em;
+}
+
+.header {
+  background-color: #9cf;
+}
+
+.categories .category {
+  margin: 5px;
+  padding: 15px;
+  border: solid 1px silver;
+  word-wrap: break-word;
+  display: inline-block;
+  width: 92%;
+  background-color: #ffc;
+}
+
+.categories .category a {
+  color: black;
+  text-decoration: none;
+}
+
+.categories .category a:visited {
+  color: black;
+}
+
+.categories__column {
+  display: inline-block;
+  width: 100%;
+  vertical-align: top;
+  -webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-count: 2;
+  column-gap: .2em;
+  -webkit-column-gap: .2em;
+  -moz-column-gap: .2em;
+}
+
+.category__name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #c00;
+}
+
+.category__fields {
+  list-style: none;
+  padding: 0;
+}
+
+.category__field-name {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: #c00;
+  width: 80%;
+}
+
+.category__field-type {
+  font-size: 15px;
+  font-weight: bold;
+  color: #c00;
+  width: 10%;
+  float: right;
 }

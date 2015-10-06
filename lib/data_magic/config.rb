@@ -2,6 +2,7 @@ require_relative '../data_magic.rb'
 
 module DataMagic
   require_relative 'example.rb'
+  require_relative 'category.rb'
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
                 :null_value, :file_config
@@ -49,6 +50,14 @@ module DataMagic
         end
       end
       @examples
+    end
+
+    def categories
+      data['categories']
+    end
+
+    def category_by_id id
+      Category.new(id).assemble
     end
 
     def self.init(s3 = nil)
