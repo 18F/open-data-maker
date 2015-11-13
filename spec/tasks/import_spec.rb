@@ -24,7 +24,5 @@ describe 'elastic search index management rake task' do
       expect { Rake::Task['import'].invoke }.not_to raise_exception
       expect(DataMagic.config.api_endpoint_names).to eq(['cities'])
     end
-
   end
-
 end

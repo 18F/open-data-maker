@@ -1,5 +1,4 @@
 class NestedHash < Hash
-
   def initialize(hash = {}, default = nil, &block)
     default ? super(default) : super(&block)
     self.add(hash)
@@ -29,7 +28,7 @@ class NestedHash < Hash
       if deep_hash[key].is_a?(Hash)
         flat_hash.merge! withdotkeys(value, flat_hash, key + '.')
       else
-        key = "#{root}#{key}" if not root.empty?
+        key = "#{root}#{key}" unless root.empty?
         flat_hash[key] = value
       end
     end
@@ -37,7 +36,7 @@ class NestedHash < Hash
   end
 
   # generate a list of the keys with dots representing the hierarchy
-  def dotkeys(row = self, prefix = '', path = [])
+  def dotkeys(row = self, prefix = '', _path = [])
     human_names = []
     paths = []
     row.keys.each do |key|
@@ -50,5 +49,4 @@ class NestedHash < Hash
     end
     human_names
   end
-
 end

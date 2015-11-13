@@ -18,7 +18,7 @@ module DataMagic
       end
 
       def report_nonexistent_operators(params)
-        params.keys.select { |p| p =~ /__(\w+)$/ && $1 !~ /range|not|ne/i }.
+        params.keys.select { |p| p =~ /__(\w+)$/ && Regexp.last_match(1) !~ /range|not|ne/i }.
           map do |p|
             (param, op) = p.match(/^(.*)__(\w+)$/).captures
             build_error(error: 'operator_not_found', parameter: param, input: op)
@@ -35,15 +35,15 @@ module DataMagic
       end
 
       def report_bad_range_argument(params)
-        ranges = params.select do |p,v|
-          p =~ /__range$/ and
-            v !~ / ^(\d+(\.\d+)?)? # optional starting number
-                   \.\.           # range dots
-                   (\d+(\.\d+)?)?  # optional ending number
-                   (,(\d+(\.\d+)?)?\.\.(\d+(\.\d+)?)?)* # and more, with commas
-                   $/x
+        ranges = params.select do |p, v|
+          p =~ /__range$/ &&
+          v !~ / ^(\d+(\.\d+)?)? # optional starting number
+                 \.\.           # range dots
+                 (\d+(\.\d+)?)?  # optional ending number
+                 (,(\d+(\.\d+)?)?\.\.(\d+(\.\d+)?)?)* # and more, with commas
+                 $/x
         end
-        ranges.map do |p,v|
+        ranges.map do |p, v|
           build_error(error: 'range_format_error', parameter: strip_op(p), input: v)
         end
       end
@@ -53,8 +53,8 @@ module DataMagic
           next false if p =~ /__range$/
           param_type = config.field_type(strip_op(p))
           value_type = guess_value_type(v)
-          (param_type == "float" && value_type != "float" && value_type != "integer") or
-            (param_type == "integer" && value_type != "integer")
+          (param_type == "float" && value_type != "float" && value_type != "integer") ||
+          (param_type == "integer" && value_type != "integer")
         end
         bad_fields.map do |p, v|
           build_error(error: 'parameter_type_error', parameter: p, input: v,

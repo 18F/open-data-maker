@@ -26,30 +26,30 @@ describe "DataMagic #search" do
       end
 
       it "can find document with one attribute" do
-        result = DataMagic.search({name: "Marilyn"})
-        expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"}]
+        result = DataMagic.search(name: "Marilyn")
+        expected["results"] = [{ "name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield" }]
         expect(result).to eq(expected)
       end
 
       it "can find document with multiple search terms" do
-        result = DataMagic.search({name: "Paul", city:"Liverpool"})
-        expected["results"] = [{"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"}]
+        result = DataMagic.search(name: "Paul", city: "Liverpool")
+        expected["results"] = [{ "name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool" }]
         expect(result).to eq(expected)
       end
 
       it "can find a document with a set of values delimited by commas" do
-        result = DataMagic.search({name: "Paul,Marilyn"})
+        result = DataMagic.search(name: "Paul,Marilyn")
         expected['metadata']["total"] = 3
-        expect(result["results"]).to include({"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield"})
-        expect(result["results"]).to include({"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool"})
-        expect(result["results"]).to include({"name" => "Paul", "address" => "19 N Square", "city" => "Boston"})
+        expect(result["results"]).to include("name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield")
+        expect(result["results"]).to include("name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool")
+        expect(result["results"]).to include("name" => "Paul", "address" => "19 N Square", "city" => "Boston")
       end
 
       it "can return a single attribute" do
-        result = DataMagic.search({city: "Springfield"}, fields:[:address])
+        result = DataMagic.search({ city: "Springfield" }, fields: [:address])
         expected["results"] = [
-          {"address" => "1313 Mockingbird Lane"},
-          {"address"=>"742 Evergreen Terrace"},
+          { "address" => "1313 Mockingbird Lane" },
+          { "address" => "742 Evergreen Terrace" }
         ]
         expected['metadata']["total"] = 2
         DataMagic.logger.info "======= EXPECTED: #{expected.inspect}"
@@ -58,40 +58,38 @@ describe "DataMagic #search" do
       end
 
       it "can return a subset of attributes" do
-        result = DataMagic.search({city: "Springfield"}, fields:[:address, :city])
+        result = DataMagic.search({ city: "Springfield" }, fields: [:address, :city])
         expected["results"] = [
-          {"city"=>"Springfield", "address"=>"1313 Mockingbird Lane"},
-          {"city"=>"Springfield", "address"=>"742 Evergreen Terrace"},
+          { "city" => "Springfield", "address" => "1313 Mockingbird Lane" },
+          { "city" => "Springfield", "address" => "742 Evergreen Terrace" }
         ]
         result["results"] = result["results"].sort_by { |k| k["address"] }
         expected['metadata']["total"] = 2
         expect(result).to eq(expected)
       end
 
-
       describe "supports pagination" do
         it "can specify both page and page size" do
-          result = DataMagic.search({ address: "Lane" }, page:1, per_page: 3)
+          result = DataMagic.search({ address: "Lane" }, page: 1, per_page: 3)
           expect(result['metadata']["per_page"]).to eq(3)
           expect(result['metadata']["page"]).to eq(1)
           expect(result["results"].length).to eq(1)
         end
 
         it "can use a default page size" do
-          result = DataMagic.search({}, page:1)
+          result = DataMagic.search({}, page: 1)
           expect(result['metadata']["per_page"]).to eq(DataMagic::DEFAULT_PAGE_SIZE)
           expect(result['metadata']["page"]).to eq(1)
           expect(result["results"].length).to eq(0)
         end
       end
-
     end
     describe "with mapping" do
       before (:all) do
-        ENV['DATA_PATH']="./no-data"
+        ENV['DATA_PATH'] = "./no-data"
         DataMagic.init(load_now: false)
         options = {}
-        options[:fields] = {name: 'person_name', address: 'street'}
+        options[:fields] = { name: 'person_name', address: 'street' }
         options[:override_dictionary] = {}
         num_rows, fields = DataMagic.import_csv(address_data, options)
         expect(fields.sort).to eq(options[:fields].values.sort)
@@ -101,24 +99,20 @@ describe "DataMagic #search" do
       end
 
       it "can find an attribute from an imported file" do
-        result = DataMagic.search({person_name: "Marilyn" })
-        expected["results"] = [{"person_name" => "Marilyn", "street" => "1313 Mockingbird Lane"}]
+        result = DataMagic.search(person_name: "Marilyn")
+        expected["results"] = [{ "person_name" => "Marilyn", "street" => "1313 Mockingbird Lane" }]
         expect(result).to eq(expected)
       end
-
-
     end
-
-
   end
   describe "with geolocation" do
     before (:all) do
       ENV['DATA_PATH'] = './spec/fixtures/geo_no_files'
       DataMagic.init(load_now: false)
       options = {}
-      options[:fields] = {lat: 'location.lat',
-                          lon: 'location.lon',
-                          city: 'city'}
+      options[:fields] = { lat: 'location.lat',
+                           lon: 'location.lon',
+                           city: 'city' }
       num_rows, fields = DataMagic.import_csv(geo_data, options)
     end
     after(:all) do
@@ -155,7 +149,7 @@ describe "DataMagic #search" do
     end
 
     it "can match a field on several given integer values" do
-      response = DataMagic.search({population: "8175133,3792621,2695598,"}, sort: "population:desc")
+      response = DataMagic.search({ population: "8175133,3792621,2695598," }, sort: "population:desc")
       expect(response["results"].length).to eq(3)
       expect(response["results"][0]['name']).to eq("New York")
       expect(response["results"][1]['name']).to eq("Los Angeles")

@@ -28,7 +28,6 @@ describe "DataMagic #init" do
     end
   end
 
-
   context "with load_now: false" do
     it "does not call #create_index" do
       expect(DataMagic).not_to receive(:create_index)

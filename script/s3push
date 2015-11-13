@@ -6,7 +6,7 @@ require_relative 's3config.rb'
 
 dirname = 'real-data'
 bucket_name = ENV['s3_bucket']
-datayamlpath = File.expand_path("../../#{dirname}/#{bucket_name}.yaml",  __FILE__)
+datayamlpath = File.expand_path("../../#{dirname}/#{bucket_name}.yaml", __FILE__)
 
 puts "copying #{datayamlpath}"
 puts "to S3 #{bucket_name}"

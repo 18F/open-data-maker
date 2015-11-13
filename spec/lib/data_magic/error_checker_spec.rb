@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'fixtures/data.rb'
 
 describe 'API errors', type: 'feature' do
-  let(:errors)          {  DataMagic::ErrorChecker.check(params, options, config) }
+  let(:errors)          { DataMagic::ErrorChecker.check(params, options, config) }
   let(:expected_errors) { [] }
   let(:config)          { DataMagic.config }
   let(:options)         { {} }
@@ -125,7 +125,7 @@ describe 'API errors', type: 'feature' do
 
     context "when a value of the correct type is provided for a field" do
       context "providing a comma-separated list of integers for an integer field" do
-        let(:params) { { "population" => "10,20,30"} }
+        let(:params) { { "population" => "10,20,30" } }
         it_correctly "does not return an error"
       end
     end

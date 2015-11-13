@@ -11,11 +11,11 @@ module OpenDataMaker
     # This app has no sensitive bits and csrf protection requires sessions
     disable :protect_from_csrf
 
-    if ENV['DATA_AUTH'] and not ENV['DATA_AUTH'].empty?
+    if ENV['DATA_AUTH'] && !ENV['DATA_AUTH'].empty?
       auth = ENV['DATA_AUTH']
       authorized_user, authorized_pass = auth.split(',')
       use Rack::Auth::Basic, "Restricted Area" do |username, password|
-        username == authorized_user and password == authorized_pass
+        username == authorized_user && password == authorized_pass
       end
     end
 
@@ -24,7 +24,7 @@ module OpenDataMaker
     if ENV['RACK_ENV'] == 'test'
       DataMagic.init(load_now: true)
     else
-      DataMagic.init   # loads in background
+      DataMagic.init # loads in background
     end
 
     ##

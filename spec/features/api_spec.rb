@@ -9,13 +9,12 @@ shared_examples_for "api request" do
 
     it "allows GET HTTP method thru CORS" do
       allowed_http_methods = last_response.header['Access-Control-Allow-Methods']
-      %w{GET}.each do |method| # don't expect we'll need: POST PUT DELETE
+      %w(GET).each do |method| # don't expect we'll need: POST PUT DELETE
         expect(allowed_http_methods).to include(method)
       end
     end
   end
 end
-
 
 describe 'api', type: 'feature' do
   let(:json_response) { JSON.parse(last_response.body) }
@@ -29,7 +28,7 @@ describe 'api', type: 'feature' do
     {
       "total" => 1,
       "page" => 0,
-      "per_page" => DataMagic::DEFAULT_PAGE_SIZE,
+      "per_page" => DataMagic::DEFAULT_PAGE_SIZE
     }
   end
 
@@ -43,7 +42,6 @@ describe 'api', type: 'feature' do
       DataMagic.destroy
     end
 
-
     it "loads the endpoint list" do
       get "/v1/endpoints"
 
@@ -52,7 +50,7 @@ describe 'api', type: 'feature' do
       expected = {
         'endpoints' => [
           'name' => 'cities',
-          'url' => '/v1/cities',
+          'url' => '/v1/cities'
         ]
       }
       expect(json_response).to eq expected
@@ -61,7 +59,7 @@ describe 'api', type: 'feature' do
     it "raises a 404 on missing endpoints" do
       expected = {
         "error" => 404,
-        "message" => "missing not found. Available endpoints: cities",
+        "message" => "missing not found. Available endpoints: cities"
       }
       get "/v1/missing"
       expect(last_response.status).to eq(404)
@@ -108,9 +106,9 @@ describe 'api', type: 'feature' do
         end
         let(:expected_results) do
           [
-            { "state" => "IL", "id"=>"1714000", "code"=>"00428803",
-              "name" => "Chicago", "population" => 2695598,
-              "area"=> { "land" => 227.635, "water" => 6.479 },
+            { "state" => "IL", "id" => "1714000", "code" => "00428803",
+              "name" => "Chicago", "population" => 2_695_598,
+              "area" => { "land" => 227.635, "water" => 6.479 },
               "location" => { "lat" => 41.837551, "lon" => -87.681844 }
             }
           ]
@@ -123,7 +121,6 @@ describe 'api', type: 'feature' do
           expect(last_response.content_type).to eq('application/json')
           expect(json_response).to eq(expected)
         end
-
       end
 
       describe "exporting csv" do
@@ -147,7 +144,7 @@ describe 'api', type: 'feature' do
       end
 
       describe "with options" do
-        let(:expected_results) { [{ "name" => "Boston", "population" => 617594 }] }
+        let(:expected_results) { [{ "name" => "Boston", "population" => 617_594 }] }
         it "can return a subset of fields" do
           get '/v1/cities?state=MA&_fields=name,population'
           expect(last_response).to be_ok
@@ -160,10 +157,10 @@ describe 'api', type: 'feature' do
           get '/v1/cities?area.land=302.643'
         end
         let(:expected_results) do
-          [ { "area"=> { "land" => 302.643, "water" => 165.841 },
-              "code"=>"02395220", "name"=>"New York",
-              "location" => { "lat" => 40.664274, "lon" => -73.9385 },
-              "state"=>"NY", "id"=>"3651000", "population"=>8175133 } ]
+          [{ "area" => { "land" => 302.643, "water" => 165.841 },
+             "code" => "02395220", "name" => "New York",
+             "location" => { "lat" => 40.664274, "lon" => -73.9385 },
+             "state" => "NY", "id" => "3651000", "population" => 8_175_133 }]
         end
 
         it "responds with json" do
@@ -178,9 +175,9 @@ describe 'api', type: 'feature' do
           get '/v1/cities?_zip=94132&_distance=30mi'
         end
         let(:expected_results) do
-          [{"state"=>"CA", "id"=>"0653000", "code"=>"02411292", "name"=>"Oakland",
-            "population"=>390724, "area"=>{"land"=>55.786,"water"=>22.216},
-            "location"=>{"lat"=>37.769857, "lon"=>-122.22564}} ]
+          [{ "state" => "CA", "id" => "0653000", "code" => "02411292", "name" => "Oakland",
+             "population" => 390_724, "area" => { "land" => 55.786, "water" => 22.216 },
+             "location" => { "lat" => 37.769857, "lon" => -122.22564 } }]
         end
 
         it "can find an attribute from an imported file" do
@@ -203,7 +200,7 @@ describe 'api', type: 'feature' do
           expect(last_response).to be_ok
           csv_path = File.expand_path "../../sample-data/cities100.csv", __dir__
           data = CSV.read(csv_path).slice(1..-1)
-          data = data.map { |row| row[3] }.sort.slice(0,20)
+          data = data.map { |row| row[3] }.sort.slice(0, 20)
           expect(json_response["results"].map { |r| r['name'] }).to eq(data)
         end
 
@@ -235,7 +232,6 @@ describe 'api', type: 'feature' do
         end
       end
     end
-
   end
 
   context "with nested data" do
@@ -249,16 +245,16 @@ describe 'api', type: 'feature' do
       DataMagic.destroy
     end
     let(:expected_results) do
-      [ { "id" => "9", "city" => "Tanner", "state" => "AL",
-          "name" => "Inquisitive Farm College",
-          "2013" => { "earnings" =>
+      [{ "id" => "9", "city" => "Tanner", "state" => "AL",
+         "name" => "Inquisitive Farm College",
+         "2013" => { "earnings" =>
                         { "6_yrs_after_entry" =>
-                            { "percent_gt_25k" => 0.19, "median" => 34183 } },
-                      "sat_average" => "971" },
-          "2012" => { "earnings" =>
+                            { "percent_gt_25k" => 0.19, "median" => 34_183 } },
+                     "sat_average" => "971" },
+         "2012" => { "earnings" =>
                         { "6_yrs_after_entry" =>
-                            { "percent_gt_25k" => 0.83, "median" => 42150 } },
-                      "sat_average" => "1292" } }]
+                            { "percent_gt_25k" => 0.83, "median" => 42_150 } },
+                     "sat_average" => "1292" } }]
     end
     it "can search" do
       get '/v1/school?name=Inquisitive Farm College'
@@ -279,16 +275,16 @@ describe 'api', type: 'feature' do
 
     describe "when searching for range" do
       let(:expected_results) do
-        [ { "id" => "8", "city" => "Birmingham", "state" => "AL",
-            "name" => "Condemned Balloon Institute",
-            "2013" => { "earnings" =>
+        [{ "id" => "8", "city" => "Birmingham", "state" => "AL",
+           "name" => "Condemned Balloon Institute",
+           "2013" => { "earnings" =>
                           { "6_yrs_after_entry" =>
-                              { "percent_gt_25k" => 0.59, "median" => 59759 } },
-                        "sat_average" => "616" },
-            "2012" => { "earnings" =>
+                              { "percent_gt_25k" => 0.59, "median" => 59_759 } },
+                       "sat_average" => "616" },
+           "2012" => { "earnings" =>
                           { "6_yrs_after_entry" =>
-                              { "percent_gt_25k" => 0.97, "median" => 30063 } },
-                        "sat_average" => "1420" } }]
+                              { "percent_gt_25k" => 0.97, "median" => 30_063 } },
+                       "sat_average" => "1420" } }]
       end
       it "can search for range" do
         get '/v1/school?2013.earnings.6_yrs_after_entry.median__range=49310..'
@@ -312,8 +308,8 @@ describe 'api', type: 'feature' do
 
     let(:expected_results) do
       [{ "id" => 9, "school" => {
-           "city" => "Tanner", "state" => "AL",
-           "zip" => 35671, "name" => "Inquisitive Farm College" }
+        "city" => "Tanner", "state" => "AL",
+        "zip" => 35_671, "name" => "Inquisitive Farm College" }
       }]
     end
 
@@ -331,11 +327,11 @@ describe 'api', type: 'feature' do
 
     describe "when searching for range" do
       let(:expected_results) do
-        [ { "id" => 7,
-          "school" => { "city" => "Auburn University",
-                        "state" => "AL", "zip" => 36849,
-                        "name" => "Alabama Beauty College of Auburn University" }
-        } ]
+        [{ "id" => 7,
+           "school" => { "city" => "Auburn University",
+                         "state" => "AL", "zip" => 36_849,
+                         "name" => "Alabama Beauty College of Auburn University" }
+        }]
       end
       it "can search for range" do
         get '/v1/fakeschool?school.zip__range=36800..'
@@ -360,9 +356,9 @@ describe 'api', type: 'feature' do
     it "still works" do
       get '/v1/cities?zip=94132&distance=30mi'
       expected_results = [
-        {"area"=>{"land"=>55.786, "water"=>22.216}, "code"=>"02411292", "name"=>"Oakland", 
-          "location"=>{"lon"=>-122.22564, "lat"=>37.769857}, "state"=>"CA", "id"=>"0653000", 
-          "population"=>390724}      ]
+        { "area" => { "land" => 55.786, "water" => 22.216 }, "code" => "02411292", "name" => "Oakland",
+          "location" => { "lon" => -122.22564, "lat" => 37.769857 }, "state" => "CA", "id" => "0653000",
+          "population" => 390_724 }]
       expect(last_response).to be_ok
       json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
       expect(json_response["results"]).to eq(expected_results)

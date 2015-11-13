@@ -9,7 +9,7 @@ OpenDataMaker::App.controllers do
     }
   end
 
-  get :category, :with => :id do
+  get :category, with: :id do
     category_entry = DataMagic.config.category_by_id(params[:id])
     render :category, layout: true, locals: {
       'title' => 'Open Data Maker',
@@ -83,7 +83,7 @@ def get_search_args_from_params(params)
   end
   options[:endpoint] = params.delete("endpoint") # these two params are
   options[:format]   = params.delete("format")   # supplied by Padrino
-  options[:fields]   = (options[:fields]   || "").split(',')
+  options[:fields]   = (options[:fields] || "").split(',')
   options
 end
 
@@ -96,7 +96,7 @@ def output_data_as_csv(results)
       results.each_with_index do |row, row_num|
         row = NestedHash.new(row).withdotkeys
         # make the order match data.yaml order
-        output = DataMagic.config.field_types.each_with_object({}) do |(name, type), output|
+        output = DataMagic.config.field_types.each_with_object({}) do |(name, _type), output|
           output[name] = row[name] unless row[name].nil?
           if name == "location"
             output["location.lat"] = row["location.lat"] unless row["location.lat"].nil?

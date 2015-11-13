@@ -3,7 +3,6 @@ require 'data_magic'
 require 'csv'
 
 describe "DataMagic intuitive search" do
-
   before :example do
     DataMagic.destroy
     ENV['DATA_PATH'] = './spec/fixtures/school_names'
@@ -17,49 +16,52 @@ describe "DataMagic intuitive search" do
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
   end
 
-  let(:expected_meta) {{"metadata"=>{"total"=>1, "page"=>0, "per_page"=>20}}}
+  let(:expected_meta) { { "metadata" => { "total" => 1, "page" => 0, "per_page" => 20 } } }
   let(:expected_match) { "" }
-  let(:response) {  DataMagic.search(
-                    {'school.name' => subject}, fields:['school.name']) }
+  let(:response) do
+    DataMagic.search(
+      { 'school.name' => subject }, fields: ['school.name'])
+  end
 
   context "full request" do
-    let(:response) {  DataMagic.search({id: 1}) }
-    let(:expected_match) { [{"id"=>"1", "school"=>{"state"=>"AL", "name"=>"Stillman College"}}]}
+    let(:response) { DataMagic.search(id: 1) }
+    let(:expected_match) { [{ "id" => "1", "school" => { "state" => "AL", "name" => "Stillman College" } }] }
     it "provides expected document" do
       expect(response['results']).to eql expected_match
     end
   end
 
   context "sort" do
-     shared_examples "returns" do
-       it "sorted results " do
-         expect(response['results'].map { |i| i['school.name'] })
-                 .to eql expected_match
-       end
-     end
+    shared_examples "returns" do
+      it "sorted results " do
+        expect(response['results'].map { |i| i['school.name'] })
+          .to eql expected_match
+      end
+    end
 
-     context "with list of names" do
-       let(:response) {  DataMagic.search({}, fields:['school.name'],
-                          sort: 'school.name') }
-                          # fields:['name'],
-       let(:expected_match) {
-         csv_path = File.expand_path("../../fixtures/school_names/school_names.csv", __dir__)
-         data = CSV.read(csv_path).slice(1..-1)
-         data.map { |row| row[2] }
-                   .sort.slice(0,20)
-       }
-       it_correctly "returns"
-     end
-
+    context "with list of names" do
+      let(:response) do
+        DataMagic.search({}, fields: ['school.name'],
+                             sort: 'school.name')
+      end
+      # fields:['name'],
+      let(:expected_match) do
+        csv_path = File.expand_path("../../fixtures/school_names/school_names.csv", __dir__)
+        data = CSV.read(csv_path).slice(1..-1)
+        data.map { |row| row[2] }
+          .sort.slice(0, 20)
+      end
+      it_correctly "returns"
+    end
   end
 
-   context "basic search" do
+  context "basic search" do
     shared_examples "finds" do
       it "correct results " do
         expect(response['results']
                 .map { |i| i['school.name'] }
-                .sort )
-                .to eql expected_match
+                .sort)
+          .to eql expected_match
       end
       it "correct metadata" do
         expect(response.reject { |k, _| k == 'results' }).to eql expected_meta
@@ -97,10 +99,12 @@ describe "DataMagic intuitive search" do
 
     context "by prefix in the middle of the name" do
       subject { 'Phoenix' }
-      let(:expected_meta) {{"metadata"=>{"total"=>3, "page"=>0, "per_page"=>20}}}
-      let(:expected_match) { ['Phoenix College',
-                              'University of Phoenix-Online Campus',
-                              "University of Phoenix-Phoenix Campus"] }
+      let(:expected_meta) { { "metadata" => { "total" => 3, "page" => 0, "per_page" => 20 } } }
+      let(:expected_match) do
+        ['Phoenix College',
+         'University of Phoenix-Online Campus',
+         "University of Phoenix-Phoenix Campus"]
+      end
       it_correctly "finds"
     end
 
@@ -112,10 +116,12 @@ describe "DataMagic intuitive search" do
 
     context "partial word after dash" do
       subject { 'berk' }
-      let(:expected_meta) {{"metadata"=>{"total"=>3, "page"=>0, "per_page"=>20}}}
-      let(:expected_match) { ['Berk Trade and Business School',
-                              'Berklee College of Music',
-                              'University of California-Berkeley'] }
+      let(:expected_meta) { { "metadata" => { "total" => 3, "page" => 0, "per_page" => 20 } } }
+      let(:expected_match) do
+        ['Berk Trade and Business School',
+         'Berklee College of Music',
+         'University of California-Berkeley']
+      end
       it_correctly "finds"
     end
 
@@ -128,5 +134,4 @@ describe "DataMagic intuitive search" do
   # TO DO
   # "pheonix" (mis-spelling) should probably work
   # "phoenix college" should also probably return "university of phoenix" --- since college is a synonym for unversity
-
 end

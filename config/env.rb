@@ -13,4 +13,4 @@ Bundler.require(:default, RACK_ENV)
 
 # do this early so we can log during startup
 require './lib/data_magic/config.rb'
-DataMagic::Config.logger=Logger.new(STDOUT) if ENV['VCAP_APPLICATION']    # Cloud Foundry
+DataMagic::Config.logger = Logger.new(STDOUT) if ENV['VCAP_APPLICATION'] # Cloud Foundry
