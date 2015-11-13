@@ -4,7 +4,7 @@ Category = Struct.new(:category_id) do
     dictionary = DataMagic.config.dictionary
     field_details = {}
     category_entry['fields'].each do |field_name|
-      field_details[field_name] = dictionary[field_name] || { "description"=>"" }
+      field_details[field_name] = dictionary[field_name] || { "description" => "" }
     end
     field_details = { "field_details" => field_details }
     assemble = category_entry.merge(field_details)

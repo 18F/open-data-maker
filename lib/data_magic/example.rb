@@ -7,10 +7,9 @@ class Example < Hashie::Mash
   coerce_key :endpoint, String
   coerce_key :link, String
   def initialize(hash = {})
-   super
-   # we want to use this in a liquid template
-   # so all attributes needs to be plain data, not code
-   self[:link] = "/v1/#{endpoint}?#{params}" if self[:link].nil?
+    super
+    # we want to use this in a liquid template
+    # so all attributes needs to be plain data, not code
+    self[:link] = "/v1/#{endpoint}?#{params}" if self[:link].nil?
  end
-
 end

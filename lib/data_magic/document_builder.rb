@@ -11,7 +11,7 @@ module DataMagic
       # row: a hash  { field => value } where all values are strings
       # fields: column_name => field_name
       # config: DataMagic.Config instance for dictionary, column types, NULL
-      def parse_row(row, fields, config, options={}, additional=nil)
+      def parse_row(row, fields, config, options = {}, additional = nil)
         row = csv_row = row.to_hash
         row = map_field_names(row, fields, options) unless fields.empty?
         row = row.merge(calculated_fields(csv_row, config))
@@ -73,7 +73,7 @@ module DataMagic
         new_doc
       end
 
-      def fix_field_type(type, value, key=nil)
+      def fix_field_type(type, value, key = nil)
         return value if value.nil?
 
         new_value = case type
@@ -86,7 +86,7 @@ module DataMagic
                     else # "string"
                       value.to_s
         end
-        new_value = value.to_f if key and key.to_s.include? "location"
+        new_value = value.to_f if key && key.to_s.include?("location")
         new_value
       end
 
@@ -127,14 +127,13 @@ module DataMagic
       # doc: hash with string keys
       # only_keys: array of keys
       def select_only_fields(doc, only_keys)
-        doc = doc.select do |key, value|
+        doc = doc.select do |key, _value|
           key = key.to_s
           # if key has _ prefix, select if key present without _
           key = key[1..-1] if key[0] == '_'
           only_keys.include?(key)
         end
       end
-
     end # class methods
   end # module QueryBuilder
-end  # module DataMagic
+end # module DataMagic

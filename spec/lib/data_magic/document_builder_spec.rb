@@ -3,7 +3,6 @@ require 'data_magic'
 require 'hashie'
 
 describe DataMagic::DocumentBuilder do
-
   let(:config)     { DataMagic::Config.new(load_datayaml: false) }
   let(:fields)     { {} }
   let(:options)    { {} }
@@ -22,8 +21,8 @@ describe DataMagic::DocumentBuilder do
 
   context "with no field mapping" do
     describe "strings" do
-      subject {{ city: 'New York', state: 'NY' }}
-      let(:expected_document) {{ 'city' => 'New York', 'state' => 'NY' }}
+      subject { { city: 'New York', state: 'NY' } }
+      let(:expected_document) { { 'city' => 'New York', 'state' => 'NY' } }
       it_correctly "creates a document"
     end
   end
@@ -32,17 +31,17 @@ describe DataMagic::DocumentBuilder do
       before do
         allow(config).to receive(:column_field_types).and_return(size: 'integer')
       end
-      subject {{ size: '45' }}
-      let(:expected_document) {{ 'size' => 45}}
+      subject { { size: '45' } }
+      let(:expected_document) { { 'size' => 45 } }
       it_correctly "creates a document"
     end
 
     describe "with name type" do
       before do
-        config.dictionary =  {city: { source: 'CITY', type: 'name' }}
+        config.dictionary = { city: { source: 'CITY', type: 'name' } }
       end
-      subject {{ city: 'New York' }}
-      let(:expected_document) {{ 'city' => 'New York', '_city' => 'new york'}}
+      subject { { city: 'New York' } }
+      let(:expected_document) { { 'city' => 'New York', '_city' => 'new york' } }
       it_correctly "creates a document"
     end
 
@@ -51,17 +50,19 @@ describe DataMagic::DocumentBuilder do
         allow(config).to receive(:column_field_types).and_return(
           population: 'integer', elevation: 'float')
       end
-      subject {{ name: 'Smithville', population: '45', elevation: '20.5'  }}
-      let(:expected_document) {{ 'name' => 'Smithville',
-                                  'population' => 45,
-                                  'elevation' => 20.5 }}
+      subject { { name: 'Smithville', population: '45', elevation: '20.5' } }
+      let(:expected_document) do
+        { 'name' => 'Smithville',
+          'population' => 45,
+          'elevation' => 20.5 }
+      end
       it_correctly "creates a document"
     end
 
     describe "float expressions" do
       before do
         allow(config).to receive(:column_field_types).and_return(
-          one: 'float', two: 'float', one_or_two:'float')
+          one: 'float', two: 'float', one_or_two: 'float')
         allow(config).to receive(:dictionary).and_return(
           one_or_two: {
             calculate: 'one or two',
@@ -70,8 +71,8 @@ describe DataMagic::DocumentBuilder do
           })
       end
       context "with second value NULL" do
-        subject {{ one: '0.12', two: 'NULL' }}
-        let(:expected_document)  { { 'one' => 0.12, 'two' => nil, 'one_or_two' => 0.12  } }
+        subject { { one: '0.12', two: 'NULL' } }
+        let(:expected_document) { { 'one' => 0.12, 'two' => nil, 'one_or_two' => 0.12 } }
         it "reports calculated fields" do
           expect(
             DataMagic::DocumentBuilder.calculated_fields(subject, config)
@@ -81,23 +82,22 @@ describe DataMagic::DocumentBuilder do
       end
 
       context "with first value NULL" do
-        subject {{ one: 'NULL', two: '0.45' }}
-        let(:expected_document)  { { 'one' => nil, 'two' => 0.45, 'one_or_two' => 0.45 } }
+        subject { { one: 'NULL', two: '0.45' } }
+        let(:expected_document) { { 'one' => nil, 'two' => 0.45, 'one_or_two' => 0.45 } }
         it_correctly "creates a document"
       end
 
       context "and zero evaluates to false" do
-        subject {{ one: '0.0', two: '0.45' }}
-        let(:expected_document)  { { 'one' => 0.0, 'two' => 0.45, 'one_or_two' => 0.45 } }
+        subject { { one: '0.0', two: '0.45' } }
+        let(:expected_document) { { 'one' => 0.0, 'two' => 0.45, 'one_or_two' => 0.45 } }
         it_correctly "creates a document"
       end
 
       context "and zero evaluates to false and stays zero" do
-        subject {{ one: '0.0', two: '0.0' }}
-        let(:expected_document)  { { 'one' => 0.0, 'two' => 0.0, 'one_or_two' => 0.0 } }
+        subject { { one: '0.0', two: '0.0' } }
+        let(:expected_document) { { 'one' => 0.0, 'two' => 0.0, 'one_or_two' => 0.0 } }
         it_correctly "creates a document"
       end
-
     end
   end
 
@@ -107,8 +107,8 @@ describe DataMagic::DocumentBuilder do
     end
     let(:fields) { config.field_mapping }
     context "with second value NULL" do
-      subject {{ NAME: 'foo', STABBR:'MA' }}
-      let(:expected_document)  { { 'name' => 'foo', 'state' => 'MA'  } }
+      subject { { NAME: 'foo', STABBR: 'MA' } }
+      let(:expected_document) { { 'name' => 'foo', 'state' => 'MA' } }
       it_correctly "creates a document"
     end
   end
@@ -116,7 +116,7 @@ describe DataMagic::DocumentBuilder do
   describe "integer expressions" do
     before do
       allow(config).to receive(:column_field_types).and_return(
-        one: 'integer', two: 'integer', one_or_two:'integer')
+        one: 'integer', two: 'integer', one_or_two: 'integer')
       allow(config).to receive(:dictionary).and_return(
         one_or_two: {
           calculate: 'one or two',
@@ -125,14 +125,14 @@ describe DataMagic::DocumentBuilder do
         })
     end
     context "zero evaluates to false" do
-      subject {{ one: '0', two: '4' }}
-      let(:expected_document)  { { 'one' => 0, 'two' => 4, 'one_or_two' => 4 } }
+      subject { { one: '0', two: '4' } }
+      let(:expected_document) { { 'one' => 0, 'two' => 4, 'one_or_two' => 4 } }
       it_correctly "creates a document"
     end
 
     context "zero evaluates to false and stays zero" do
-      subject {{ one: '0', two: '0' }}
-      let(:expected_document)  { { 'one' => 0, 'two' => 0, 'one_or_two' => 0 } }
+      subject { { one: '0', two: '0' } }
+      let(:expected_document) { { 'one' => 0, 'two' => 0, 'one_or_two' => 0 } }
       it_correctly "creates a document"
     end
   end
@@ -149,18 +149,17 @@ describe DataMagic::DocumentBuilder do
     let(:fields) { config.field_mapping }
 
     context "specify two vanilla columns" do
-      let(:options) {{ only: %w[id state] }}
-      subject {{ ID: 'ABC', STABBR: 'NY', CITY: 'New York' }}
-      let(:expected_document) {{ 'id' => 'ABC', 'state' => 'NY'}}
+      let(:options) { { only: %w(id state) } }
+      subject { { ID: 'ABC', STABBR: 'NY', CITY: 'New York' } }
+      let(:expected_document) { { 'id' => 'ABC', 'state' => 'NY' } }
       it_correctly "creates a document"
     end
 
     context "specify name column" do
-      let(:options) {{ only: %w[city] }}
-      subject {{ ID: 'ABC', STABBR: 'NY', CITY: 'New York' }}
-      let(:expected_document) {{ 'city' => 'New York', '_city' => 'new york'}}
+      let(:options) { { only: %w(city) } }
+      subject { { ID: 'ABC', STABBR: 'NY', CITY: 'New York' } }
+      let(:expected_document) { { 'city' => 'New York', '_city' => 'new york' } }
       it_correctly "creates a document"
     end
   end
-
 end

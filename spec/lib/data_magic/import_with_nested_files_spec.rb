@@ -2,7 +2,6 @@ require 'spec_helper'
 require 'data_magic'
 
 describe "unique key(s)" do
-
   before :example do
     DataMagic.destroy
     ENV['DATA_PATH'] = './spec/fixtures/nested_files'
@@ -24,7 +23,7 @@ describe "unique key(s)" do
 
   context "can import a subset of fields" do
     context "and when searching for a field value" do
-      let(:query) { {zipcode: "35762"} }
+      let(:query) { { zipcode: "35762" } }
       it "and doesn't find column" do
         expect(total).to eq(0)
       end
@@ -35,10 +34,10 @@ describe "unique key(s)" do
   end
 
   context "when searching on a nested field" do
-    let(:query) { { '2013.earnings.6_yrs_after_entry.median' => 26318 } }
+    let(:query) { { '2013.earnings.6_yrs_after_entry.median' => 26_318 } }
     it "can find the correct results" do
       expect(total).to eq(1)
-      expect(first['2013']['earnings']['6_yrs_after_entry']).to eq({"percent_gt_25k"=>0.53, "median"=>26318})
+      expect(first['2013']['earnings']['6_yrs_after_entry']).to eq("percent_gt_25k" => 0.53, "median" => 26_318)
     end
   end
 
@@ -46,7 +45,7 @@ describe "unique key(s)" do
     let(:sort) { '2013.earnings.6_yrs_after_entry.median' }
     it "can find the right first result" do
       expect(total).to eq(10)
-      expect(first['2013']['earnings']['6_yrs_after_entry']).to eq({"percent_gt_25k"=>0.09, "median"=>1836})
+      expect(first['2013']['earnings']['6_yrs_after_entry']).to eq("percent_gt_25k" => 0.09, "median" => 1836)
     end
   end
 end

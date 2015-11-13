@@ -2,7 +2,6 @@ require 'spec_helper'
 require 'data_magic'
 
 describe "calculated columns" do
-
   before :example do
     DataMagic.destroy
     ENV['DATA_PATH'] = './spec/fixtures/schools'
@@ -14,8 +13,7 @@ describe "calculated columns" do
   it "can combine two columns" do
     DataMagic.config = DataMagic::Config.new
     DataMagic.import_with_dictionary
-    result = DataMagic.search({id: 1}, fields: ['id', 'completion.rate.overall'] )
-    expect(result['results'].first).to eq({'id' => 1, 'completion.rate.overall' => 0.16 })
+    result = DataMagic.search({ id: 1 }, fields: ['id', 'completion.rate.overall'])
+    expect(result['results'].first).to eq('id' => 1, 'completion.rate.overall' => 0.16)
   end
-
 end

@@ -17,9 +17,7 @@ module DataMagic
       @s3 = options[:s3]
 
       @data_path = options[:data_path] || ENV['DATA_PATH']
-      if @data_path.nil? or @data_path.empty?
-        @data_path = DEFAULT_PATH
-      end
+      @data_path = DEFAULT_PATH if @data_path.nil? || @data_path.empty?
       if options[:load_datayaml] == false
         @data = {}
       else
@@ -56,7 +54,7 @@ module DataMagic
       data['categories']
     end
 
-    def category_by_id id
+    def category_by_id(id)
       Category.new(id).assemble
     end
 
@@ -67,15 +65,15 @@ module DataMagic
     end
 
     def clear_all
-      unless @data.nil? or @data.empty?
+      unless @data.nil? || @data.empty?
         logger.info "Config.clear_all: deleting index '#{scoped_index_name}'"
         Stretchy.delete scoped_index_name
         DataMagic.client.indices.clear_cache
       end
     end
 
-    def self.logger=(new_logger)
-      @logger = new_logger
+    class << self
+      attr_writer :logger
     end
 
     def self.logger
@@ -111,7 +109,6 @@ module DataMagic
       @api_endpoints.keys
     end
 
-
     def find_index_for(api)
       api_info = @api_endpoints[api] || {}
       api_info[:index]
@@ -120,9 +117,7 @@ module DataMagic
     def dictionary=(yaml_hash = {})
       @dictionary = IndifferentHash.new(yaml_hash)
       @dictionary.each do |key, info|
-        if info === String
-          @dictionary[key] = {source: info}
-        end
+        @dictionary[key] = { source: info } if info === String
       end
     end
 
@@ -135,7 +130,7 @@ module DataMagic
       selected = {}
       only_names.each do |name|
         # pick all fields with given only_name as either exact match or prefix
-        named = all_fields.select do |k,v|
+        named = all_fields.select do |k, _v|
           name == k || ((k =~ /#{name}.*/) == 0)
         end
         selected.merge! named
@@ -177,7 +172,6 @@ module DataMagic
       @column_types
     end
 
-
     # field_mapping[column_name] = field_name
     def field_mapping
       if @field_mapping.nil?
@@ -185,17 +179,17 @@ module DataMagic
         # field_name: name we want as the json key
         dictionary.each do |field_name, info|
           case info
-            when String
-              dictionary[field_name] = {'source' => field_name}
-              field_mapping[info] = field_name
-            when Hash
-              column_name = info['source']
-              unless column_name.nil? and info['calculate'] # skip calc columns
-                @field_mapping[column_name] = field_name
-              end
-            else
-              Config.logger.warn("unexpected dictionary field info " +
-                "for #{field_name}: #{info.inspect} -- expected String or Hash")
+          when String
+            dictionary[field_name] = { 'source' => field_name }
+            field_mapping[info] = field_name
+          when Hash
+            column_name = info['source']
+            unless column_name.nil? && info['calculate'] # skip calc columns
+              @field_mapping[column_name] = field_name
+            end
+          else
+            Config.logger.warn("unexpected dictionary field info " \
+              "for #{field_name}: #{info.inspect} -- expected String or Hash")
           end
         end
 
@@ -207,11 +201,10 @@ module DataMagic
       if @calculated_field_list.nil?
         @calculated_field_list = []
         dictionary.each do |field_name, info|
-          if info.is_a? Hash
-            if info['calculate'] or info[:calculate]
-              @calculated_field_list << field_name.to_s
-            end
-          end
+          next unless info.is_a? Hash
+          if info['calculate'] || info[:calculate]
+            @calculated_field_list << field_name.to_s
+                      end
         end
       end
       @calculated_field_list
@@ -231,7 +224,7 @@ module DataMagic
         logger.info "file_config #{file_config.inspect}"
         file_config.each do |f|
           logger.info "f #{f.inspect}"
-          if f.keys == ['name']   # only filename, use all the columns
+          if f.keys == ['name'] # only filename, use all the columns
             fields.merge!(dictionary)
           else
             fields.merge!(only_field_list(f['only'], dictionary)) if f['only']
@@ -242,7 +235,7 @@ module DataMagic
         fields.each do |field_name, info|
           type = info['type'] || "string"
           type = nil if field_name == 'location.lat' || field_name == 'location.lon'
-          #logger.info "field #{field_name}: #{type.inspect}"
+          # logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
           if type == 'name' || type == 'autocomplete'
             @field_types["_#{field_name}"] = 'lowercase_name'
@@ -260,22 +253,20 @@ module DataMagic
       if index_needs_update?
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
         DataMagic.client.indices.delete index: index_name if index_exists?
-        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
+        DataMagic.create_index(index_name, field_types) ## DataMagic::Index.create ?
         DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
         updated = true
       end
       updated
     end
 
-
-    def index_exists?(index_name=nil)
+    def index_exists?(index_name = nil)
       index_name ||= scoped_index_name
       logger.info "looking for: #{index_name}"
       DataMagic.client.indices.exists? index: index_name
     end
 
-
-    def index_needs_update?(index_name=nil)
+    def index_needs_update?(index_name = nil)
       index_name ||= scoped_index_name
       old_config = nil
       if index_exists?(index_name)
@@ -293,7 +284,6 @@ module DataMagic
       old_config.nil? || old_config["version"] != @data["version"]
     end
 
-
     # reads a file or s3 object, returns a string
     # path follows URI pattern
     # could be
@@ -305,15 +295,15 @@ module DataMagic
       uri = URI(path)
       scheme = uri.scheme
       case scheme
-        when nil
-          File.read(uri.path)
-        when "s3"
-          key = uri.path
-          key[0] = ''  # remove initial /
-          response = @s3.get_object(bucket: uri.hostname, key: key)
-          response.body.read
-        else
-          raise ArgumentError, "unexpected scheme: #{scheme}"
+      when nil
+        File.read(uri.path)
+      when "s3"
+        key = uri.path
+        key[0] = '' # remove initial /
+        response = @s3.get_object(bucket: uri.hostname, key: key)
+        response.body.read
+      else
+        fail ArgumentError, "unexpected scheme: #{scheme}"
       end
     end
 
@@ -321,13 +311,13 @@ module DataMagic
       uri = URI(path)
       scheme = uri.scheme
       case scheme
-        when nil
-          Dir.glob("#{path}/*").map { |file| File.basename file }
-        when "s3"
-          logger.info "bucket: #{uri.hostname}"
-          response = @s3.list_objects(bucket: uri.hostname)
-          logger.info "response: #{response.inspect[0..255]}"
-          response.contents.map { |item| item.key }
+      when nil
+        Dir.glob("#{path}/*").map { |file| File.basename file }
+      when "s3"
+        logger.info "bucket: #{uri.hostname}"
+        response = @s3.list_objects(bucket: uri.hostname)
+        logger.info "response: #{response.inspect[0..255]}"
+        response.contents.map(&:key)
       end
     end
 
@@ -338,7 +328,7 @@ module DataMagic
     def load_yaml(path = nil)
       logger.info "load_yaml: #{path}"
       file = data_file_name(path)
-      if file.nil? and not ENV['ALLOW_MISSING_YML']
+      if file.nil? && !ENV['ALLOW_MISSING_YML']
         logger.warn "No data.y?ml found; using default options"
       end
 
@@ -347,11 +337,11 @@ module DataMagic
     end
 
     def list_files(path)
-      Dir["#{path}/*"].select { |file|
+      Dir["#{path}/*"].select do |file|
         @extensions.include? File.extname(file)
-      }.map { |file|
+      end.map do |file|
         File.basename file
-      }
+      end
     end
 
     # if limit is not nil, truncate the length of list to limit
@@ -375,7 +365,7 @@ module DataMagic
         fdata.each_with_index do |info, index|
           name = info.fetch('name', '')
           if name.empty?
-            raise ArgumentError "file #{index}: 'name' must not be empty " +
+            fail ArgumentError "file #{index}: 'name' must not be empty " \
                                 "in #{fdata.inspect}"
           end
           names << name
@@ -384,7 +374,7 @@ module DataMagic
 
       paths = names.map { |name| File.join(path, name) }
 
-      return paths, fdata
+      [paths, fdata]
     end
 
     def clean_index(path)
@@ -398,11 +388,9 @@ module DataMagic
 
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
-      if directory_path.nil? or directory_path.empty?
-        directory_path = data_path
-      end
+      directory_path = data_path if directory_path.nil? || directory_path.empty?
 
-      if @data and @data['data_path'] == directory_path
+      if @data && @data['data_path'] == directory_path
         logger.debug "already loaded, nothing to do!"
       else
         logger.debug "load config #{directory_path.inspect}"
@@ -414,7 +402,7 @@ module DataMagic
         @dictionary = @data['dictionary'] || {}
         @data['options'] ||= {}
         Hashie.symbolize_keys! @data['options']
-        @api_endpoints[endpoint] = {index: @data['index']}
+        @api_endpoints[endpoint] = { index: @data['index'] }
         @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
 
         logger.debug "file_config: #{@data['files'].inspect}"
@@ -422,10 +410,9 @@ module DataMagic
 
         # keep track of where we loaded our data, so we can avoid loading again
         @data['data_path'] = directory_path
-        @data_path = directory_path  # make sure this is set, in case it changed
+        @data_path = directory_path # make sure this is set, in case it changed
       end
       scoped_index_name
     end
-
   end # class Config
 end # module DataMagic

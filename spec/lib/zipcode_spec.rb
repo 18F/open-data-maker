@@ -6,7 +6,7 @@ describe Zipcode do
     expect(location).to eq(lat: 37.7211, lon: -122.4754)
   end
   it "supports zipcode given as a number" do
-    location = Zipcode.latlon(94132)
+    location = Zipcode.latlon(94_132)
     expect(location).to eq(lat: 37.7211, lon: -122.4754)
   end
 end

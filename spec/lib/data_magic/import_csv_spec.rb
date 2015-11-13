@@ -8,17 +8,17 @@ describe "DataMagic #import_csv" do
   end
   after do
     DataMagic.destroy
-    #expect(DataMagic.client.indices.get(index: '_all')).to be_empty
+    # expect(DataMagic.client.indices.get(index: '_all')).to be_empty
   end
 
   describe "error while reading" do
     it "throws errors for bad format" do
       data = StringIO.new("not csv format")
-      expect{DataMagic.import_csv(data)}.to raise_error(DataMagic::InvalidData)
+      expect { DataMagic.import_csv(data) }.to raise_error(DataMagic::InvalidData)
     end
 
     it "stops importing when invalid UTF-8 chars are found" do
-      expect{
+      expect do
         File.open('./spec/fixtures/invalid_utf8.csv') do |f|
           num_rows, fields = DataMagic.import_csv(f)
           expect(num_rows).to eq(0)
@@ -26,7 +26,7 @@ describe "DataMagic #import_csv" do
           # in that case an exception won't be raised, but haven't been able
           # to repro as a test case
         end
-      }.to raise_error(DataMagic::InvalidData)
+      end.to raise_error(DataMagic::InvalidData)
     end
 
     it "allows importing invalid utf8 with force_utf8 option" do
@@ -46,7 +46,6 @@ eos
     data = StringIO.new(data_str)
     num_rows, fields = DataMagic.import_csv(data)
     expect(num_rows).to be(2)
-    expect(fields).to eq(['a', 'b'])
+    expect(fields).to eq(%w(a b))
   end
-
 end

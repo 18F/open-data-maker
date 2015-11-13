@@ -1,8 +1,8 @@
 class Expression
-  attr_accessor :name   # purely for reporting Errors
-  attr_reader   :variables
+  attr_accessor :name # purely for reporting Errors
+  attr_reader :variables
 
-  def initialize(expr, name = 'unknown')
+  def initialize(expr, _name = 'unknown')
     @variables = parse(expr)
   end
 
@@ -10,10 +10,9 @@ class Expression
 
   def parse(expression)
     match = /\s*(\w+)\s+or\s+(\w+)\s*/.match expression
-    if match.nil? or match[1].nil? or match[2].nil?
+    if match.nil? || match[1].nil? || match[2].nil?
       fail ArgumentError, "can't interpret #{expression.inspect} for #{name}"
     end
     [match[1], match[2]]
   end
-
 end
