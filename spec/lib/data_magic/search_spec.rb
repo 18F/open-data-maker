@@ -162,4 +162,43 @@ describe "DataMagic #search" do
       expect(response["results"][2]['name']).to eq("Chicago")
     end
   end
+
+  describe "with null fields in the data" do
+    before :example do
+      ENV['DATA_PATH'] = './spec/fixtures/nested_files'
+      DataMagic.init(load_now: true)
+    end
+
+    after :example do
+      DataMagic.destroy
+    end
+
+    context "with a fields filter containing NULL fields" do
+      it "should include the NULL fields" do
+        response = DataMagic.search({id: "11"}, {:fields => ["name", "state"]})
+        result = response["results"][0]
+        expect(result.keys.length).to eq(2)
+        expect(result).to include("state")
+        expect(result["state"]).to be_nil
+      end
+
+      it "should include nested NULL fields" do
+        response = DataMagic.search({id: "11"}, {:fields => ["2012.sat_average"]})
+        result = response["results"][0]
+        expect(result.keys.length).to eq(1)
+        expect(result).to include("2012.sat_average")
+        expect(result["2012.sat_average"]).to be_nil
+      end
+    end
+
+    context "without a fields filter" do
+      it "should include NULL fields" do
+        response = DataMagic.search({id: "11"})
+        result = response["results"][0]
+        expect(result).to include("state")
+        expect(result["2012"]).to include("sat_average")
+      end
+    end
+
+  end
 end
