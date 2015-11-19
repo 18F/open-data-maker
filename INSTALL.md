@@ -4,12 +4,14 @@
 
 Before you can run Open Data Maker, you'll need to have the following software
 installed on your computer:
-* [Elasticsearch]
+* [Elasticsearch] 1.7.3
 * [Ruby] 2.2.2
+
+**NOTE: The newest version of Elasticsearch 2.0.0 does NOT work with our current code**
 
 ### Mac OS X
 
-On a Mac, we recommend installing Ruby 2.2.2 via [RVM], and Elasticsearch via
+On a Mac, we recommend installing Ruby 2.2.2 via [RVM], and Elasticsearch 1.7.3 via
 [Homebrew]. If you are contributing to development, you will also need [Git].
 If you don't already have these tools, the 18F [laptop] script will install
 them for you.
