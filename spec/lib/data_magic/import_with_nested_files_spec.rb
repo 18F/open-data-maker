@@ -19,7 +19,7 @@ describe "unique key(s)" do
   let(:total)   { result['metadata']['total'] }
 
   it "creates one document per unique id" do
-    expect(total).to eq(10)
+    expect(total).to eq(11)
   end
 
   context "can import a subset of fields" do
@@ -45,7 +45,7 @@ describe "unique key(s)" do
   context "when sorting by a nested field" do
     let(:sort) { '2013.earnings.6_yrs_after_entry.median' }
     it "can find the right first result" do
-      expect(total).to eq(10)
+      expect(total).to eq(11)
       expect(first['2013']['earnings']['6_yrs_after_entry']).to eq({"percent_gt_25k"=>0.09, "median"=>1836})
     end
   end

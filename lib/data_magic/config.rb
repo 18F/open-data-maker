@@ -2,6 +2,7 @@ require_relative '../data_magic.rb'
 
 module DataMagic
   require_relative 'example.rb'
+  require_relative 'category.rb'
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
                 :null_value, :file_config
@@ -49,6 +50,14 @@ module DataMagic
         end
       end
       @examples
+    end
+
+    def categories
+      data['categories']
+    end
+
+    def category_by_id id
+      Category.new(id).assemble
     end
 
     def self.init(s3 = nil)
@@ -247,14 +256,32 @@ module DataMagic
     # return whether the current config was new and required an update
     def update_indexed_config
       updated = false
-      old_config = nil
       index_name = scoped_index_name
+      if index_needs_update?
+        logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
+        DataMagic.client.indices.delete index: index_name if index_exists?
+        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
+        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
+        updated = true
+      end
+      updated
+    end
+
+
+    def index_exists?(index_name=nil)
+      index_name ||= scoped_index_name
       logger.info "looking for: #{index_name}"
-      index_exists = false
-      if DataMagic.client.indices.exists? index: index_name
-        index_exists = true
+      DataMagic.client.indices.exists? index: index_name
+    end
+
+
+    def index_needs_update?(index_name=nil)
+      index_name ||= scoped_index_name
+      old_config = nil
+      if index_exists?(index_name)
         begin
           response = DataMagic.client.get index: index_name, type: 'config', id: 1
+          logger.debug "+-- DM index exists -- #{response.inspect}"
           old_config = response["_source"]
         rescue Elasticsearch::Transport::Transport::Errors::NotFound
           logger.debug "no prior index configuration"
@@ -262,14 +289,8 @@ module DataMagic
       end
       logger.debug "old config version (from es): #{(old_config.nil? ? old_config : old_config['version']).inspect}"
       logger.debug "new config version (from data.yaml): #{@data['version'].inspect}"
-      if old_config.nil? || old_config["version"] != @data["version"]
-        logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
-        DataMagic.client.indices.delete index: index_name if index_exists
-        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
-        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
-        updated = true
-      end
-      updated
+
+      old_config.nil? || old_config["version"] != @data["version"]
     end
 
 

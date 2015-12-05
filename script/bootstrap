@@ -48,10 +48,10 @@ if command -v brew >/dev/null; then
   brew update
 
   brew_tap 'homebrew/services'
+  brew_tap 'homebrew/versions'
+  brew_install_or_upgrade 'elasticsearch17'
 
-  brew_install_or_upgrade 'elasticsearch'
-
-  brew services restart elasticsearch
+  brew services restart elasticsearch17
 
   # elasticsearch takes several seconds to load
   sleep 10

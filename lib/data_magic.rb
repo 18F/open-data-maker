@@ -99,13 +99,18 @@ module DataMagic
     else
       # we're getting a subset of fields...
       results = hits["hits"].map do |hit|
-        found = hit["fields"]
+        found = hit.fetch("fields", {})
         # each result looks like this:
         # {"city"=>["Springfield"], "address"=>["742 Evergreen Terrace"]}
 
         found.keys.each { |key| found[key] = found[key][0] }
         # now it should look like this:
-        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace"}
+        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace}
+
+        # re-insert null fields that didn't get returned by ES
+        query_body[:fields].each do |field|
+          found[field] ||= nil
+        end
         found
       end
     end
