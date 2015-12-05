@@ -153,7 +153,8 @@ describe "DataMagic #search" do
         }
       }
 
-      expect(result).to eq(expected)
+      expect(result["age"]).to eq(expected["age"])
+      expect(result["height"]).to eq(expected["height"])
     end
   end
 

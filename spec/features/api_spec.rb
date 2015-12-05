@@ -392,7 +392,12 @@ describe 'api', type: 'feature' do
       get '/v1/cities/stats?city=Springfield&_fields=address,age,height'
       expect(last_response).to be_ok
       json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
-      expect(json_response).to eq(stats_envelope.merge(all_aggregs))
+
+      age_expected = stats_envelope.merge(all_aggregs)["aggregations"]["age"]
+      expect(json_response["aggregations"]["age"]["std_deviation"]).to eq(age_expected["std_deviation"])
+
+      height_expected = stats_envelope.merge(all_aggregs)["aggregations"]["height"]
+      expect(json_response["aggregations"]["height"]["std_deviation"]).to eq(height_expected["std_deviation"])
     end
 
     it "/stats requires fields option" do

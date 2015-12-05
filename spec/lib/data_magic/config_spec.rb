@@ -80,7 +80,6 @@ describe DataMagic::Config do
         "version" => "cities100-2010",
         "index" => "city-data", "api" => "cities",
         "files" => [{ "name" => "cities100.csv" }],
-        "data_path" => "./sample-data",
         "options" => {:search=>"dictionary_only"},
         "unique" => ["name"],
         "data_path" => "./sample-data"
