@@ -147,11 +147,19 @@ describe 'api', type: 'feature' do
       end
 
       describe "with options" do
-        let(:expected_results) { [{ "name" => "Boston", "population" => 617594 }] }
-        it "can return a subset of fields" do
-          get '/v1/cities?state=MA&_fields=name,population'
-          expect(last_response).to be_ok
-          expect(json_response).to eq(expected)
+        describe "fields option" do
+          let(:expected_results) { [{ "name" => "Boston", "population" => 617594 }] }
+          it "can return a subset of fields" do
+            get '/v1/cities?state=MA&_fields=name,population'
+            expect(last_response).to be_ok
+            expect(json_response).to eq(expected_results)
+          end
+
+          it "can return location fields" do
+            get '/v1/cities?state=MA&_fields=location'
+            expect(last_response).to be_ok
+            expect(json_response).to eq([{ "location.lon" => -71.020173 }])
+          end
         end
       end
 
@@ -360,8 +368,8 @@ describe 'api', type: 'feature' do
     it "still works" do
       get '/v1/cities?zip=94132&distance=30mi'
       expected_results = [
-        {"area"=>{"land"=>55.786, "water"=>22.216}, "code"=>"02411292", "name"=>"Oakland", 
-          "location"=>{"lon"=>-122.22564, "lat"=>37.769857}, "state"=>"CA", "id"=>"0653000", 
+        {"area"=>{"land"=>55.786, "water"=>22.216}, "code"=>"02411292", "name"=>"Oakland",
+          "location"=>{"lon"=>-122.22564, "lat"=>37.769857}, "state"=>"CA", "id"=>"0653000",
           "population"=>390724}      ]
       expect(last_response).to be_ok
       json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
