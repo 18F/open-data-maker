@@ -12,7 +12,13 @@ installed on your computer:
 ### Mac OS X
 
 On a Mac, we recommend installing Ruby 2.2.2 via [RVM], and Elasticsearch 1.7.3 via
-[Homebrew]. If you are contributing to development, you will also need [Git].
+[Homebrew].
+
+```
+brew install elasticsearch
+```
+
+ If you are contributing to development, you will also need [Git].
 If you don't already have these tools, the 18F [laptop] script will install
 them for you.
 
