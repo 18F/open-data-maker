@@ -242,6 +242,3 @@ DEPENDENCIES
   safe_yaml
   sass
   stretchy
-
-BUNDLED WITH
-   1.10.6

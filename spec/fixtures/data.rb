@@ -1,16 +1,16 @@
-
-
+# Ages adjusted for Springfield residents to average to 42
+# Heights randomly set to generate a max of 142
 def address_data
   @address_data ||= StringIO.new <<-eos
-name,address,city
-Paul,15 Penny Lane,Liverpool
-Michelle,600 Pennsylvania Avenue,Washington
-Marilyn,1313 Mockingbird Lane,Springfield
-Sherlock,221B Baker Street,London
-Clark,66 Lois Lane,Smallville
-Bart,742 Evergreen Terrace,Springfield
-Paul,19 N Square,Boston
-Peter,66 Parker Lane,New York
+name,address,city,age,height
+Paul,15 Penny Lane,Liverpool,10,142
+Michelle,600 Pennsylvania Avenue,Washington,12,1
+Marilyn,1313 Mockingbird Lane,Springfield,14,2
+Sherlock,221B Baker Street,London,16,123
+Clark,66 Lois Lane,Smallville,18,141
+Bart,742 Evergreen Terrace,Springfield,70,142
+Paul,19 N Square,Boston,70,55.2
+Peter,66 Parker Lane,New York,74,11.5123
 eos
   @address_data.rewind
   @address_data
