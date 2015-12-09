@@ -76,6 +76,14 @@ options:
   search: dictionary_only
 ```
 
+Also for debugging, you can limit the number of files that will be imported.  This is helpful when the import process is time consuming because you have many, many files, but can test format changes with a subset of the files.
+
+```
+options:
+  limit: 4
+```
+
+
 
 ## Help Wanted
 
