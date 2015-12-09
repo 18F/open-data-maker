@@ -184,7 +184,7 @@ describe 'API errors', type: 'feature' do
         let(:expected_errors) {
           [{
             error: 'zipcode_error',
-            message: "Zipcode not found.",
+            message: "The provided zipcode, '00002', is not valid.",
             input: '00002',
             parameter: 'zip'
           }]

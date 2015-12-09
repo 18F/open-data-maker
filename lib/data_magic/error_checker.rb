@@ -25,7 +25,6 @@ module DataMagic
         return [] if !params["zip"] || Zipcode.valid?(params["zip"])
         [build_error(
           error: 'zipcode_error',
-          message: "Zipcode not found.",
           parameter: "zip",
           input: params['zip'].to_s
         )]
@@ -99,7 +98,7 @@ module DataMagic
           when 'range_format_error'
             "The range '#{opts[:input]}' supplied to parameter '#{opts[:parameter]}' isn't in the correct format."
           when 'zipcode_error'
-            "Zipcode not found."
+            "The provided zipcode, '#{opts[:input]}', is not valid."
           end
         opts
       end
