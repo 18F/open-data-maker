@@ -96,10 +96,13 @@ module DataMagic
         fail "calculate: field not found in dictionary #{field_name.inspect}" if item.nil?
         expr = item['calculate'] || item[:calculate]
         fail ArgumentError, "expected to calculate #{field_name}" if expr.nil?
-        a, b = Expression.new(expr, field_name).variables
-               .map { |c| row[c.to_sym] }
-               .map { |c| fix_field_type(item['type'] || item[:type], c) }
-        (a == 0 || a == 0.0) ? b : (a || b)
+        vars = {}
+        e = Expression.new(expr)
+        e.variables.each do |name|
+          vars[name] = fix_field_type(item['type'] || item[:type],
+                                      row[name.to_sym])
+        end
+        e.evaluate(vars)
       end
 
       # row: a hash  (keys may be strings or symbols)
