@@ -23,6 +23,7 @@ gem 'aws-sdk', '~> 2'
 gem 'actionview'
 gem 'dotenv'
 gem 'oj'
+gem 'parslet'
 
 # Project requirements
 gem 'rake'
