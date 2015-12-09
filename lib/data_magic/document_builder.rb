@@ -84,7 +84,7 @@ module DataMagic
                     when "lowercase_name"
                       value.to_s.downcase
                     else # "string"
-                      value.to_s
+                      value == 'NULL' ? nil : value.to_s
         end
         new_value = value.to_f if key and key.to_s.include? "location"
         new_value
@@ -98,7 +98,6 @@ module DataMagic
         fail ArgumentError, "expected to calculate #{field_name}" if expr.nil?
         a, b = Expression.new(expr, field_name).variables
                .map { |c| row[c.to_sym] }
-               .map { |value| value == 'NULL' ? nil : value }
                .map { |c| fix_field_type(item['type'] || item[:type], c) }
         (a == 0 || a == 0.0) ? b : (a || b)
       end
