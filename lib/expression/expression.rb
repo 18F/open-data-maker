@@ -1,5 +1,5 @@
-require_relative 'expression_parser'
-require_relative 'expression_eval'
+require_relative 'parser'
+require_relative 'eval'
 require 'hashie'
 
 class Expression
@@ -7,12 +7,12 @@ class Expression
   attr_reader   :variables
 
   def initialize(expr, name = 'unknown')
-    @tree = ExpressionParser.new.parse(expr)
+    @tree = Parser.new.parse(expr)
     @variables = Variables.new.apply(@tree)
   end
 
   def evaluate(vars)
     Hashie.stringify_keys! vars
-    ExpressionEval.new.apply(@tree, variables: vars)
+    Eval.new.apply(@tree, variables: vars)
   end
 end

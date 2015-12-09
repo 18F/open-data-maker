@@ -1,4 +1,4 @@
-require './lib/expression'
+require './lib/expression/expression'
 
 module DataMagic
   module DocumentBuilder

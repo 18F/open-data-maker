@@ -14,7 +14,8 @@ require 'parslet'
 #
 # Variables.new.apply(tree)
 
-class ExpressionParser < Parslet::Parser
+class Expression
+  class Parser < Parslet::Parser
   rule(:space)  { match[" "].repeat(1) }
   rule(:space?) { space.maybe }
 
@@ -42,4 +43,5 @@ class ExpressionParser < Parslet::Parser
 
   # We start at the lowest precedence rule.
   root(:or_operation)
+end
 end

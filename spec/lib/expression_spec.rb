@@ -1,4 +1,4 @@
-require 'expression'
+require 'expression/expression'
 
 describe Expression do
   context "simple or expression" do
