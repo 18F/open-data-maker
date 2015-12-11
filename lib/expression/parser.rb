@@ -10,7 +10,7 @@ require 'parslet'
 #
 # tree = ExpressionParser.new.parse("one or two")
 #  => {:or=>{:left=>{:var=>"one"@0}, :right=>{:var=>"two"@7}}}
-# Transformer.new.apply(tree, variables: {"one"=>1, "two"=>2})
+# Eval.new.apply(tree, variables: {"one"=>1, "two"=>2})
 #
 # Variables.new.apply(tree)
 
@@ -25,7 +25,7 @@ class Expression
   rule(:and_operator) { str("and") >> space? }
   rule(:or_operator)  { str("or")  >> space? }
 
-  rule(:var) { match["[^\s]"].repeat(1).as(:var) >> space? }
+  rule(:var) { match["[^\s\(\)]"].repeat(1).as(:var) >> space? }
 
   # The primary rule deals with parentheses.
   rule(:primary) { lparen >> or_operation >> rparen | var }
