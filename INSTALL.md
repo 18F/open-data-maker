@@ -15,11 +15,12 @@ It will also install and start up Elasticsearch:
 script/bootstrap
 ```
 
-To run OpenDataMaker, you will need to have the following software installed on your computer:
+To run Open Data Maker, you will need to have the following software installed on your computer:
 * [Elasticsearch] 1.7.3
 * [Ruby] 2.2.2
 
-**NOTE: The newest version of Elasticsearch 2.0.0 does NOT work with our current code**
+**NOTE: Open Data Maker does not currently work with Elasticsearch versions 2.x and above.**
+You can follow or assist our progress towards 2.x compatibility [at this GitHub issue](https://github.com/18F/open-data-maker/issues/248).
 
 ### Mac OS X
 
