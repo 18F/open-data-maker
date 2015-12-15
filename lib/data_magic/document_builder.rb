@@ -7,11 +7,12 @@ module DataMagic
         DataMagic::Config.logger
       end
 
-      # parse a row from a csv file, returns a nested document
-      # row: a hash  { field => value } where all values are strings
+      # build a nested json document from a csv row
+      # row: a hash  { column_name => value }
+      #      where all column_names and values are strings
       # fields: column_name => field_name
       # config: DataMagic.Config instance for dictionary, column types, NULL
-      def parse_row(row, fields, config, options={}, additional=nil)
+      def build(row, fields, config, options={}, additional=nil)
         row = csv_row = row.to_hash
         row = map_field_names(row, fields, options) unless fields.empty?
         row = row.merge(calculated_fields(csv_row, config))

@@ -57,7 +57,7 @@ module DataMagic
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
         logger.info "csv parsed" if num_rows == 0
-        doc = DocumentBuilder.parse_row(row, new_field_names, config,  options, additional_data)
+        doc = DocumentBuilder.build(row, new_field_names, config,  options, additional_data)
         if num_rows % 500 == 0
           logger.info "indexing rows: #{num_rows}..."
         end

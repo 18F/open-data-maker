@@ -8,7 +8,7 @@ describe DataMagic::DocumentBuilder do
   let(:fields)     { {} }
   let(:options)    { {} }
   let(:additional) { {} }
-  let(:document)   { DataMagic::DocumentBuilder.parse_row(subject, fields, config, options, additional) }
+  let(:document)   { DataMagic::DocumentBuilder.build(subject, fields, config, options, additional) }
 
   RSpec.configure do |c|
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
