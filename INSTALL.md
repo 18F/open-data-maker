@@ -1,24 +1,38 @@
 # Running Open Data Maker on your computer
 
+If you just want to install and run, then you can just download a
+[zip file](https://github.com/18F/open-data-maker/archive/master.zip).
+
+You will still need the the dependencies below, but you don't need to
+clone the git repo for the source code.
+
 ## Install Prerequisites
 
-Before you can run Open Data Maker, you'll need to have the following software
-installed on your computer:
+You can run our bootstrap script to make sure you have all the dependencies.
+It will also install and start up Elasticsearch:
+
+```
+script/bootstrap
+```
+
+To run Open Data Maker, you will need to have the following software installed on your computer:
 * [Elasticsearch] 1.7.3
 * [Ruby] 2.2.2
 
-**NOTE: The newest version of Elasticsearch 2.0.0 does NOT work with our current code**
+**NOTE: Open Data Maker does not currently work with Elasticsearch versions 2.x and above.**
+You can follow or assist our progress towards 2.x compatibility [at this GitHub issue](https://github.com/18F/open-data-maker/issues/248).
 
 ### Mac OS X
 
 On a Mac, we recommend installing Ruby 2.2.2 via [RVM], and Elasticsearch 1.7.3 via
-[Homebrew].
+[Homebrew].  If you don't want to use the bootstrap script above, you can install
+elasticsearch 1.7 with brew using the following command:
 
 ```
-brew install elasticsearch
+brew install elasticsearch17
 ```
 
- If you are contributing to development, you will also need [Git].
+If you are contributing to development, you will also need [Git].
 If you don't already have these tools, the 18F [laptop] script will install
 them for you.
 
@@ -30,17 +44,6 @@ first, then clone your fork.
 ```
 git clone https://github.com/<your GitHub username>/open-data-maker.git
 cd open-data-maker
-```
-
-If you just want to install and run, then you can just download a
-[zip file](https://github.com/18F/open-data-maker/archive/master.zip).
-
-## Install dependencies
-The bootstrap script will make sure you have all the dependencies, and will
-also install and start up Elasticsearch:
-
-```
-script/bootstrap
 ```
 
 ## Run the App
