@@ -21,7 +21,8 @@ module DataMagic
                                 config.column_field_types,
                                 config.null_value)
         end
-        row = row.merge(additional) if additional
+        row.merge!(lowercase_columns(row, config.column_field_types))
+        row.merge!(additional) if additional
         doc = NestedHash.new.add(row)
         doc = parse_nested(doc, options) if options[:nest]
         doc = select_only_fields(doc, options[:only]) unless options[:only].nil?
@@ -51,13 +52,21 @@ module DataMagic
             type = field_types[key.to_sym] || field_types[key.to_s]
             if valid_types.include? type
               mapped[key] = fix_field_type(type, value, key)
-              mapped["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"
             else
               fail InvalidDictionary, "unexpected type '#{type.inspect}' for field '#{key}'"
             end
           end
         end
         mapped
+      end
+
+      def lowercase_columns(row, field_types = {})
+        new_columns = {}
+        row.each do |key, value|
+          type = field_types[key.to_sym] || field_types[key.to_s]
+          new_columns["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"
+        end
+        new_columns
       end
 
       def parse_nested(document, options)
