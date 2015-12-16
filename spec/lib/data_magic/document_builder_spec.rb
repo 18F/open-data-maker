@@ -74,7 +74,7 @@ describe DataMagic::DocumentBuilder do
         let(:expected_document)  { { 'one' => 0.12, 'two' => nil, 'one_or_two' => 0.12  } }
         it "reports calculated fields" do
           expect(
-            DataMagic::DocumentBuilder.calculated_fields(subject, config)
+            DataMagic::DocumentBuilder.send(:calculated_fields,subject, config)
           ).to eq('one_or_two' => 0.12)
         end
         it_correctly "creates a document"

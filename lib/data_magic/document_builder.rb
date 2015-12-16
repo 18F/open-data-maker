@@ -28,6 +28,8 @@ module DataMagic
         doc
       end
 
+      private
+
       def calculated_fields(row, config)
         result = {}
         config.calculated_field_list.each do |name|
@@ -35,8 +37,6 @@ module DataMagic
         end
         result
       end
-
-      private
 
       # row: a hash  (keys may be strings or symbols)
       # valid_types: an array of allowed types

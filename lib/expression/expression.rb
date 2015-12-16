@@ -1,5 +1,6 @@
 require_relative 'parser'
 require_relative 'eval'
+require_relative 'variables'
 require 'hashie'
 
 class Expression
