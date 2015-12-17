@@ -1,4 +1,4 @@
-require './lib/expression'
+require './lib/expression/expression'
 
 module DataMagic
   module DocumentBuilder
@@ -7,25 +7,26 @@ module DataMagic
         DataMagic::Config.logger
       end
 
-      # parse a row from a csv file, returns a nested document
-      # row: a hash  { field => value } where all values are strings
+      # build a nested json document from a csv row
+      # row: a hash  { column_name => value }
+      #      where all column_names and values are strings
       # fields: column_name => field_name
       # config: DataMagic.Config instance for dictionary, column types, NULL
-      def parse_row(row, fields, config, options={}, additional=nil)
+      def build(row, fields, config, options={}, additional=nil)
         row = csv_row = row.to_hash
         row = map_field_names(row, fields, options) unless fields.empty?
         row = row.merge(calculated_fields(csv_row, config))
-        unless config.column_field_types.empty? && config.null_value.empty?
-          row = map_field_types(row, config.valid_types,
-                                config.column_field_types,
-                                config.null_value)
-        end
-        row = row.merge(additional) if additional
+        row = map_field_types(row, config)
+
+        row.merge!(lowercase_columns(row, config.column_field_types))
+        row.merge!(additional) if additional
         doc = NestedHash.new.add(row)
         doc = parse_nested(doc, options) if options[:nest]
         doc = select_only_fields(doc, options[:only]) unless options[:only].nil?
         doc
       end
+
+      private
 
       def calculated_fields(row, config)
         result = {}
@@ -35,13 +36,15 @@ module DataMagic
         result
       end
 
-      private
-
       # row: a hash  (keys may be strings or symbols)
       # valid_types: an array of allowed types
       # field_types: hash field_name : type (float, integer, string)
       # returns a hash where values have been coerced to the new type
-      def map_field_types(row, valid_types, field_types = {}, null_value = 'NULL')
+      def map_field_types(row, config)
+        valid_types = config.valid_types
+        field_types = config.column_field_types || {}
+        null_value = config.null_value || null_value = 'NULL'
+
         mapped = {}
         row.each do |key, value|
           if value == null_value
@@ -50,13 +53,21 @@ module DataMagic
             type = field_types[key.to_sym] || field_types[key.to_s]
             if valid_types.include? type
               mapped[key] = fix_field_type(type, value, key)
-              mapped["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"
             else
               fail InvalidDictionary, "unexpected type '#{type.inspect}' for field '#{key}'"
             end
           end
         end
         mapped
+      end
+
+      def lowercase_columns(row, field_types = {})
+        new_columns = {}
+        row.each do |key, value|
+          type = field_types[key.to_sym] || field_types[key.to_s]
+          new_columns["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"
+        end
+        new_columns
       end
 
       def parse_nested(document, options)
@@ -96,11 +107,13 @@ module DataMagic
         fail "calculate: field not found in dictionary #{field_name.inspect}" if item.nil?
         expr = item['calculate'] || item[:calculate]
         fail ArgumentError, "expected to calculate #{field_name}" if expr.nil?
-        a, b = Expression.new(expr, field_name).variables
-               .map { |c| row[c.to_sym] }
-               .map { |value| value == 'NULL' ? nil : value }
-               .map { |c| fix_field_type(item['type'] || item[:type], c) }
-        (a == 0 || a == 0.0) ? b : (a || b)
+        vars = {}
+        e = Expression.new(expr)
+        e.variables.each do |name|
+          vars[name] = fix_field_type(item['type'] || item[:type],
+                                      row[name.to_sym])
+        end
+        e.evaluate(vars)
       end
 
       # row: a hash  (keys may be strings or symbols)

@@ -13,6 +13,8 @@ db/*.db
 .vagrant
 .idea/
 
+public/stylesheets/application.css*
+
 # expect people to put their own data in /data
 data
 
