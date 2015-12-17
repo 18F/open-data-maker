@@ -95,7 +95,7 @@ module DataMagic
                     when "lowercase_name"
                       value.to_s.downcase
                     else # "string"
-                      value == 'NULL' ? nil : value.to_s
+                      value.to_s
         end
         new_value = value.to_f if key and key.to_s.include? "location"
         new_value
