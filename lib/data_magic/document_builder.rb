@@ -16,11 +16,8 @@ module DataMagic
         row = csv_row = row.to_hash
         row = map_field_names(row, fields, options) unless fields.empty?
         row = row.merge(calculated_fields(csv_row, config))
-        unless config.column_field_types.empty? && config.null_value.empty?
-          row = map_field_types(row, config.valid_types,
-                                config.column_field_types,
-                                config.null_value)
-        end
+        row = map_field_types(row, config)
+
         row.merge!(lowercase_columns(row, config.column_field_types))
         row.merge!(additional) if additional
         doc = NestedHash.new.add(row)
@@ -43,7 +40,11 @@ module DataMagic
       # valid_types: an array of allowed types
       # field_types: hash field_name : type (float, integer, string)
       # returns a hash where values have been coerced to the new type
-      def map_field_types(row, valid_types, field_types = {}, null_value = 'NULL')
+      def map_field_types(row, config)
+        valid_types = config.valid_types
+        field_types = config.column_field_types || {}
+        null_value = config.null_value || null_value = 'NULL'
+
         mapped = {}
         row.each do |key, value|
           if value == null_value
