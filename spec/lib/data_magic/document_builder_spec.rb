@@ -101,6 +101,29 @@ describe DataMagic::DocumentBuilder do
     end
   end
 
+  describe "boolean expressions with integer inputs" do
+    before do
+      allow(config).to receive(:column_field_types).and_return(
+        one: 'integer', two: 'integer', one_or_two:'boolean')
+      allow(config).to receive(:dictionary).and_return(
+        one_or_two: {
+          calculate: 'one or two',
+          type: 'boolean',
+          description: 'something'
+        })
+    end
+
+    context "evaluate as true" do
+      subject {{ one: 0, two: 33 }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 33, 'one_or_two' => true } }
+      it_correctly "creates a document"
+    end
+
+  end
+
+
+
+
   context "with column name mapping" do
     before do
       config.dictionary = { name: 'NAME', state: 'STABBR' }
