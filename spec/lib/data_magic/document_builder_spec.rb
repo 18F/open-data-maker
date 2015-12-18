@@ -101,6 +101,60 @@ describe DataMagic::DocumentBuilder do
     end
   end
 
+  describe "boolean expressions with integer inputs" do
+    before do
+      allow(config).to receive(:column_field_types).and_return(
+        one: 'integer', two: 'integer', one_or_two:'boolean')
+      allow(config).to receive(:dictionary).and_return(
+        one_or_two: {
+          calculate: 'one or two',
+          type: 'boolean',
+          description: 'something'
+        })
+    end
+
+    context "'0 or 33' evaluate as true" do
+      subject {{ one: 0, two: 33 }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 33, 'one_or_two' => true } }
+      it_correctly "creates a document"
+    end
+
+    context "0 evaluates as false" do
+      subject {{ one: 0, two: 0 }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 0, 'one_or_two' => false } }
+      it_correctly "creates a document"
+    end
+
+  end
+
+  describe "boolean expressions with float inputs" do
+    before do
+      allow(config).to receive(:column_field_types).and_return(
+        one: 'float', two: 'float', one_or_two:'boolean')
+      allow(config).to receive(:dictionary).and_return(
+        one_or_two: {
+          calculate: 'one or two',
+          type: 'boolean',
+          description: 'something'
+        })
+    end
+
+    context "'0.0 or 33.0' evaluate as true" do
+      subject {{ one: 0.0, two: 33.0 }}
+      let(:expected_document)  { { 'one' => 0.0, 'two' => 33.0, 'one_or_two' => true } }
+      it_correctly "creates a document"
+    end
+
+    context "0.0 evaluates as false" do
+      subject {{ one: 0.0, two: 0.0 }}
+      let(:expected_document)  { { 'one' => 0.0, 'two' => 0.0, 'one_or_two' => false } }
+      it_correctly "creates a document"
+    end
+
+  end
+
+
+
   context "with column name mapping" do
     before do
       config.dictionary = { name: 'NAME', state: 'STABBR' }
@@ -174,7 +228,7 @@ describe DataMagic::DocumentBuilder do
       let(:expected_document) {{ 'accredited' => true }}
       it_correctly "creates a document"
     end
-    
+
     context "the value is the string 'false'" do
       subject {{ accredited: 'false'}}
       let(:expected_document) {{ 'accredited' => false }}

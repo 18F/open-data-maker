@@ -109,8 +109,10 @@ module DataMagic
           true
         when "false"
           false
+        when 0
+          false
         else
-          fail InvalidDictionary, "unexpected value '#{value.inspect}' for type '#{type.inspect}' for field '#{key}'"
+          !!value 
         end
       end
 
