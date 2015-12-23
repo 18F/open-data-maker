@@ -7,7 +7,8 @@ module DataMagic
           report_nonexistent_operators(params) +
           report_nonexistent_fields(options[:fields], config) +
           report_bad_range_argument(params) +
-          report_wrong_field_type(params, config)
+          report_wrong_field_type(params, config) +
+          report_wrong_zip(params)
       end
 
       private
@@ -18,6 +19,15 @@ module DataMagic
         else
           []
         end
+      end
+
+      def report_wrong_zip(params)
+        return [] if !params["zip"] || Zipcode.valid?(params["zip"])
+        [build_error(
+          error: 'zipcode_error',
+          parameter: "zip",
+          input: params['zip'].to_s
+        )]
       end
 
       def report_nonexistent_params(params, config)
@@ -87,6 +97,8 @@ module DataMagic
             "The parameter '#{opts[:parameter]}' expects a value of type #{opts[:expected_type]}, but received '#{opts[:input]}' which is a value of type #{opts[:input_type]}."
           when 'range_format_error'
             "The range '#{opts[:input]}' supplied to parameter '#{opts[:parameter]}' isn't in the correct format."
+          when 'zipcode_error'
+            "The provided zipcode, '#{opts[:input]}', is not valid."
           end
         opts
       end
