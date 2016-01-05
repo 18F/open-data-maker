@@ -329,7 +329,7 @@ module DataMagic
       end
       if raw.empty?
         if not ENV['ALLOW_MISSING_YML']
-            logger.warn "No data.y?ml found; using default options"
+            fail "No data.y?ml found. Did you mean to define ALLOW_MISSING_YML environment variable?"
         end
         raw = '{}'
       end
