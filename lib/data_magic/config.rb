@@ -306,7 +306,11 @@ module DataMagic
       scheme = uri.scheme
       case scheme
         when nil
-          File.read(uri.path)
+          begin
+            File.read(uri.path)
+          rescue
+            ''
+          end
         when "s3"
           key = uri.path
           key[0] = ''  # remove initial /
@@ -317,32 +321,19 @@ module DataMagic
       end
     end
 
-    def file_list(path)
-      uri = URI(path)
-      scheme = uri.scheme
-      case scheme
-        when nil
-          Dir.glob("#{path}/*").map { |file| File.basename file }
-        when "s3"
-          logger.info "bucket: #{uri.hostname}"
-          response = @s3.list_objects(bucket: uri.hostname)
-          logger.info "response: #{response.inspect[0..255]}"
-          response.contents.map { |item| item.key }
-      end
-    end
-
-    def data_file_name(path)
-      ['data.yml', 'data.yaml'].find { |file| file_list(path).include? file }
-    end
-
     def load_yaml(path = nil)
       logger.info "load_yaml: #{path}"
-      file = data_file_name(path)
-      if file.nil? and not ENV['ALLOW_MISSING_YML']
-        logger.warn "No data.y?ml found; using default options"
+      raw = read_path(File.join(path, "data.yaml"))
+      if raw.empty?
+        raw = read_path(File.join(path, "data.yml"))
+      end
+      if raw.empty?
+        if not ENV['ALLOW_MISSING_YML']
+            logger.warn "No data.y?ml found; using default options"
+        end
+        raw = '{}'
       end
 
-      raw = file ? read_path(File.join(path, file)) : '{}'
       YAML.load(raw)
     end
 
