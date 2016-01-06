@@ -293,6 +293,21 @@ module DataMagic
       old_config.nil? || old_config["version"] != @data["version"]
     end
 
+    # read from the key,
+    # return contents or...
+    # nil if not found, otherwise raise exception
+    def read_from_s3(bucket, key)
+      result = nil
+      response = @s3.get_object(bucket: bucket, key: key)
+      if response.isOK
+        result = response.body.read
+      else
+        unless response.status == 404  # return nil for not found
+          raise IOError, "could not read #{key} from bucket: #{bucket}, status: #{response.status}"
+        end
+      end
+      result
+    end
 
     # reads a file or s3 object, returns a string
     # path follows URI pattern
@@ -302,36 +317,38 @@ module DataMagic
     #   s3://bucket_name
     #   a local path like: './data'
     def read_path(path)
+      result = nil
       uri = URI(path)
       scheme = uri.scheme
       case scheme
         when nil
           begin
-            File.read(uri.path)
-          rescue
-            ''
+            result = File.read(uri.path)
+          rescue => e
+            if e.message.include? "No such file or directory"
+              result = nil
+            else
+              logger.error "read_path failed: #{path} with #{e.class}:#{e.message}"
+              raise e
+            end
           end
         when "s3"
           key = uri.path
           key[0] = ''  # remove initial /
-          response = @s3.get_object(bucket: uri.hostname, key: key)
-          response.body.read
+          result = read_from_s3(uri.hostname, key)
         else
           raise ArgumentError, "unexpected scheme: #{scheme}"
       end
+      result
     end
 
     def load_yaml(path = nil)
       logger.info "load_yaml: #{path}"
       raw = read_path(File.join(path, "data.yaml"))
-      if raw.empty?
-        raw = read_path(File.join(path, "data.yml"))
-      end
-      if raw.empty?
-        if not ENV['ALLOW_MISSING_YML']
-            fail "No data.y?ml found. Did you mean to define ALLOW_MISSING_YML environment variable?"
-        end
-        raw = '{}'
+      raw ||= read_path(File.join(path, "data.yml"))
+      raw ||= '{}' if ENV['ALLOW_MISSING_YML']
+      if raw.nil?
+        fail "No data.y?ml found. Did you mean to define ALLOW_MISSING_YML environment variable?"
       end
 
       YAML.load(raw)
