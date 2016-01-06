@@ -14,7 +14,9 @@ begin
   end
 
   desc "Run complete application spec suite"
-  RSpec::Core::RakeTask.new(:spec)
+  RSpec::Core::RakeTask.new(:spec) do |t|
+    t.rspec_opts = "--color"
+  end
 rescue LoadError
   puts "RSpec is not part of this bundle, skip specs."
 end
