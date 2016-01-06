@@ -124,7 +124,6 @@ describe DataMagic::DocumentBuilder do
       let(:expected_document)  { { 'one' => 0, 'two' => 0, 'one_or_two' => false } }
       it_correctly "creates a document"
     end
-
   end
 
   describe "boolean expressions with float inputs" do
@@ -150,7 +149,6 @@ describe DataMagic::DocumentBuilder do
       let(:expected_document)  { { 'one' => 0.0, 'two' => 0.0, 'one_or_two' => false } }
       it_correctly "creates a document"
     end
-
   end
 
 
