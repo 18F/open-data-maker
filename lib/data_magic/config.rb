@@ -309,6 +309,24 @@ module DataMagic
       result
     end
 
+    # read local file and return content
+    # if not found, return nil
+    # any other failure, raise exception
+    def read_path_local(path)
+      result = nil
+      begin
+        result = File.read(path)
+      rescue => e
+        if e.message.include? "No such file or directory"
+          result = nil
+        else
+          logger.error "read_path_local failed: #{path} with #{e.class}:#{e.message}"
+          raise e
+        end
+      end
+      result
+    end
+
     # reads a file or s3 object, returns a string
     # path follows URI pattern
     # could be
@@ -322,16 +340,7 @@ module DataMagic
       scheme = uri.scheme
       case scheme
         when nil
-          begin
-            result = File.read(uri.path)
-          rescue => e
-            if e.message.include? "No such file or directory"
-              result = nil
-            else
-              logger.error "read_path failed: #{path} with #{e.class}:#{e.message}"
-              raise e
-            end
-          end
+          result = read_path_local(uri.path)
         when "s3"
           key = uri.path
           key[0] = ''  # remove initial /
@@ -348,7 +357,7 @@ module DataMagic
       raw ||= read_path(File.join(path, "data.yml"))
       raw ||= '{}' if ENV['ALLOW_MISSING_YML']
       if raw.nil?
-        fail "No data.y?ml found. Did you mean to define ALLOW_MISSING_YML environment variable?"
+        fail "No data.y?ml found at #{path}. Did you mean to define ALLOW_MISSING_YML environment variable?"
       end
 
       YAML.load(raw)

@@ -3,12 +3,32 @@ require 'data_magic'
 
 describe "DataMagic #import_without_data_yaml" do
   describe "without ALLOW_MISSING_YML" do
-    it "fails" do
+    it "not found locally raises error" do
       ENV['DATA_PATH'] = './spec/fixtures/cities_without_yml'
       expect {
         DataMagic.init(load_now: true)
-      }.to raise_error(RuntimeError, "No data.y?ml found. Did you mean to define ALLOW_MISSING_YML environment variable?")
+      }.to raise_error(RuntimeError, "No data.y?ml found at ./spec/fixtures/cities_without_yml. Did you mean to define ALLOW_MISSING_YML environment variable?")
     end
+    it "not found on s3 raises error" do
+      ENV['DATA_PATH'] = 's3://mybucket'
+      fake_s3 = class_spy("Fake Aws::S3::Client")
+      fake_get_object_response = double(
+        "S3 response",
+        body: '',
+        isOK: false,
+        status: 404
+      )
+      allow(fake_s3).to receive(:get_object)
+        .with(bucket: 'mybucket', key: 'data.yaml')
+        .and_return(fake_get_object_response)
+        allow(fake_s3).to receive(:get_object)
+          .with(bucket: 'mybucket', key: 'data.yml')
+          .and_return(fake_get_object_response)
+      expect {
+        config = DataMagic::Config.new(s3: fake_s3)
+      }.to raise_error(RuntimeError, "No data.y?ml found at s3://mybucket. Did you mean to define ALLOW_MISSING_YML environment variable?")
+    end
+
   end
   describe "with ALLOW_MISSING_YML" do
     let (:expected) do
