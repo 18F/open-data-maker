@@ -164,7 +164,7 @@ module DataMagic
     end
 
     # returns a hash that lets us know the types of what we read from csv
-    # key: the field names which map directly to csv columns
+    # key: the field names from data.yml (not yet nested)
     # value: type
     def column_field_types
       if @column_types.nil?
@@ -177,6 +177,21 @@ module DataMagic
       @column_types
     end
 
+    # returns a hash that lets us know the types of what we read from csv
+    # key: csv column names
+    # value: type
+    def csv_column_field_types
+      if @csv_column_types.nil?
+        @csv_column_types = {}
+        puts "dictionary: #{dictionary.inspect}"
+        dictionary.each do |field_name, info|
+          type = info['type']
+          column_name = info['source'] || field_name
+          @csv_column_types[column_name] = type unless type.nil?
+        end
+      end
+      @csv_column_types
+    end
 
     # field_mapping[column_name] = field_name
     def field_mapping

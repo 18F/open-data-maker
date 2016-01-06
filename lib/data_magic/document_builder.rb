@@ -13,14 +13,20 @@ module DataMagic
       # fields: column_name => field_name
       # config: DataMagic.Config instance for dictionary, column types, NULL
       def build(row, fields, config, options={}, additional=nil)
-        row = csv_row = row.to_hash
-        row = map_field_names(row, fields, options) unless fields.empty?
-        row = row.merge(calculated_fields(csv_row, config))
-        row = map_field_types(row, config)
+        field_values = nil
+        csv_row = row.to_hash
+        csv_row = map_field_types(csv_row, config)
+        puts "csv_row: #{csv_row}"
+        if fields.empty?
+          field_values = csv_row
+        else
+          field_values = map_field_names(csv_row, fields, options)
+        end
+        field_values = field_values.merge(calculated_fields(csv_row, config))
 
-        row.merge!(lowercase_columns(row, config.column_field_types))
-        row.merge!(additional) if additional
-        doc = NestedHash.new.add(row)
+        field_values.merge!(lowercase_columns(field_values, config.column_field_types))
+        field_values.merge!(additional) if additional
+        doc = NestedHash.new.add(field_values)
         doc = parse_nested(doc, options) if options[:nest]
         doc = select_only_fields(doc, options[:only]) unless options[:only].nil?
         doc
@@ -37,14 +43,12 @@ module DataMagic
       end
 
       # row: a hash  (keys may be strings or symbols)
-      # valid_types: an array of allowed types
-      # field_types: hash field_name : type (float, integer, string)
+      # config: a config object
       # returns a hash where values have been coerced to the new type
       def map_field_types(row, config)
         valid_types = config.valid_types
-        field_types = config.column_field_types || {}
+        field_types = config.csv_column_field_types || {}
         null_value = config.null_value || null_value = 'NULL'
-
         mapped = {}
         row.each do |key, value|
           if value == null_value
@@ -112,7 +116,7 @@ module DataMagic
         when 0
           false
         else
-          !!value 
+          !!value
         end
       end
 
@@ -136,6 +140,7 @@ module DataMagic
       # returns a hash (which may be a subset of row) where keys are new_name
       #         with value of corresponding row[current_name]
       def map_field_names(row, new_fields, options = {})
+        puts "--- map_field_names"
         mapped = {}
         row.each do |key, value|
           fail ArgumentError, "column header missing for: #{value}" if key.nil?
@@ -143,10 +148,13 @@ module DataMagic
           if new_key
             value = value.to_f if new_key.include? "location"
             mapped[new_key] = value
+            puts "new_key: #{new_key}, value: #{value.inspect} #{value.class}"
           elsif options[:columns] == 'all'
             mapped[key] = value
+            puts "key: #{key}, value: #{value.inspect} #{value.class}"
           end
         end
+        puts "mapped: #{mapped}"
         mapped
       end
 

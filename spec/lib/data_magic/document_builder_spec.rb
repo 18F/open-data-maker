@@ -30,7 +30,7 @@ describe DataMagic::DocumentBuilder do
   context "with type mapping" do
     describe "integer" do
       before do
-        allow(config).to receive(:column_field_types).and_return(size: 'integer')
+        allow(config).to receive(:csv_column_field_types).and_return(size: 'integer')
       end
       subject {{ size: '45' }}
       let(:expected_document) {{ 'size' => 45}}
@@ -48,7 +48,7 @@ describe DataMagic::DocumentBuilder do
 
     describe "multiple types" do
       before do
-        allow(config).to receive(:column_field_types).and_return(
+        allow(config).to receive(:csv_column_field_types).and_return(
           population: 'integer', elevation: 'float')
       end
       subject {{ name: 'Smithville', population: '45', elevation: '20.5'  }}
@@ -60,7 +60,7 @@ describe DataMagic::DocumentBuilder do
 
     describe "float expressions" do
       before do
-        allow(config).to receive(:column_field_types).and_return(
+        allow(config).to receive(:csv_column_field_types).and_return(
           one: 'float', two: 'float', one_or_two:'float')
         allow(config).to receive(:dictionary).and_return(
           one_or_two: {
@@ -103,7 +103,7 @@ describe DataMagic::DocumentBuilder do
 
   describe "boolean expressions with integer inputs" do
     before do
-      allow(config).to receive(:column_field_types).and_return(
+      allow(config).to receive(:csv_column_field_types).and_return(
         one: 'integer', two: 'integer', one_or_two:'boolean')
       allow(config).to receive(:dictionary).and_return(
         one_or_two: {
@@ -128,7 +128,7 @@ describe DataMagic::DocumentBuilder do
 
   describe "boolean expressions with float inputs" do
     before do
-      allow(config).to receive(:column_field_types).and_return(
+      allow(config).to receive(:csv_column_field_types).and_return(
         one: 'float', two: 'float', one_or_two:'boolean')
       allow(config).to receive(:dictionary).and_return(
         one_or_two: {
@@ -167,7 +167,7 @@ describe DataMagic::DocumentBuilder do
 
   describe "integer expressions" do
     before do
-      allow(config).to receive(:column_field_types).and_return(
+      allow(config).to receive(:csv_column_field_types).and_return(
         one: 'integer', two: 'integer', one_or_two:'integer')
       allow(config).to receive(:dictionary).and_return(
         one_or_two: {
@@ -217,7 +217,7 @@ describe DataMagic::DocumentBuilder do
 
   describe "boolean expressions" do
     before do
-      allow(config).to receive(:column_field_types).and_return(
+      allow(config).to receive(:csv_column_field_types).and_return(
         accredited: 'boolean')
     end
 
