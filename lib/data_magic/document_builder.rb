@@ -121,16 +121,16 @@ module DataMagic
       # currently we just support 'or' operations on two columns
       def calculate(field_name, row, dictionary)
         item = dictionary[field_name.to_s] || dictionary[field_name.to_sym]
+        type = item['type'] || item[:type]
         fail "calculate: field not found in dictionary #{field_name.inspect}" if item.nil?
         expr = item['calculate'] || item[:calculate]
         fail ArgumentError, "expected to calculate #{field_name}" if expr.nil?
         vars = {}
         e = Expression.new(expr)
         e.variables.each do |name|
-          vars[name] = fix_field_type(item['type'] || item[:type],
-                                      row[name.to_sym])
+          vars[name] = fix_field_type(type, row[name.to_sym])
         end
-        e.evaluate(vars)
+        fix_field_type(type, e.evaluate(vars))
       end
 
       # row: a hash  (keys may be strings or symbols)
