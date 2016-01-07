@@ -109,7 +109,9 @@ module DataMagic
 
         # re-insert null fields that didn't get returned by ES
         query_body[:fields].each do |field|
-          found[field] ||= nil
+          if !found.has_key?(field)
+            found[field] = nil
+          end
         end
         found
       end
