@@ -27,7 +27,7 @@ describe Expression::Eval do
     end
   end
 
-  it "mutliple operands" do
+  it "multiple operands" do
     expect(
       eval.apply(parser.parse('f or f or t'), variables: values)
     ).to eq(1)
