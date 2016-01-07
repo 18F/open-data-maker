@@ -86,6 +86,10 @@ module DataMagic
       Config.logger
     end
 
+    def csv_column_type(column_name)
+      extract_csv_column_types[column_name.to_s]
+    end
+
     # fetches file configuration
     # add: whatever
     def additional_data_for_file(index)
@@ -177,6 +181,21 @@ module DataMagic
       @column_types
     end
 
+    # actually does what column_field_types is meant to do - creates a hash of CSV column
+    # names (strings) to types (as symbols).
+    # Access to this hash is done through Config#column_type(column_name)
+    # TODO: remove column_field_types
+    def extract_csv_column_types
+      if @csv_column_types.nil?
+        @csv_column_types = {}
+        dictionary.each do |_, info|
+          next if info['source'].nil?
+          type = info['type'] || "string"
+          @csv_column_types[info['source'].to_s] = type.to_s
+        end
+      end
+      @csv_column_types
+    end
 
     # field_mapping[column_name] = field_name
     def field_mapping

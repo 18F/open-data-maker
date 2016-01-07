@@ -13,14 +13,16 @@ module DataMagic
       # fields: column_name => field_name
       # config: DataMagic.Config instance for dictionary, column types, NULL
       def build(row, fields, config, options={}, additional=nil)
-        row = csv_row = row.to_hash
-        row = map_field_names(row, fields, options) unless fields.empty?
-        row = row.merge(calculated_fields(csv_row, config))
-        row = map_field_types(row, config)
-
-        row.merge!(lowercase_columns(row, config.column_field_types))
-        row.merge!(additional) if additional
-        doc = NestedHash.new.add(row)
+        csv_row = map_column_types(row.to_hash, config)
+        if fields.empty?
+          field_values = csv_row
+        else
+          field_values = map_field_names(csv_row, fields, options)
+        end
+        field_values.merge!(calculated_fields(csv_row, config))
+        field_values.merge!(lowercase_columns(field_values, config.column_field_types))
+        field_values.merge!(additional) if additional
+        doc = NestedHash.new.add(field_values)
         doc = parse_nested(doc, options) if options[:nest]
         doc = select_only_fields(doc, options[:only]) unless options[:only].nil?
         doc
@@ -40,9 +42,9 @@ module DataMagic
       # valid_types: an array of allowed types
       # field_types: hash field_name : type (float, integer, string)
       # returns a hash where values have been coerced to the new type
-      def map_field_types(row, config)
+      # TODO: move type validation to config load time instead
+      def map_column_types(row, config)
         valid_types = config.valid_types
-        field_types = config.column_field_types || {}
         null_value = config.null_value || null_value = 'NULL'
 
         mapped = {}
@@ -50,7 +52,7 @@ module DataMagic
           if value == null_value
             mapped[key] = nil
           else
-            type = field_types[key.to_sym] || field_types[key.to_s]
+            type = config.csv_column_type(key)
             if valid_types.include? type
               mapped[key] = fix_field_type(type, value, key)
             else
@@ -94,7 +96,7 @@ module DataMagic
                       value.to_i
                     when "lowercase_name"
                       value.to_s.downcase
-                    when 'boolean'
+                    when "boolean"
                       parse_boolean(value)
                     else # "string"
                       value.to_s
@@ -112,7 +114,7 @@ module DataMagic
         when 0
           false
         else
-          !!value 
+          !!value
         end
       end
 
