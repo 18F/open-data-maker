@@ -18,10 +18,12 @@ describe "DataMagic #search" do
     describe "as strings" do
       before (:all) do
         ENV['DATA_PATH'] = './no-data'
+        ENV['ALLOW_MISSING_YML'] = 'allow'
         DataMagic.init(load_now: false)
         num_rows, fields = DataMagic.import_csv(address_data)
       end
       after(:all) do
+        ENV['ALLOW_MISSING_YML'] = ''
         DataMagic.destroy
       end
 
@@ -89,7 +91,7 @@ describe "DataMagic #search" do
         end
       end
     end
-    
+
     describe "with mapping" do
       before (:all) do
         ENV['DATA_PATH']="./no-data"
@@ -117,11 +119,13 @@ describe "DataMagic #search" do
   describe "with numeric data" do
     before (:all) do
       ENV['DATA_PATH'] = './spec/fixtures/numeric_data'
+      ENV['ALLOW_MISSING_YML'] = 'allow'
       DataMagic.init(load_now: false)
       num_rows, fields = DataMagic.import_csv(address_data)
     end
     after(:all) do
         DataMagic.destroy
+        ENV['ALLOW_MISSING_YML'] = ''
     end
 
     it "can correctly compute filtered statistics" do
@@ -162,6 +166,7 @@ describe "DataMagic #search" do
     before (:all) do
       ENV['DATA_PATH'] = './spec/fixtures/geo_no_files'
       DataMagic.init(load_now: false)
+      ENV['ALLOW_MISSING_YML'] = 'allow'
       options = {}
       options[:fields] = {lat: 'location.lat',
                           lon: 'location.lon',
@@ -170,6 +175,7 @@ describe "DataMagic #search" do
     end
     after(:all) do
       DataMagic.destroy
+      ENV['ALLOW_MISSING_YML'] = ''
     end
 
     it "#search can find an attribute" do
