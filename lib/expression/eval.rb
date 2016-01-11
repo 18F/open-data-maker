@@ -7,13 +7,11 @@ class Expression
 
     # in Ruby 0 is 'truthy' but that's not what most people expect
     rule(:or => { :left => subtree(:left), :right => subtree(:right) }) do
-      result = left == 0 ? right : (left or right)
-      result.nil? ? 0 : result
+      left == 0 ? right : (left or right)
     end
 
     rule(:and => { :left => subtree(:left), :right => subtree(:right) }) do
-      result = left == 0 ? left : (left and right)
-      result.nil? ? 0 : result
+      left == 0 ? left : (left and right)
     end
   end
 end

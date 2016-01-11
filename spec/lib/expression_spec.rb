@@ -37,16 +37,22 @@ describe Expression do
       expect(Expression.new(expr).evaluate(values)).to eq(1)
     end
 
-    it "evaluates: 0 OR nil to be 0" do
+    it "evaluates: 0 OR nil to be nil" do
       expr = "t1 or t2"
       values = {t1:0, t2:nil}
+      expect(Expression.new(expr).evaluate(values)).to eq(nil)
+    end
+
+    it "evaluates: nil OR 0 to be 0" do
+      expr = "t1 or t2"
+      values = {t1:nil, t2:0}
       expect(Expression.new(expr).evaluate(values)).to eq(0)
     end
 
-    it "evaluates: nil OR nil to be 0" do
+    it "evaluates: nil OR nil to be nil" do
       expr = "t1 or t2"
       values = {t1:nil, t2:nil}
-      expect(Expression.new(expr).evaluate(values)).to eq(0)
+      expect(Expression.new(expr).evaluate(values)).to eq(nil)
     end
   end
 end
