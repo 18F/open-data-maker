@@ -20,8 +20,8 @@ describe "calculated columns" do
       results = result['results'].sort_by { |hash| hash['id'] }
       expect(results[0]).to eq('id' => 1, 'completion.rate.overall' => 0.16)
       expect(results[1]).to eq('id' => 2, 'completion.rate.overall' => 0.62)
-      expect(results[2]).to eq('id' => 3, 'completion.rate.overall' => 0)
-      expect(results[3]).to eq('id' => 4, 'completion.rate.overall' => 0)
+      expect(results[2]).to eq('id' => 3, 'completion.rate.overall' => nil)
+      expect(results[3]).to eq('id' => 4, 'completion.rate.overall' => nil)
       expect(results[4]).to eq('id' => 5, 'completion.rate.overall' => 0.91)
     end
   end

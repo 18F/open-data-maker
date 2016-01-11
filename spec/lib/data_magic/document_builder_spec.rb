@@ -103,7 +103,7 @@ describe DataMagic::DocumentBuilder do
 
       context "and zero or nil equals zero" do
         subject {{ one: '0.0', two: nil }}
-        let(:expected_document)  { { 'one' => 0.0, 'two' => nil, 'one_or_two' => 0.0 } }
+        let(:expected_document)  { { 'one' => 0.0, 'two' => nil, 'one_or_two' => nil } }
         it_correctly "creates a document"
       end
     end
