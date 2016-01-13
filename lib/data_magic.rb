@@ -47,8 +47,10 @@ module DataMagic
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
       end
       logger.info "s3cred = #{s3cred.inspect}"
-      ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
-      ::Aws.config[:region] = 'us-east-1'
+      if ENV['RACK_ENV'] != 'test'
+        ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
+      end
+        ::Aws.config[:region] = 'us-east-1'
       @s3 = ::Aws::S3::Client.new
       logger.info "@s3 = #{@s3.inspect}"
     end
