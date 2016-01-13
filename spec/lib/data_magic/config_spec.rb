@@ -46,19 +46,13 @@ describe DataMagic::Config do
     it "raises error if s3 errors" do
       ENV['DATA_PATH'] = 's3://mybucket'
       fake_s3 = class_spy("Fake Aws::S3::Client")
-      fake_get_object_response = double(
-        "S3 response",
-        body: '',
-        isOK: false,
-        status: 500
-      )
 
       allow(fake_s3).to receive(:get_object)
         .with(bucket: 'mybucket', key: 'data.yaml')
-        .and_return(fake_get_object_response)
+        .and_raise(RuntimeError)
       expect {
         DataMagic::Config.new(s3: fake_s3)
-      }.to raise_error(IOError, "could not read data.yaml from bucket: mybucket, status: 500")
+      }.to raise_error(RuntimeError)
     end
 
   end

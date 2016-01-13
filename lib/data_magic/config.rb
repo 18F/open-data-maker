@@ -317,13 +317,15 @@ module DataMagic
     # nil if not found, otherwise raise exception
     def read_from_s3(bucket, key)
       result = nil
-      response = @s3.get_object(bucket: bucket, key: key)
-      if response.isOK
+      begin
+        response = @s3.get_object(bucket: bucket, key: key)
         result = response.body.read
-      else
-        unless response.status == 404  # return nil for not found
-          raise IOError, "could not read #{key} from bucket: #{bucket}, status: #{response.status}"
-        end
+      rescue Aws::S3::Errors::NoSuchKey
+        # we don't want to raise this one, might be expected
+        result = nil
+      rescue => e
+        logger.debug "read_from_s3 failed: #{bucket} #{key} with #{e.class}:#{e.message}"
+        raise e
       end
       result
     end
@@ -376,7 +378,7 @@ module DataMagic
       raw ||= read_path(File.join(path, "data.yml"))
       raw ||= '{}' if ENV['ALLOW_MISSING_YML']
       if raw.nil?
-        fail "No data.y?ml found at #{path}. Did you mean to define ALLOW_MISSING_YML environment variable?"
+        raise IOError, "No data.y?ml found at #{path}. Did you mean to define ALLOW_MISSING_YML environment variable?"
       end
 
       YAML.load(raw)
