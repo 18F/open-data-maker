@@ -177,5 +177,25 @@ describe 'API errors', type: 'feature' do
       # response, which it shouldn't, because that doesn't matter.
       it_correctly "returns an error"
     end
+    context "when a zipcode is supplied" do
+
+      context "when an invalid zipcode is provided" do
+        let(:params) { { "zip" => '00002' } }
+        let(:expected_errors) {
+          [{
+            error: 'zipcode_error',
+            message: "The provided zipcode, '00002', is not valid.",
+            input: '00002',
+            parameter: 'zip'
+          }]
+        }
+        it_correctly "returns an error"
+      end
+
+      context "when a valid zipcode is provided" do
+        let(:params) { { "zip" => '94607' } }
+        it_correctly "does not return an error"
+      end
+    end
   end
 end

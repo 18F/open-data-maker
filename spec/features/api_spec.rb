@@ -108,8 +108,9 @@ describe 'api', type: 'feature' do
         end
         let(:expected_results) do
           [
-            { "state" => "IL", "name" => "Chicago", "population" => 2695598,
-              "land_area" => 227.635, # later we'll make this a float
+            { "state" => "IL", "id"=>"1714000", "code"=>"00428803",
+              "name" => "Chicago", "population" => 2695598,
+              "area"=> { "land" => 227.635, "water" => 6.479 },
               "location" => { "lat" => 41.837551, "lon" => -87.681844 }
             }
           ]
@@ -140,8 +141,8 @@ describe 'api', type: 'feature' do
 
           expect(result.length).to eq 2
 
-          expect(result[0]).to eq %w(state name population land_area location.lat location.lon)
-          expect(result[1]).to eq %w(IL Chicago 2695598 227.635 41.837551 -87.681844)
+          expect(result[0]).to eq %w(id code name state population area.land area.water location.lat location.lon)
+          expect(result[1]).to eq %w(1714000 00428803 Chicago IL 2695598 227.635 6.479 41.837551 -87.681844)
         end
       end
 
@@ -156,12 +157,13 @@ describe 'api', type: 'feature' do
 
       describe "with float" do
         before do
-          get '/v1/cities?land_area=302.643'
+          get '/v1/cities?area.land=302.643'
         end
         let(:expected_results) do
-          [ { "state" => "NY", "name" => "New York",
-              "population" => 8175133, "land_area" => 302.643,
-              "location" => { "lat" => 40.664274, "lon" => -73.9385 } } ]
+          [ { "area"=> { "land" => 302.643, "water" => 165.841 },
+              "code"=>"02395220", "name"=>"New York",
+              "location" => { "lat" => 40.664274, "lon" => -73.9385 },
+              "state"=>"NY", "id"=>"3651000", "population"=>8175133 } ]
         end
 
         it "responds with json" do
@@ -176,8 +178,9 @@ describe 'api', type: 'feature' do
           get '/v1/cities?_zip=94132&_distance=30mi'
         end
         let(:expected_results) do
-          [{"state"=>"CA", "name"=>"Oakland", "population"=>390724,
-            "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}} ]
+          [{"state"=>"CA", "id"=>"0653000", "code"=>"02411292", "name"=>"Oakland",
+            "population"=>390724, "area"=>{"land"=>55.786,"water"=>22.216},
+            "location"=>{"lat"=>37.769857, "lon"=>-122.22564}} ]
         end
 
         it "can find an attribute from an imported file" do
@@ -341,6 +344,67 @@ describe 'api', type: 'feature' do
       end
     end
   end
+  
+  describe "With residents CSV data" do
+    before do
+      ENV['DATA_PATH'] = './spec/fixtures/numeric_data'
+      DataMagic.init(load_now: false)
+      num_rows, fields = DataMagic.import_csv(address_data)
+    end
+
+    after do
+      DataMagic.destroy
+    end
+
+    let(:all_aggregs) do
+      { "aggregations" => {
+          "age"=>{"count"=>2, "min"=>14.0, "max"=>70.0, "avg"=>42.0, "sum"=>84.0, "sum_of_squares"=>5096.0, "variance"=>784.0, "std_deviation"=>28.0, "std_deviation_bounds"=>{"upper"=>98.0, "lower"=>-14.0}},
+          "height"=>{"count"=>2, "min"=>2.0, "max"=>142.0, "avg"=>72.0, "sum"=>144.0, "sum_of_squares"=>20168.0, "variance"=>4900.0, "std_deviation"=>70.0, "std_deviation_bounds"=>{"upper"=>212.0, "lower"=>-68.0}}
+        }
+      }
+    end
+
+    let(:max_avg_aggregs) do
+      { "aggregations" => {
+          "age"    => { "max" => 70.0,  "avg" => 42.0},
+          "height" => { "max" => 142.0, "avg" => 72.0}
+        }
+      }
+    end
+
+    let(:stats_envelope) do
+      { "metadata" => {      "total" => 2,
+                             "page" => 0,
+                             "per_page" => DataMagic::DEFAULT_PAGE_SIZE
+                      },
+        "results" => []
+      }
+    end
+
+    it "/stats returns the correct results for Springfield residents" do
+      get '/v1/cities/stats?city=Springfield&_fields=address,age,height&_metrics=max,avg'
+      expect(last_response).to be_ok
+      json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
+      expect(json_response).to eq(stats_envelope.merge(max_avg_aggregs))
+    end
+
+    it "/stats returns all metrics when none are specified" do
+      get '/v1/cities/stats?city=Springfield&_fields=address,age,height'
+      expect(last_response).to be_ok
+      json_response["results"] = json_response["results"].sort_by { |k| k["age"] }
+
+      age_expected = stats_envelope.merge(all_aggregs)["aggregations"]["age"]
+      expect(json_response["aggregations"]["age"]["std_deviation"]).to eq(age_expected["std_deviation"])
+
+      height_expected = stats_envelope.merge(all_aggregs)["aggregations"]["height"]
+      expect(json_response["aggregations"]["height"]["std_deviation"]).to eq(height_expected["std_deviation"])
+    end
+
+    it "/stats requires fields option" do
+      get '/v1/cities/stats?city=Springfield&_metrics=max,avg'
+      expect(last_response.status).to eq(400)
+    end
+  end
 
   describe "deprecated option syntax" do
     before do
@@ -357,9 +421,9 @@ describe 'api', type: 'feature' do
     it "still works" do
       get '/v1/cities?zip=94132&distance=30mi'
       expected_results = [
-        {"state"=>"CA", "name"=>"Oakland", "population"=>390724,
-          "land_area"=>55.786, "location"=>{"lat"=>37.769857, "lon"=>-122.22564}}
-      ]
+        {"area"=>{"land"=>55.786, "water"=>22.216}, "code"=>"02411292", "name"=>"Oakland", 
+          "location"=>{"lon"=>-122.22564, "lat"=>37.769857}, "state"=>"CA", "id"=>"0653000", 
+          "population"=>390724}      ]
       expect(last_response).to be_ok
       json_response["results"] = json_response["results"].sort_by { |k| k["name"] }
       expect(json_response["results"]).to eq(expected_results)

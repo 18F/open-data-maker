@@ -28,6 +28,7 @@ GEM
       descendants_tracker (~> 0.0.4)
       ice_nine (~> 0.11.0)
       thread_safe (~> 0.3, >= 0.3.1)
+    blankslate (2.1.2.4)
     builder (3.2.2)
     byebug (5.0.0)
       columnize (= 0.9.0)
@@ -143,6 +144,8 @@ GEM
       padrino-core (= 0.12.5)
     padrino-support (0.12.5)
       activesupport (>= 3.1)
+    parslet (1.7.1)
+      blankslate (>= 2.0, <= 4.0)
     polyglot (0.3.5)
     pry (0.10.1)
       coderay (~> 1.1.0)
@@ -232,6 +235,7 @@ DEPENDENCIES
   newrelic_rpm
   oj
   padrino (= 0.12.5)
+  parslet
   pry
   pry-byebug
   puma
@@ -244,4 +248,4 @@ DEPENDENCIES
   stretchy
 
 BUNDLED WITH
-   1.10.6
+   1.10.5

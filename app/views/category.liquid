@@ -1,0 +1,54 @@
+<section>
+  <div class="header">
+    <img class="logo" style="float: left" src="https://18f.gsa.gov/assets/images/logo-18f.png">
+    <br/>
+    <h1 class="title">{{ title }}</h1>
+    <div style="clear: both"></div>
+  </div>
+  </br>
+</section>
+
+<h2 class="bottom-margin">Data Details for the <span id="category-name"></span> Category</h2>
+
+<div class="category">
+  <div id="category-details" class="category"></div>
+  <div id="field-details" class="category"></div>
+</div>
+
+</br>
+<a href="/">Back to the list of Categories</a>
+
+<script>
+  var category_entry = {{ category_entry }} ;
+  var field_details = {{ field_details }} ;
+
+  var category_details_div = "<p>" + category_entry.description + "</p>" +
+    "<ul class=\"category__fields\">" +
+    "<hr/>";
+
+  var field_details_div = "" ;
+  category_entry.fields.forEach(function (field) {
+    var field_description = field_details[field].description ;
+    var field_type = field_details[field].type ;
+    if ( field_type ) {
+      field_type = "[" + field_type + "]" ;
+    }
+    else {
+      field_type = "" ;
+    }
+
+    field_details_div = field_details_div +
+      "<li class=\"category__fields\">" +
+        "<div class=\"category__field-name\">" + field +
+          "<span class=\"category__field-type\">" + field_type + "</span>" +
+          "</div>" +
+        "<div>" + field_description + "</div>" +
+        "<hr/>" +
+      "</li>" +
+     "</ul>";
+  });
+
+  document.getElementById("category-name").innerHTML = category_entry.title;
+  document.getElementById("category-details").innerHTML = category_details_div;
+  document.getElementById("field-details").innerHTML = field_details_div;
+</script>
