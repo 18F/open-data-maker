@@ -31,23 +31,30 @@ describe DataMagic::Config do
       fake_s3 = class_spy("Fake Aws::S3::Client")
       fake_get_object_response = double(
         "S3 response",
-        body: StringIO.new({ 'index' => 'fake-index' }.to_yaml)
+        body: StringIO.new({ 'index' => 'fake-index' }.to_yaml),
+        isOK: true,
+        status: 200
       )
-      fake_list_objects_response = double(
-        "S3 response",
-        contents: [double("item", key: "data.yaml")]
-      )
-
       allow(fake_s3).to receive(:get_object)
         .with(bucket: 'mybucket', key: 'data.yaml')
         .and_return(fake_get_object_response)
-      allow(fake_s3).to receive(:list_objects)
-        .with(bucket: 'mybucket')
-        .and_return(fake_list_objects_response)
       config = DataMagic::Config.new(s3: fake_s3)
       expect(config.s3).to eq(fake_s3)
       expect(config.data["index"]).to eq("fake-index")
     end
+
+    it "raises error if s3 errors" do
+      ENV['DATA_PATH'] = 's3://mybucket'
+      fake_s3 = class_spy("Fake Aws::S3::Client")
+
+      allow(fake_s3).to receive(:get_object)
+        .with(bucket: 'mybucket', key: 'data.yaml')
+        .and_raise(RuntimeError)
+      expect {
+        DataMagic::Config.new(s3: fake_s3)
+      }.to raise_error(RuntimeError)
+    end
+
   end
 
   context "create" do
@@ -80,17 +87,17 @@ describe DataMagic::Config do
         "version" => "cities100-2010",
         "index" => "city-data", "api" => "cities",
         "files" => [{ "name" => "cities100.csv" }],
-        "data_path" => "./sample-data",
         "options" => {:search=>"dictionary_only"},
-        "unique" => ["name"]
+        "unique" => ["name"],
+        "data_path" => "./sample-data"
       }
       expect(config.data.keys).to include('dictionary')
       dictionary = config.data.delete 'dictionary'
 
       expect(dictionary.keys.sort).to eq %w(id code name state population
-        location.lat location.lon area.land area.water).sort
+        location.lat location.lon land_area area.water).sort
       categories = config.data.delete 'categories'
-      expect(categories.keys.sort).to eq %w(general geographic).sort
+      expect(categories.keys.sort).to eq %w(general general2 general3 general4 general5 geographic).sort
       expect(config.data).to eq(default_config)
     end
 

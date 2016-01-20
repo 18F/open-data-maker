@@ -2,14 +2,33 @@ module DataMagic
   module ErrorChecker
     class << self
       def check(params, options, config)
-        report_nonexistent_params(params, config) +
+        report_required_params_absent(options) + 
+          report_nonexistent_params(params, config) +
           report_nonexistent_operators(params) +
           report_nonexistent_fields(options[:fields], config) +
           report_bad_range_argument(params) +
-          report_wrong_field_type(params, config)
+          report_wrong_field_type(params, config) +
+          report_wrong_zip(params)
       end
 
       private
+
+      def report_required_params_absent(options)
+        if options[:command] == 'stats' && options[:fields].length == 0
+          [build_error(error: 'invalid_or_incomplete_parameters', input: options[:command])]
+        else
+          []
+        end
+      end
+
+      def report_wrong_zip(params)
+        return [] if !params["zip"] || Zipcode.valid?(params["zip"])
+        [build_error(
+          error: 'zipcode_error',
+          parameter: "zip",
+          input: params['zip'].to_s
+        )]
+      end
 
       def report_nonexistent_params(params, config)
         return [] unless config.dictionary_only_search?
@@ -66,6 +85,8 @@ module DataMagic
       def build_error(opts)
         opts[:message] =
           case opts[:error]
+          when 'invalid_or_incomplete_parameters'
+            "The command #{opts[:input]} requires a fields parameter."
           when 'parameter_not_found'
             "The input parameter '#{opts[:input]}' is not known in this dataset."
           when 'field_not_found'
@@ -76,6 +97,8 @@ module DataMagic
             "The parameter '#{opts[:parameter]}' expects a value of type #{opts[:expected_type]}, but received '#{opts[:input]}' which is a value of type #{opts[:input_type]}."
           when 'range_format_error'
             "The range '#{opts[:input]}' supplied to parameter '#{opts[:parameter]}' isn't in the correct format."
+          when 'zipcode_error'
+            "The provided zipcode, '#{opts[:input]}', is not valid."
           end
         opts
       end

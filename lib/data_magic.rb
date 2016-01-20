@@ -47,7 +47,9 @@ module DataMagic
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
       end
       logger.info "s3cred = #{s3cred.inspect}"
-      ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
+      if ENV['RACK_ENV'] != 'test'
+        ::Aws.config[:credentials] = ::Aws::Credentials.new(s3cred['access_key'], s3cred['secret_key'])
+      end
       ::Aws.config[:region] = 'us-east-1'
       @s3 = ::Aws::S3::Client.new
       logger.info "@s3 = #{@s3.inspect}"
@@ -76,12 +78,20 @@ module DataMagic
       body: query_body
     }
 
+    # Per https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html:
+    # "the search_type and the query_cache must be passed as query-string parameters"
+    if options[:command] == 'stats'
+      full_query.merge! :search_type => 'count'
+    end
+
     logger.info "FULL_QUERY: #{full_query.inspect}"
 
     time_start = Time.now.to_f
     result = client.search full_query
+
     search_time = Time.now.to_f - time_start
     logger.info "ES query time (ms): #{result["took"]} ; Query fetch time (s): #{search_time} ; result: #{result.inspect[0..500]}"
+
     hits = result["hits"]
     total = hits["total"]
     results = []
@@ -91,13 +101,20 @@ module DataMagic
     else
       # we're getting a subset of fields...
       results = hits["hits"].map do |hit|
-        found = hit["fields"]
+        found = hit.fetch("fields", {})
         # each result looks like this:
         # {"city"=>["Springfield"], "address"=>["742 Evergreen Terrace"]}
 
         found.keys.each { |key| found[key] = found[key][0] }
         # now it should look like this:
-        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace
+        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace}
+
+        # re-insert null fields that didn't get returned by ES
+        query_body[:fields].each do |field|
+          if !found.has_key?(field)
+            found[field] = nil
+          end
+        end
         found
       end
     end
@@ -113,10 +130,28 @@ module DataMagic
     end
 
     # assemble a simpler json document to return
+    simple_result =
     {
       "metadata" => metadata,
       "results" => 	results
     }
+
+    if options[:command] == 'stats'
+      # Remove metrics that weren't requested.
+      aggregations = result['aggregations']
+      aggregations.each do |f_name, values|
+        if options[:metrics] && options[:metrics].size > 0
+          aggregations[f_name] = values.reject { |k, v| !(options[:metrics].include? k) }
+        else
+          # Keep everything is no metric list is provided
+          aggregations[f_name] = values
+        end
+      end
+
+      simple_result.merge!({"aggregations" => aggregations})
+    end
+
+    simple_result
   end
 
   private

@@ -8,7 +8,7 @@ describe DataMagic::DocumentBuilder do
   let(:fields)     { {} }
   let(:options)    { {} }
   let(:additional) { {} }
-  let(:document)   { DataMagic::DocumentBuilder.parse_row(subject, fields, config, options, additional) }
+  let(:document)   { DataMagic::DocumentBuilder.build(subject, fields, config, options, additional) }
 
   RSpec.configure do |c|
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
@@ -27,10 +27,11 @@ describe DataMagic::DocumentBuilder do
       it_correctly "creates a document"
     end
   end
+
   context "with type mapping" do
     describe "integer" do
       before do
-        allow(config).to receive(:column_field_types).and_return(size: 'integer')
+        allow(config).to receive(:csv_column_type).with(:size).and_return('integer')
       end
       subject {{ size: '45' }}
       let(:expected_document) {{ 'size' => 45}}
@@ -39,7 +40,7 @@ describe DataMagic::DocumentBuilder do
 
     describe "with name type" do
       before do
-        config.dictionary =  {city: { source: 'CITY', type: 'name' }}
+        config.dictionary = { city: { source: 'CITY', type: 'name' } }
       end
       subject {{ city: 'New York' }}
       let(:expected_document) {{ 'city' => 'New York', '_city' => 'new york'}}
@@ -48,8 +49,9 @@ describe DataMagic::DocumentBuilder do
 
     describe "multiple types" do
       before do
-        allow(config).to receive(:column_field_types).and_return(
-          population: 'integer', elevation: 'float')
+        allow(config).to receive(:csv_column_type).with(:population).and_return('integer')
+        allow(config).to receive(:csv_column_type).with(:elevation).and_return('float')
+        allow(config).to receive(:csv_column_type).with(:name).and_return('string')
       end
       subject {{ name: 'Smithville', population: '45', elevation: '20.5'  }}
       let(:expected_document) {{ 'name' => 'Smithville',
@@ -60,8 +62,9 @@ describe DataMagic::DocumentBuilder do
 
     describe "float expressions" do
       before do
-        allow(config).to receive(:column_field_types).and_return(
-          one: 'float', two: 'float', one_or_two:'float')
+        allow(config).to receive(:csv_column_type).with(:one).and_return('float')
+        allow(config).to receive(:csv_column_type).with(:two).and_return('float')
+        allow(config).to receive(:csv_column_type).with(:one_or_two).and_return('float')
         allow(config).to receive(:dictionary).and_return(
           one_or_two: {
             calculate: 'one or two',
@@ -74,7 +77,7 @@ describe DataMagic::DocumentBuilder do
         let(:expected_document)  { { 'one' => 0.12, 'two' => nil, 'one_or_two' => 0.12  } }
         it "reports calculated fields" do
           expect(
-            DataMagic::DocumentBuilder.calculated_fields(subject, config)
+            DataMagic::DocumentBuilder.send(:calculated_fields,subject, config)
           ).to eq('one_or_two' => 0.12)
         end
         it_correctly "creates a document"
@@ -98,8 +101,67 @@ describe DataMagic::DocumentBuilder do
         it_correctly "creates a document"
       end
 
+      context "and zero or nil equals zero" do
+        subject {{ one: '0.0', two: nil }}
+        let(:expected_document)  { { 'one' => 0.0, 'two' => nil, 'one_or_two' => nil } }
+        it_correctly "creates a document"
+      end
     end
   end
+
+  describe "boolean expressions with integer inputs" do
+    before do
+      allow(config).to receive(:csv_column_type).with(:one).and_return('integer')
+      allow(config).to receive(:csv_column_type).with(:two).and_return('integer')
+      allow(config).to receive(:csv_column_type).with(:one_or_two).and_return('boolean')
+      allow(config).to receive(:dictionary).and_return(
+        one_or_two: {
+          calculate: 'one or two',
+          type: 'boolean',
+          description: 'something'
+        })
+    end
+
+    context "'0 or 33' evaluate as true" do
+      subject {{ one: 0, two: 33 }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 33, 'one_or_two' => true } }
+      it_correctly "creates a document"
+    end
+
+    context "0 evaluates as false" do
+      subject {{ one: 0, two: 0 }}
+      let(:expected_document)  { { 'one' => 0, 'two' => 0, 'one_or_two' => false } }
+      it_correctly "creates a document"
+    end
+  end
+
+  describe "boolean expressions with float inputs" do
+    before do
+      allow(config).to receive(:csv_column_type).with(:one).and_return('float')
+      allow(config).to receive(:csv_column_type).with(:two).and_return('float')
+      allow(config).to receive(:csv_column_type).with(:one_or_two).and_return('boolean')
+      allow(config).to receive(:dictionary).and_return(
+        one_or_two: {
+          calculate: 'one or two',
+          type: 'boolean',
+          description: 'something'
+        })
+    end
+
+    context "'0.0 or 33.0' evaluate as true" do
+      subject {{ one: 0.0, two: 33.0 }}
+      let(:expected_document)  { { 'one' => 0.0, 'two' => 33.0, 'one_or_two' => true } }
+      it_correctly "creates a document"
+    end
+
+    context "0.0 evaluates as false" do
+      subject {{ one: 0.0, two: 0.0 }}
+      let(:expected_document)  { { 'one' => 0.0, 'two' => 0.0, 'one_or_two' => false } }
+      it_correctly "creates a document"
+    end
+  end
+
+
 
   context "with column name mapping" do
     before do
@@ -115,8 +177,9 @@ describe DataMagic::DocumentBuilder do
 
   describe "integer expressions" do
     before do
-      allow(config).to receive(:column_field_types).and_return(
-        one: 'integer', two: 'integer', one_or_two:'integer')
+      allow(config).to receive(:csv_column_type).with(:one).and_return('integer')
+      allow(config).to receive(:csv_column_type).with(:two).and_return('integer')
+      allow(config).to receive(:csv_column_type).with(:one_or_two).and_return('integer')
       allow(config).to receive(:dictionary).and_return(
         one_or_two: {
           calculate: 'one or two',
@@ -163,4 +226,21 @@ describe DataMagic::DocumentBuilder do
     end
   end
 
+  describe "boolean expressions" do
+    before do
+      allow(config).to receive(:csv_column_type).with(:accredited).and_return('boolean')
+    end
+
+    context "the value is the string 'true'" do
+      subject {{ accredited: 'true'}}
+      let(:expected_document) {{ 'accredited' => true }}
+      it_correctly "creates a document"
+    end
+
+    context "the value is the string 'false'" do
+      subject {{ accredited: 'false'}}
+      let(:expected_document) {{ 'accredited' => false }}
+      it_correctly "creates a document"
+    end
+  end
 end

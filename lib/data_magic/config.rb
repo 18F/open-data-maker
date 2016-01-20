@@ -2,6 +2,7 @@ require_relative '../data_magic.rb'
 
 module DataMagic
   require_relative 'example.rb'
+  require_relative 'category.rb'
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
                 :null_value, :file_config
@@ -51,6 +52,14 @@ module DataMagic
       @examples
     end
 
+    def categories
+      data['categories']
+    end
+
+    def category_by_id id
+      Category.new(id).assemble
+    end
+
     def self.init(s3 = nil)
       logger.info "Config.init #{s3.inspect}"
       @s3 = s3
@@ -75,6 +84,10 @@ module DataMagic
 
     def logger
       Config.logger
+    end
+
+    def csv_column_type(column_name)
+      extract_csv_column_types[column_name.to_s]
     end
 
     # fetches file configuration
@@ -168,6 +181,21 @@ module DataMagic
       @column_types
     end
 
+    # actually does what column_field_types is meant to do - creates a hash of CSV column
+    # names (strings) to types (as symbols).
+    # Access to this hash is done through Config#column_type(column_name)
+    # TODO: remove column_field_types
+    def extract_csv_column_types
+      if @csv_column_types.nil?
+        @csv_column_types = {}
+        dictionary.each do |_, info|
+          next if info['source'].nil?
+          type = info['type'] || "string"
+          @csv_column_types[info['source'].to_s] = type.to_s
+        end
+      end
+      @csv_column_types
+    end
 
     # field_mapping[column_name] = field_name
     def field_mapping
@@ -247,24 +275,10 @@ module DataMagic
     # return whether the current config was new and required an update
     def update_indexed_config
       updated = false
-      old_config = nil
       index_name = scoped_index_name
-      logger.info "looking for: #{index_name}"
-      index_exists = false
-      if DataMagic.client.indices.exists? index: index_name
-        index_exists = true
-        begin
-          response = DataMagic.client.get index: index_name, type: 'config', id: 1
-          old_config = response["_source"]
-        rescue Elasticsearch::Transport::Transport::Errors::NotFound
-          logger.debug "no prior index configuration"
-        end
-      end
-      logger.debug "old config version (from es): #{(old_config.nil? ? old_config : old_config['version']).inspect}"
-      logger.debug "new config version (from data.yaml): #{@data['version'].inspect}"
-      if old_config.nil? || old_config["version"] != @data["version"]
+      if index_needs_update?
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
-        DataMagic.client.indices.delete index: index_name if index_exists
+        DataMagic.client.indices.delete index: index_name if index_exists?
         DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
         DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
         updated = true
@@ -272,6 +286,67 @@ module DataMagic
       updated
     end
 
+
+    def index_exists?(index_name=nil)
+      index_name ||= scoped_index_name
+      logger.info "looking for: #{index_name}"
+      DataMagic.client.indices.exists? index: index_name
+    end
+
+
+    def index_needs_update?(index_name=nil)
+      index_name ||= scoped_index_name
+      old_config = nil
+      if index_exists?(index_name)
+        begin
+          response = DataMagic.client.get index: index_name, type: 'config', id: 1
+          logger.debug "+-- DM index exists -- #{response.inspect}"
+          old_config = response["_source"]
+        rescue Elasticsearch::Transport::Transport::Errors::NotFound
+          logger.debug "no prior index configuration"
+        end
+      end
+      logger.debug "old config version (from es): #{(old_config.nil? ? old_config : old_config['version']).inspect}"
+      logger.debug "new config version (from data.yaml): #{@data['version'].inspect}"
+
+      old_config.nil? || old_config["version"] != @data["version"]
+    end
+
+    # read from the key,
+    # return contents or...
+    # nil if not found, otherwise raise exception
+    def read_from_s3(bucket, key)
+      result = nil
+      begin
+        response = @s3.get_object(bucket: bucket, key: key)
+        result = response.body.read
+      rescue Aws::S3::Errors::NoSuchKey
+        # we don't want to raise this one, might be expected
+        result = nil
+      rescue => e
+        logger.debug "read_from_s3 failed: #{bucket} #{key} with #{e.class}:#{e.message}"
+        raise e
+      end
+      result
+    end
+
+    # read local file and return content
+    # if not found, return nil
+    # any other failure, raise exception
+    def read_path_local(path)
+      result = nil
+      begin
+        result = File.read(path)
+      rescue => e
+        if e.message.include? "No such file or directory"
+          result = nil
+        else
+          logger.error "read_path_local failed: #{path} with #{e.class}:#{e.message}"
+          raise e
+        end
+      end
+      result
+    end
 
     # reads a file or s3 object, returns a string
     # path follows URI pattern
@@ -281,47 +356,31 @@ module DataMagic
     #   s3://bucket_name
     #   a local path like: './data'
     def read_path(path)
+      result = nil
       uri = URI(path)
       scheme = uri.scheme
       case scheme
         when nil
-          File.read(uri.path)
+          result = read_path_local(uri.path)
         when "s3"
           key = uri.path
           key[0] = ''  # remove initial /
-          response = @s3.get_object(bucket: uri.hostname, key: key)
-          response.body.read
+          result = read_from_s3(uri.hostname, key)
         else
           raise ArgumentError, "unexpected scheme: #{scheme}"
       end
-    end
-
-    def file_list(path)
-      uri = URI(path)
-      scheme = uri.scheme
-      case scheme
-        when nil
-          Dir.glob("#{path}/*").map { |file| File.basename file }
-        when "s3"
-          logger.info "bucket: #{uri.hostname}"
-          response = @s3.list_objects(bucket: uri.hostname)
-          logger.info "response: #{response.inspect[0..255]}"
-          response.contents.map { |item| item.key }
-      end
-    end
-
-    def data_file_name(path)
-      ['data.yml', 'data.yaml'].find { |file| file_list(path).include? file }
+      result
     end
 
     def load_yaml(path = nil)
       logger.info "load_yaml: #{path}"
-      file = data_file_name(path)
-      if file.nil? and not ENV['ALLOW_MISSING_YML']
-        logger.warn "No data.y?ml found; using default options"
+      raw = read_path(File.join(path, "data.yaml"))
+      raw ||= read_path(File.join(path, "data.yml"))
+      raw ||= '{}' if ENV['ALLOW_MISSING_YML']
+      if raw.nil?
+        raise IOError, "No data.y?ml found at #{path}. Did you mean to define ALLOW_MISSING_YML environment variable?"
       end
 
-      raw = file ? read_path(File.join(path, file)) : '{}'
       YAML.load(raw)
     end
 

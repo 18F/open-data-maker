@@ -12,18 +12,65 @@ options:
   search: dictionary_only
 
 dictionary:
-  state: USPS
+  id:
+    source: GEOID
+    description: >
+      Geographic Identifier - fully concatenated geographic code (State FIPS and
+      County FIPS). The Census Bureau and other state and federal agencies are
+      responsible for assigning geographic identifiers, or GEOIDs, to geographic
+      entities to facilitate the organization, presentation, and
+      exchange of geographic and statistical data. GEOIDs are numeric codes that
+      uniquely identify all administrative/legal and statistical geographic areas for
+      which the Census Bureau tabulates data. From Alaska, the largest state,
+      to the smallest census block in New York City, every geographic area
+      has a unique GEOID. Data users rely on GEOIDs to join the appropriate
+      demographic data from censuses and surveys, such as the
+      American Community Survey (ACS), to various levels of geography for data
+      analysis, interpretation and mapping.
+  code:
+    source: ANSICODE
+    description: >
+      American National Standards Institute codes (ANSI codes)
+      are standardized numeric or alphabetic codes issued by the American
+      National Standards Institute (ANSI) to ensure uniform identification of
+      geographic entities through all federal government agencies.
   name:
     source: NAME
+    description: The name of the city
     type: literal
+  state:
+    source: USPS
+    description: Two letter state abbreviation
   population:
     source: POP10
+    description: City population from 2010 Census data
     type: integer
   location.lat: INTPTLAT
   location.lon: INTPTLONG
-  land_area:
+  area.land:
+    description: Land Area (square miles)
     source: ALAND_SQMI
     type: float
+  area.water:
+    description: Water Area (square miles)
+    source: AWATER_SQMI
+    type: float
+
+categories:
+  general:
+    title: General
+    description: >
+      general information about the city, including standard
+      identifiers and actual census summary data about the population of the city.
+    fields: [id, code, name, state, population]
+  geographic:
+    title: Geographic
+    description: >
+      Geographic characteristics of the area. These are created for
+      statistical purposes only.  Depiction and designation for statistical
+      purposes does not constitute a determination of jurisdictional authority
+      or rights of ownership or entitlement.
+    fields: [location, area.land, area.water]
 
 files:
   - name: cities100.csv

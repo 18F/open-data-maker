@@ -1,0 +1,37 @@
+---
+version: Aug6-2015-08-10-23:48-0600
+api: fakeschool
+index: fakeschool-data
+unique:
+- id
+options:
+  limit_files: 1
+  limit_rows: 100
+
+dictionary:
+  id:
+    source: UNITID
+    type: integer
+    description: Unit ID for institution
+  school.name:
+    source: INSTNM
+    description: Institution name
+  integer1:
+    source: INT1
+    type: integer
+  integer2:
+    source: INT2
+    type: integer
+  integer3:
+    source: INT3
+    type: integer
+  integer4:
+    source: INT4
+    type: integer
+  summarybool:
+    calculate: INT1 or INT2 or INT3 or INT4
+    type: boolean
+    description: are any of the unparsed booleans true?
+
+files:
+  - name: schools.csv

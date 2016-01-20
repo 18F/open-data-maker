@@ -1,4 +1,12 @@
-<h1>{{ title }}</h1>
+<section>
+  <div class="header">
+    <img class="logo" style="float: left" src="https://18f.gsa.gov/assets/images/logo-18f.png">
+    <br/>
+    <h1 class="title">{{ title }}</h1>
+    <div style="clear: both"></div>
+  </div>
+  </br>
+</section>
 
 <h2>API endpoints</h2>
 
@@ -8,12 +16,37 @@
 {% endfor %}
 </ul>
 
- {% if examples.size > 0 %}
-<h2>Examples</h2>
+{% if examples.size > 0 %}
+  <h2>Examples</h2>
 
-<ul>
-{% for ex in examples %}
-  <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
-{% endfor %}
-</ul>
+  <ul>
+  {% for ex in examples %}
+    <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
+  {% endfor %}
+  </ul>
 {% endif %}
+
+<h2 class="bottom-margin">Browse Data Details by Category</h2>
+<div class="categories">
+  <div id="categories-list" class="categories__column"></div>
+</div>
+
+<script>
+  var categories = {{ categories }} ;
+  if (categories === null)
+    var oneColumn = "Sorry, no categories have been added yet.";
+  else {
+    var oneColumn = "";
+    for (var i in categories) {
+      oneColumn = oneColumn +
+        "<div class=\"category\">" +    // put box around category block
+        "<a href=\"/category/" + i + "\">" +    // make whole div into a link
+          "<div class=\"category__name\">" + categories[i].title + "</div>" +
+          "<p>" + categories[i].description + "</p>" +
+        "</a>" +
+        "</div>";
+    }
+  }
+//  alert(oneColumn);
+  document.getElementById("categories-list").innerHTML=oneColumn;
+</script>

@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-ruby '2.2.2'
+ruby '2.2.4'
 
 # Distribute your app as a gem
 # gemspec
@@ -23,6 +23,7 @@ gem 'aws-sdk', '~> 2'
 gem 'actionview'
 gem 'dotenv'
 gem 'oj'
+gem 'parslet'
 
 # Project requirements
 gem 'rake'
@@ -46,8 +47,8 @@ end
 # Padrino Stable Gem
 gem 'padrino', '0.12.5'
 
-gem 'pry', :group => 'development'
-gem 'pry-byebug', :group => 'development'
+gem 'pry', :group => ['development', 'test']
+gem 'pry-byebug', :group => ['development', 'test']
 gem 'newrelic_rpm'
 
 # Or Padrino Edge

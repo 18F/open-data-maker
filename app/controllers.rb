@@ -4,7 +4,17 @@ OpenDataMaker::App.controllers do
     render :home, layout: true, locals: {
       'title' => 'Open Data Maker',
       'endpoints' => DataMagic.config.api_endpoint_names,
-      'examples' => DataMagic.config.examples
+      'examples' => DataMagic.config.examples,
+      'categories' => DataMagic.config.categories.to_json
+    }
+  end
+
+  get :category, :with => :id do
+    category_entry = DataMagic.config.category_by_id(params[:id])
+    render :category, layout: true, locals: {
+      'title' => 'Open Data Maker',
+      'category_entry' => category_entry.to_json,
+      'field_details' => category_entry['field_details'].to_json
     }
   end
 end
@@ -37,27 +47,49 @@ OpenDataMaker::App.controllers :v1 do
     data.to_json
   end
 
-  get :index, with: :endpoint, provides: [:json, :csv] do
-    options = get_search_args_from_params(params)
-    endpoint = options[:endpoint]
-    content_type options[:format].to_sym if options[:format]
-    DataMagic.logger.debug "-----> APP GET #{params.inspect}"
+  get :index, with: ':endpoint/:command', provides: [:json] do
+    process_params
+  end
 
-    unless DataMagic.config.api_endpoints.keys.include? endpoint
-      halt 404, {
-        error: 404,
-        message: "#{endpoint} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
-      }.to_json
-    end
+  get :index, with: ':endpoint', provides: [:json, :csv] do
+    process_params
+  end
+end
 
-    data = DataMagic.search(params, options)
-    halt 400, data.to_json if data.key?(:errors)
+def process_params
+  options = get_search_args_from_params(params)
+  DataMagic.logger.debug "-----> APP GET #{params.inspect} with options #{options.inspect}"
 
-    if content_type == :csv
-      output_data_as_csv(data['results'])
-    else
-      data.to_json
-    end
+  check_endpoint!(options)
+  set_content_type(options)
+  search_and_respond(options)
+end
+
+def search_and_respond(options)
+  data = DataMagic.search(params, options)
+  halt 400, data.to_json if data.key?(:errors)
+
+  if content_type == :csv
+    output_data_as_csv(data['results'])
+  else
+    data.to_json
+  end
+end
+
+def check_endpoint!(options)
+  unless DataMagic.config.api_endpoints.keys.include? options[:endpoint]
+    halt 404, {
+           error: 404,
+           message: "#{options[:endpoint]} not found. Available endpoints: #{DataMagic.config.api_endpoints.keys.join(',')}"
+         }.to_json
+  end
+end
+
+def set_content_type(options)
+  if options[:command] == 'stats'
+    content_type :json
+  else
+    content_type(options[:format].nil? ? :json : options[:format].to_sym)
   end
 end
 
@@ -66,7 +98,7 @@ end
 # see comment in method body
 def get_search_args_from_params(params)
   options = {}
-  %w(sort fields zip distance page per_page debug).each do |opt|
+  %w(metrics sort fields zip distance page per_page debug).each do |opt|
     options[opt.to_sym] = params.delete("_#{opt}")
     # TODO: remove next line to end support for un-prefixed option parameters
     options[opt.to_sym] ||= params.delete(opt)
@@ -74,6 +106,9 @@ def get_search_args_from_params(params)
   options[:endpoint] = params.delete("endpoint") # these two params are
   options[:format]   = params.delete("format")   # supplied by Padrino
   options[:fields]   = (options[:fields]   || "").split(',')
+  options[:command]  = params.delete("command")
+
+  options[:metrics] = options[:metrics].split(/\s*,\s*/) if options[:metrics]
   options
 end
 
