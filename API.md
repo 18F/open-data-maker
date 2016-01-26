@@ -5,6 +5,7 @@ This document explains:
  * How to define and execute queries as URLs
  * Refining query results using option parameters
  * Extracting query results in JSON and CSV format
+ * Generating aggregate data using statistics queries
  * Detecting query errors
 
 ## Introduction to Queries
@@ -18,10 +19,12 @@ Each query is expressed as a URL, containing:
  * The **API Version String**. Currently the only supported version string is: `v1`
  * The **Endpoint** representing a particular dataset, e.g. `schools`. Endpoint
  names are usually plural.
+ * An optional **Query Type**, added to the Endpoint's path. Currently the only
+ additional type is `stats`; see the section on [Statistics Queries](#statistics-queries) for more information.
  * The **Format** for the result data. The default output format is JSON ([JavaScript Object Notation](http://json.org/)); CSV is
  also available.
  * The **Query String** containing a set of named key-value pairs that
- represent the query, which incude
+ represent the query, which include
    * **Field Parameters**, specifying a value (or set of values) to match
    against a particular field, and
    * **Option Parameters**, which affect the filtering and output of the
@@ -215,3 +218,71 @@ When the dataset includes a `location` at the root level (`location.lat` and
 * By default, any number passed in the `_distance` parameter is treated as a number of miles, but you can specify miles or kilometers by appending `mi` or `km` respectively.
 * Distances are calculated from the center of the given zip code, not the boundary.
 * Only U.S. zip codes are supported.
+
+## Statistics Queries
+
+The queries discussed so far are only capable of returning individual records and selected values from those records. However, it's also possible to generate aggregate data from a specified set of records by making use of Statistics Queries.
+
+### Statistics Query Example
+
+Here's an example statistics query URL:
+
+```
+https://api.data.gov/ed/collegescorecard/v1/schools/stats?school.degrees_awarded.predominant=2,3&_fields=2013.student.size&_metrics=avg,sum,std_deviation,std_deviation_bounds
+```
+
+In this statistics query URL:
+
+ * `/stats` is appended to the Endpoint. This is the key indicator that
+ statistics should be returned instead of individual records.
+ * `school.degrees_awarded.predominant=2,3` is a Field Parameter. In this case, it's searching for records which have a `school.degrees_awarded.predominant` value of either `2` or `3`. The aggregated statistics will be generated from this subset of records.
+ * `_fields=2013.student.size` limits the aggregation to only operating over the `2013.student.size` field. Multiple fields can be specified and aggregated in a single query, but only those with numeric data can be used.
+ * `_metrics` is an Option Parameter only available to statistics queries, and limits the kinds of aggregations performed. See below for more information.
+
+This is the JSON document returned:
+
+```json
+{
+  "metadata": {
+    "total": 3667,
+    "page": 0,
+    "per_page": 20
+  },
+  "results": [],
+  "aggregations": {
+    "school.tuition_revenue_per_fte": {
+      "avg": "0.1088815711947627E5",
+      "sum": 73288234,
+      "std_deviation": "0.75913587304684015E4",
+      "std_deviation_bounds": {
+        "upper": "0.26070874580413074E5",
+        "lower": "-0.4294560341460534E4"
+      }
+    }
+  }
+}
+```
+
+Note that the top-level elements returned by a statistics query differ from those returned by other kinds of queries:
+
+  * **`metadata`** provides the same information as it does in other queries.
+    * **`total`** provides the number of records matching the query (in this case, all those schools with a `school.degrees_awarded.predominant` of 2 or 3). This is the subset of records from which the statistics are calculated.
+    * **`page`** and **`per_page`** are irrelevant in statistics queries, and will likely be removed in a future version of the API.
+  * **`results`** is always empty in statistics queries, and may be removed in a future version of the API.
+  * **`aggregations`** contains a JSON Object for every field specified in the `_fields` parameter. Within these Objects there's an entry for every type of aggregation performed. In this case, use of the `_metrics` parameter has limited the returned aggregations to `avg`, `sum`, `std_deviation` and `std_deviation_bounds`. See below for more information.
+
+### Specifying aggregations with `_metrics`
+
+By default, the full set of available aggregations is calculated and returned for each field specified in the `_fields` parameter. These aggregations are calculated by ElasticSearch's [Extended Stats Aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/1.7/search-aggregations-metrics-extendedstats-aggregation.html):
+
+ * `count`
+ * `min`
+ * `max`
+ * `avg`
+ * `sum`
+ * `sum_of_squares`
+ * `variance`
+ * `std_deviation`
+ * `std_deviation_bounds`
+
+Each of these provides a single value, with the expection of `std_deviation_bounds`, which provides a JSON Object containing `upper` and `lower` bounds.
