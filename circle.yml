@@ -3,10 +3,10 @@ dependencies:
     - curl -v -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&source=github'
     - sudo dpkg -i cf-cli_amd64.deb
     - cf -v
-
-machine:
-  services:
-    - elasticsearch
+  post:
+    - wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.1.tar.gz
+    - tar -xvf elasticsearch-1.7.1.tar.gz
+    - elasticsearch-1.7.1/bin/elasticsearch: {background: true}
 
 test:
   post:
