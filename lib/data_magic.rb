@@ -280,12 +280,12 @@ module DataMagic
   def self.client
     if @client.nil?
       if ENV['VCAP_APPLICATION']    # Cloud Foundry
-        logger.info "connect to Cloud Foundry elasticsearch service"
-        eservice = ::CF::App::Credentials.find_by_service_name(ENV['es_service'] || 'eservice')
-        logger.info "eservice: #{eservice.inspect}"
-        service_uri = eservice['url'] || eservice['uri']
-        logger.info "service_uri: #{service_uri}"
-        @client = ::Elasticsearch::Client.new host: service_uri
+        logger.info "connect to Cloud Foundry elasticsearch services"
+        eservices = ::CF::App::Credentials.find_all_by_service_tag('elasticsearch')
+        logger.info "eservices: #{eservices.inspect}"
+        service_uris = eservices.collect { |es| es['uri'] }
+        logger.info "service_uris: #{service_uris}"
+        @client = ::Elasticsearch::Client.new hosts: service_uris
         Stretchy.configure do |c|
           c.client = @client   # use a custom client
         end
