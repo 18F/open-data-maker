@@ -2,13 +2,14 @@ module DataMagic
   module ErrorChecker
     class << self
       def check(params, options, config)
-        report_required_params_absent(options) + 
+        report_required_params_absent(options) +
           report_nonexistent_params(params, config) +
           report_nonexistent_operators(params) +
           report_nonexistent_fields(options[:fields], config) +
           report_bad_range_argument(params) +
           report_wrong_field_type(params, config) +
-          report_wrong_zip(params)
+          report_wrong_zip(options) +
+          report_distance_requires_zip(options)
       end
 
       private
@@ -21,12 +22,20 @@ module DataMagic
         end
       end
 
+      def report_distance_requires_zip(params)
+        # if distance, must have zip
+        return [] if (params[:distance] && params[:zip]) || (!params[:distance])
+        [build_error(
+          error: 'distance_error'
+        )]
+      end
+
       def report_wrong_zip(params)
-        return [] if !params["zip"] || Zipcode.valid?(params["zip"])
+        return [] if !params[:zip] || Zipcode.valid?(params[:zip])
         [build_error(
           error: 'zipcode_error',
-          parameter: "zip",
-          input: params['zip'].to_s
+          parameter: :zip,
+          input: params[:zip].to_s
         )]
       end
 
@@ -99,6 +108,8 @@ module DataMagic
             "The range '#{opts[:input]}' supplied to parameter '#{opts[:parameter]}' isn't in the correct format."
           when 'zipcode_error'
             "The provided zipcode, '#{opts[:input]}', is not valid."
+          when 'distance_error'
+            "Distance requires zipcode (none given)."
           end
         opts
       end
