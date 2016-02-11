@@ -183,7 +183,7 @@ describe 'API errors', type: 'feature' do
         let(:expected_errors) {
           [{
             error: 'distance_error',
-            message: "Distance requires zipcode (none given).",
+            message: "Use of the 'distance' parameter also requires a 'zip' parameter.",
           }]
         }
         it_correctly "returns an error"
