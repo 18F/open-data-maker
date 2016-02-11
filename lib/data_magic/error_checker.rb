@@ -109,7 +109,7 @@ module DataMagic
           when 'zipcode_error'
             "The provided zipcode, '#{opts[:input]}', is not valid."
           when 'distance_error'
-            "Distance requires zipcode (none given)."
+            "Use of the 'distance' parameter also requires a 'zip' parameter."
           end
         opts
       end
