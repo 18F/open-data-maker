@@ -289,7 +289,7 @@ module DataMagic
 
     def index_exists?(index_name=nil)
       index_name ||= scoped_index_name
-      logger.info "looking for: #{index_name}"
+      logger.debug "looking for: #{index_name}"
       DataMagic.client.indices.exists? index: index_name
     end
 

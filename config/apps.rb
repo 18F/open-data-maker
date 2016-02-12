@@ -36,4 +36,5 @@ Padrino.configure_apps do
 end
 
 # Mounts the core application for this project
+Padrino.mount('OpenDataMaker::IndexApp', :app_file => Padrino.root('app/index_app.rb')).to('/index')
 Padrino.mount('OpenDataMaker::App', :app_file => Padrino.root('app/app.rb')).to('/')

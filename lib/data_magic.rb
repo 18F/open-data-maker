@@ -317,8 +317,8 @@ module DataMagic
     end
   end # init
 
-  # this is only used for testing
-  # it will clean up all indices associated with the loaded data.yaml
+  # DANGER!
+  # removes all indices associated with the loaded data.yaml
   def self.destroy
     logger.info "DataMagic.destroy"
     @index_thread.join unless @index_thread.nil?   # finish up indexing, if needed

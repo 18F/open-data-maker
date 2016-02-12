@@ -46,8 +46,8 @@ module DataMagic
     num_rows = 0
     headers = nil
 
-    logger.info "  new_field_names: #{new_field_names.inspect[0..500]}"
-    logger.info "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
+    logger.debug "  new_field_names: #{new_field_names.inspect[0..500]}"
+    logger.debug "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
 
     skipped = []
     begin
@@ -56,7 +56,7 @@ module DataMagic
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
-        logger.info "csv parsed" if num_rows == 0
+        logger.debug "csv parsed" if num_rows == 0
         doc = DocumentBuilder.build(row, new_field_names, config,  options, additional_data)
         if num_rows % 500 == 0
           logger.info "indexing rows: #{num_rows}..."
@@ -137,9 +137,9 @@ module DataMagic
       options[:only] = config.info_for_file(index, :only)
       options[:nest] = config.info_for_file(index, :nest)
       begin
-        logger.info "*"*40
-        logger.info "*    #{filepath}"
-        logger.info "*"*40
+        logger.debug "*"*40
+        logger.debug "*    #{filepath}"
+        logger.debug "*"*40
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
         logger.debug "imported #{rows} rows"
@@ -147,7 +147,9 @@ module DataMagic
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
       end
     end
-    logger.debug "indexing complete: #{distance_of_time_in_words(Time.now, start_time)}"
+    end_time = Time.now
+    logger.debug "indexing complete: #{distance_of_time_in_words(end_time, start_time)}"
+    logger.debug "duration: #{end_time - start_time}"
   end # import_with_dictionary
 
 private
