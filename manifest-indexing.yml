@@ -1,0 +1,13 @@
+---
+applications:
+-  name: ccapi-indexing
+   command: bundle exec puma -C ./config/puma.rb
+   instances: 3
+   memory: 2G
+   services:
+   - bservice
+   - eservice
+   - elk-logger
+   env:
+     MAX_THREADS: 5
+     WEB_CONCURRENCY: 3
