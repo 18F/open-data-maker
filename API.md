@@ -210,6 +210,8 @@ By default, using the `_sort_` option returns records sorted into ascending orde
 When the dataset includes a `location` at the root level (`location.lat` and
 `location.lon`) then the documents will be indexed geographically. You can use the `_zip` and `_distance` options to narrow query results down to those within a geographic area. For example, `_zip=12345&_distance=10mi` will return only those results within 10 miles of the center of the given zip code.
 
+**Note: Due to a bug, specifying `location` and its sub-fields in certain field or option parameters may cause an error.** This is a known problem and tracked in this GitHub issue: _[Querying for a school by name and returning location.lon does not work](https://github.com/18F/open-data-maker/issues/227)_
+
 #### Additional Notes on Geographic Filtering
 
 * By default, any number passed in the `_distance` parameter is treated as a number of miles, but you can specify miles or kilometers by appending `mi` or `km` respectively.

@@ -1,5 +1,5 @@
 # Open Data Maker
-[![Build Status](https://travis-ci.org/18F/open-data-maker.svg?branch=master)](https://travis-ci.org/18F/open-data-maker)
+[![Build Status](https://circleci.com/gh/18F/open-data-maker/tree/dev.svg?style=svg)](https://circleci.com/gh/18F/open-data-maker/tree/dev)
 
 The goal of this project is to make it easy to turn a lot of potentially large
 csv files into open data via an API and the ability for people to download
