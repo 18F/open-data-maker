@@ -177,16 +177,30 @@ describe 'API errors', type: 'feature' do
       # response, which it shouldn't, because that doesn't matter.
       it_correctly "returns an error"
     end
+    context "when a distance is supplied" do
+      context "and no zip" do
+        let(:options) { { distance: "4" } }
+        let(:expected_errors) {
+          [{
+            error: 'distance_error',
+            message: "Use of the 'distance' parameter also requires a 'zip' parameter.",
+          }]
+        }
+        it_correctly "returns an error"
+
+      end
+    end
+
     context "when a zipcode is supplied" do
 
       context "when an invalid zipcode is provided" do
-        let(:params) { { "zip" => '00002' } }
+        let(:options) { { zip: '00002', distance: "4" } }
         let(:expected_errors) {
           [{
             error: 'zipcode_error',
             message: "The provided zipcode, '00002', is not valid.",
             input: '00002',
-            parameter: 'zip'
+            parameter: :zip
           }]
         }
         it_correctly "returns an error"

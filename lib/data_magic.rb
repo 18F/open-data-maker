@@ -138,7 +138,7 @@ module DataMagic
 
     if options[:command] == 'stats'
       # Remove metrics that weren't requested.
-      aggregations = result['aggregations']
+      aggregations = result['aggregations'] || {}
       aggregations.each do |f_name, values|
         if options[:metrics] && options[:metrics].size > 0
           aggregations[f_name] = values.reject { |k, v| !(options[:metrics].include? k) }
