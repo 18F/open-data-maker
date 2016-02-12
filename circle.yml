@@ -20,4 +20,4 @@ deployment:
   development:
     branch: dev
     commands:
-      - cf push
+            - cf push -f manifest-dev.yml
