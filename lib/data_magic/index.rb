@@ -1,5 +1,6 @@
 require_relative 'config'
 require_relative 'document_builder'
+require_relative 'builder_data'
 require 'action_view'  # for distance_of_time_in_words (logging time)
 include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
 
@@ -31,23 +32,14 @@ module DataMagic
     self.create_index unless config.index_exists?
     es_index_name = self.config.scoped_index_name
 
-    additional_fields = options[:mapping] || {}
-    additional_data = options[:add_data]
-    Config.logger.debug "additional_data: #{additional_data.inspect}"
+    builder_data = BuilderData.new(data, options)
+    builder_data.normalize!
+    builder_data.log_metadata
 
-    data = data.read if data.respond_to?(:read)
-    data.sub!("\xEF\xBB\xBF", "") # remove Byte Order Mark
-    if options[:force_utf8]
-      data = data.encode('UTF-8', invalid: :replace, replace: '')
-    end
+    data = builder_data.data
 
-    new_field_names = options[:fields] || {}
-    new_field_names = new_field_names.merge(additional_fields)
     num_rows = 0
     headers = nil
-
-    logger.debug "  new_field_names: #{new_field_names.inspect[0..500]}"
-    logger.debug "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
 
     skipped = []
     begin
@@ -57,7 +49,7 @@ module DataMagic
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
         logger.debug "csv parsed" if num_rows == 0
-        doc = DocumentBuilder.build(row, new_field_names, config,  options, additional_data)
+        doc = DocumentBuilder.build(row, builder_data, config)
         if num_rows % 500 == 0
           logger.info "indexing rows: #{num_rows}..."
         end
@@ -66,6 +58,7 @@ module DataMagic
           logger.info "id: #{get_id(doc).inspect}"
         end
         headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
+
         if options[:nest] == nil  #first time or normal case
           client.index({
             index: es_index_name,

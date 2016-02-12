@@ -12,7 +12,10 @@ module DataMagic
       #      where all column_names and values are strings
       # fields: column_name => field_name
       # config: DataMagic.Config instance for dictionary, column types, NULL
-      def build(row, fields, config, options={}, additional=nil)
+      def build(row, builder_data, config)
+        fields = builder_data.new_field_names
+        options = builder_data.options
+        additional = builder_data.additional_data
         csv_row = map_column_types(row.to_hash, config)
         if fields.empty?
           field_values = csv_row

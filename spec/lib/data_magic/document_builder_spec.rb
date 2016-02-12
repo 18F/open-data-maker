@@ -8,7 +8,14 @@ describe DataMagic::DocumentBuilder do
   let(:fields)     { {} }
   let(:options)    { {} }
   let(:additional) { {} }
-  let(:document)   { DataMagic::DocumentBuilder.build(subject, fields, config, options, additional) }
+  let(:builder_data) {
+    double('builder data', {
+      new_field_names: fields,
+      options: options,
+      additional_data: additional
+    })
+  }
+  let(:document)   { DataMagic::DocumentBuilder.build(subject, builder_data, config) }
 
   RSpec.configure do |c|
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
