@@ -27,6 +27,69 @@ module DataMagic
     result
   end
 
+  class Output
+    attr_reader :row_count, :headers, :skipped, :options
+
+    def initialize(options)
+      @options = options
+      @row_count = 0
+      @skipped = []
+    end
+
+    def set_headers(doc)
+      return if headers
+      @headers = doc.keys.map(&:to_s) # does this only return top level fields?
+    end
+
+
+    def skipping(id)
+      skipped << id
+    end
+
+    def increment
+      @row_count += 1
+    end
+
+    def at_limit?
+      return false if !options[:limit_rows]
+      row_count == options[:limit_rows]
+    end
+
+    def validate!
+      raise InvalidData, "zero rows" if empty?
+    end
+
+    def empty?
+      row_count == 0
+    end
+
+    def log(doc)
+      log_0(doc) if empty?
+      log_marker if row_count % 500 == 0
+    end
+
+    def log_skips
+      return if skipped.empty?
+      logger.info "skipped (missing parent id): #{skipped.join(',')}"
+    end
+
+    def log_limit
+      logger.info "done now, limiting rows to #{row_count}"
+    end
+
+    private
+
+    def log_0(doc)
+      logger.debug "csv parsed"
+      logger.info "row#{row_count} -> #{doc.inspect[0..500]}"
+      logger.info "id: #{DataMagic.get_id(doc).inspect}"
+    end
+
+    def log_marker
+      logger.info "indexing rows: #{row_count}..."
+    end
+  end
+
   # data could be a String or an io stream
   def self.import_csv(data, options={})
     self.create_index unless config.index_exists?
@@ -36,30 +99,19 @@ module DataMagic
     builder_data.normalize!
     builder_data.log_metadata
 
-    data = builder_data.data
-
-    # output
-    num_rows = 0
-    headers = nil
-    skipped = []
+    output = Output.new(options)
 
     begin
       CSV.parse(
-        data,
+        builder_data.data,
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
         # process row
-        logger.debug "csv parsed" if num_rows == 0
         doc = DocumentBuilder.build(row, builder_data, config)
-        if num_rows % 500 == 0
-          logger.info "indexing rows: #{num_rows}..."
-        end
-        if num_rows == 0
-          logger.info "row#{num_rows} -> #{doc.inspect[0..500]}"
-          logger.info "id: #{get_id(doc).inspect}"
-        end
-        headers ||= doc.keys.map(&:to_s)  # does this only return top level fields?
+
+        output.log(doc)
+        output.set_headers(doc)
 
         if options[:nest] == nil  #first time or normal case
           client.index({
@@ -80,33 +132,27 @@ module DataMagic
             })
           rescue Elasticsearch::Transport::Transport::Errors::NotFound => e
             if options[:nest][:parent_missing] == 'skip'
-              skipped << id
+              output.skipping(id)
             else
               raise e
             end
           end
         end
-        num_rows += 1
-        if options[:limit_rows] and num_rows == options[:limit_rows]
-          logger.info "done now, limiting rows to #{num_rows}"
-          break
-        end
+
+        output.increment
+        output.log_limit
+        break if output.at_limit?
       end
-
-      logger.info "skipped (missing parent id): #{skipped.join(',')}" unless skipped.empty?
-
     rescue InvalidData => e
       Config.logger.error e.message
-      raise InvalidData, "invalid file format" if num_rows == 0
-      rows = []
+      raise InvalidData, "invalid file format" if output.row_count == 0
     end
 
-    # output.validate!
-    raise InvalidData, "zero rows" if num_rows == 0
+    output.validate!
 
     client.indices.refresh index: es_index_name
-    logger.info "done: #{num_rows} rows"
-    return [num_rows, headers]
+    logger.info "done: #{output.row_count} rows"
+    return [output.row_count, output.headers]
   end
 
   def self.import_with_dictionary(options = {})
