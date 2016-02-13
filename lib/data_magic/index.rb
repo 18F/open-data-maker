@@ -38,16 +38,18 @@ module DataMagic
 
     data = builder_data.data
 
+    # output
     num_rows = 0
     headers = nil
-
     skipped = []
+
     begin
       CSV.parse(
         data,
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
+        # process row
         logger.debug "csv parsed" if num_rows == 0
         doc = DocumentBuilder.build(row, builder_data, config)
         if num_rows % 500 == 0
@@ -91,18 +93,17 @@ module DataMagic
         end
       end
 
-    logger.info "skipped (missing parent id): #{skipped.join(',')}" unless skipped.empty?
-    rescue Exception => e
-        if e.class == ArgumentError && e.message == "invalid byte sequence in UTF-8"
-          Config.logger.error e.message
-          raise InvalidData, "invalid file format" if num_rows == 0
-          rows = []
-        else
-          raise e
-        end
+      logger.info "skipped (missing parent id): #{skipped.join(',')}" unless skipped.empty?
+
+    rescue InvalidData => e
+      Config.logger.error e.message
+      raise InvalidData, "invalid file format" if num_rows == 0
+      rows = []
     end
 
+    # output.validate!
     raise InvalidData, "zero rows" if num_rows == 0
+
     client.indices.refresh index: es_index_name
     logger.info "done: #{num_rows} rows"
     return [num_rows, headers]

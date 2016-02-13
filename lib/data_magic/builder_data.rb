@@ -1,5 +1,4 @@
 module DataMagic
-
   class BuilderData
     attr_reader :data, :options
     def initialize(data, options)
@@ -8,12 +7,15 @@ module DataMagic
     end
 
     def normalize!
-      @data = @data.read if @data.respond_to?(:read)
+      @data = data.read if data.respond_to?(:read)
       @data.sub!("\xEF\xBB\xBF", "") # remove Byte Order Mark
       if options[:force_utf8]
-        @data = @data.encode('UTF-8', invalid: :replace, replace: '')
+        @data = data.encode('UTF-8', invalid: :replace, replace: '')
       end
-      @data
+      data.split('i-am-just-doing-this-to-detect-some-bad-utf8-sorry')
+      data
+    rescue ArgumentError => e
+      raise DataMagic::InvalidData.new(e.message)
     end
 
     def log_metadata
@@ -35,6 +37,4 @@ module DataMagic
       options[:add_data]
     end
   end
-
-
 end
