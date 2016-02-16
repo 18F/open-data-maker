@@ -6,29 +6,14 @@ require 'action_view'  # for distance_of_time_in_words (logging time)
 include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
 
 module DataMagic
-
-  # return the unique identifier, optionally remove from row
   def self.get_id(row, options={})
-    if config.data['unique'].length > 0
-      #logger.info "config.data['unique'] #{config.data['unique'].inspect}"
-      #logger.info "row #{row}"
-      result = config.data['unique'].map { |field| row[field] }.join(':')
-      #logger.info "id: #{result.inspect}"
-      if result.empty?
-        logger.warn "unexpected blank id for "+
-                    "unique: #{config.data['unique'].inspect} "+
-                    "in row: #{row.inspect[0..255]}"
-      end
-      if options[:remove]
-        config.data['unique'].each { |key| row.delete key }
-      end
-    else
-      result = nil
-    end
-    result
+    return nil if config.data['unique'].length == 0
+    config.data['unique'].map { |field| row[field] }.join(':')
   end
 
-
+  def self.remove_ids(row)
+    config.data['unique'].each { |key| row.delete key }
+  end
 
   # data could be a String or an io stream
   def self.import_csv(data, options={})
@@ -49,22 +34,28 @@ module DataMagic
       ) do |row|
         # process row
         doc = DocumentBuilder.build(row, builder_data, config)
-        logger.info "id: #{DataMagic.get_id(doc).inspect}"
 
         output.log(doc)
         output.set_headers(doc)
 
+        id = get_id(doc)
+        logger.info "id: #{id.inspect}"
+        if id && id.empty?
+          logger.warn "unexpected blank id for "+
+                      "unique: #{config.data['unique'].inspect} "+
+                      "in row: #{doc.inspect[0..255]}"
+        end
+
         if options[:nest] == nil  #first time or normal case
           client.index({
             index: es_index_name,
-            id: get_id(doc),
+            id: id,
             type: 'document',
             body: doc,
           })
         else
           begin
-            #logger.info "UPDATE #{doc}"
-            id = get_id(doc, remove: true)
+            remove_ids(doc)
             client.update({
               index: es_index_name,
               id: id,
