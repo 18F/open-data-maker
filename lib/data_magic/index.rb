@@ -1,6 +1,7 @@
 require_relative 'config'
 require_relative 'document_builder'
 require_relative 'builder_data'
+require_relative 'output'
 require 'action_view'  # for distance_of_time_in_words (logging time)
 include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
 
@@ -27,68 +28,7 @@ module DataMagic
     result
   end
 
-  class Output
-    attr_reader :row_count, :headers, :skipped, :options
 
-    def initialize(options)
-      @options = options
-      @row_count = 0
-      @skipped = []
-    end
-
-    def set_headers(doc)
-      return if headers
-      @headers = doc.keys.map(&:to_s) # does this only return top level fields?
-    end
-
-
-    def skipping(id)
-      skipped << id
-    end
-
-    def increment
-      @row_count += 1
-    end
-
-    def at_limit?
-      return false if !options[:limit_rows]
-      row_count == options[:limit_rows]
-    end
-
-    def validate!
-      raise InvalidData, "zero rows" if empty?
-    end
-
-    def empty?
-      row_count == 0
-    end
-
-    def log(doc)
-      log_0(doc) if empty?
-      log_marker if row_count % 500 == 0
-    end
-
-    def log_skips
-      return if skipped.empty?
-      logger.info "skipped (missing parent id): #{skipped.join(',')}"
-    end
-
-    def log_limit
-      logger.info "done now, limiting rows to #{row_count}"
-    end
-
-    private
-
-    def log_0(doc)
-      logger.debug "csv parsed"
-      logger.info "row#{row_count} -> #{doc.inspect[0..500]}"
-      logger.info "id: #{DataMagic.get_id(doc).inspect}"
-    end
-
-    def log_marker
-      logger.info "indexing rows: #{row_count}..."
-    end
-  end
 
   # data could be a String or an io stream
   def self.import_csv(data, options={})
@@ -99,7 +39,7 @@ module DataMagic
     builder_data.normalize!
     builder_data.log_metadata
 
-    output = Output.new(options)
+    output = Output.new
 
     begin
       CSV.parse(
@@ -109,6 +49,7 @@ module DataMagic
       ) do |row|
         # process row
         doc = DocumentBuilder.build(row, builder_data, config)
+        logger.info "id: #{DataMagic.get_id(doc).inspect}"
 
         output.log(doc)
         output.set_headers(doc)
@@ -140,8 +81,10 @@ module DataMagic
         end
 
         output.increment
-        output.log_limit
-        break if output.at_limit?
+        if options[:limit_rows] && output.row_count == options[:limit_rows]
+          output.log_limit
+          break
+        end
       end
     rescue InvalidData => e
       Config.logger.error e.message
