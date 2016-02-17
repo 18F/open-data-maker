@@ -1,6 +1,7 @@
 module DataMagic
   class BuilderData
     attr_reader :data, :options
+
     def initialize(data, options)
       @options = options
       @data = data
@@ -16,12 +17,6 @@ module DataMagic
       data
     rescue ArgumentError => e
       raise DataMagic::InvalidData.new(e.message)
-    end
-
-    def log_metadata
-      logger.debug "additional_data: #{additional_data.inspect}"
-      logger.debug "  new_field_names: #{new_field_names.inspect[0..500]}"
-      logger.debug "  options: #{options.reject { |k,v| k == :mapping }.to_yaml}"
     end
 
     def additional_fields
