@@ -31,6 +31,12 @@ module DataMagic
         doc
       end
 
+      def create(*args)
+        DataMagic::Document.new(
+          build(*args)
+        )
+      end
+
       private
 
       def calculated_fields(row, config)

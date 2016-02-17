@@ -6,13 +6,49 @@ require 'action_view'  # for distance_of_time_in_words (logging time)
 include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
 
 module DataMagic
-  def self.get_id(row, options={})
+  def self.get_id(doc)
     return nil if config.data['unique'].length == 0
-    config.data['unique'].map { |field| row[field] }.join(':')
+    config.data['unique'].map { |field| doc[field] }.join(':')
   end
 
-  def self.remove_ids(row)
-    config.data['unique'].each { |key| row.delete key }
+  def self.remove_ids(doc)
+    config.data['unique'].each { |key| doc.delete key }
+  end
+
+  class Document
+    attr_reader :data, :id
+
+    def initialize(data)
+      @data = data
+      @id ||= calculate_id
+    end
+
+    def remove_ids
+      config.data['unique'].each { |key| data.delete key }
+    end
+
+    def headers
+      data.keys.map(&:to_s) # does this only return top level fields?
+    end
+
+    def preview(n=500)
+      data.inspect[0..n]
+    end
+
+    def id_empty?
+      id && id.empty?
+    end
+
+    private
+
+    def calculate_id
+      return nil if config.data['unique'].length == 0
+      config.data['unique'].map { |field| data[field] }.join(':')
+    end
+
+    def config
+      DataMagic.config
+    end
   end
 
   # data could be a String or an io stream
@@ -33,34 +69,33 @@ module DataMagic
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
         # process row
-        doc = DocumentBuilder.build(row, builder_data, config)
+        document = DocumentBuilder.create(row, builder_data, config)
 
-        output.log(doc)
-        output.set_headers(doc)
+        output.log(document)
+        output.set_headers(document)
 
-        id = get_id(doc)
-        logger.info "id: #{id.inspect}"
-        if id && id.empty?
+        logger.info "id: #{document.id.inspect}"
+        if document.id_empty?
           logger.warn "unexpected blank id for "+
                       "unique: #{config.data['unique'].inspect} "+
-                      "in row: #{doc.inspect[0..255]}"
+                      "in row: #{document.preview(255)}"
         end
 
         if options[:nest] == nil  #first time or normal case
           client.index({
             index: es_index_name,
-            id: id,
+            id: document.id,
             type: 'document',
-            body: doc,
+            body: document.data,
           })
         else
           begin
-            remove_ids(doc)
+            document.remove_ids
             client.update({
               index: es_index_name,
-              id: id,
+              id: document.id,
               type: 'document',
-              body: {doc: doc},
+              body: {doc: document.data},
             })
           rescue Elasticsearch::Transport::Transport::Errors::NotFound => e
             if options[:nest][:parent_missing] == 'skip'
@@ -72,6 +107,7 @@ module DataMagic
         end
 
         output.increment
+
         if options[:limit_rows] && output.row_count == options[:limit_rows]
           output.log_limit
           break

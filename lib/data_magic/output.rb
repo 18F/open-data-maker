@@ -8,7 +8,7 @@
 
     def set_headers(doc)
       return if headers
-      @headers = doc.keys.map(&:to_s) # does this only return top level fields?
+      @headers = doc.headers
     end
 
 
@@ -44,9 +44,9 @@
 
     private
 
-    def log_0(doc)
+    def log_0(document)
       logger.debug "csv parsed"
-      logger.info "row#{row_count} -> #{doc.inspect[0..500]}"
+      logger.info "row#{row_count} -> #{document.preview}"
     end
 
     def log_marker
