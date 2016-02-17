@@ -304,17 +304,22 @@ module DataMagic
   end
 
   def self.client
+    opts = {}
+    if ENV['ES_DEBUG']
+      tracer = Logger.new(STDERR)
+      tracer.formatter = ->(_s, _d, _p, m) { "#{m.gsub(/^.*$/) { |n| '   ' + n }}\n" }
+      opts[:tracer] = tracer
+    end
     if @client.nil?
       if ENV['VCAP_APPLICATION']    # Cloud Foundry
         logger.info "connect to Cloud Foundry elasticsearch service"
         logger.info "eservice_uri: #{eservice_uri}"
-        @client = ::Elasticsearch::Client.new host: eservice_uri
-        Stretchy.configure do |c|
-          c.client = @client   # use a custom client
-        end
-      else
-        logger.info "default local elasticsearch connection"
-        @client = ::Elasticsearch::Client.new
+        opts[:host] = eservice_uri
+      end
+      logger.info "default local elasticsearch connection"
+      @client = ::Elasticsearch::Client.new(opts)
+      Stretchy.configure do |c|
+        c.client = @client   # use a custom client
       end
     end
     @client
