@@ -1,3 +1,5 @@
+require 'forwardable'
+
 require_relative 'config'
 require_relative 'document_builder'
 require_relative 'builder_data'
@@ -42,7 +44,7 @@ module DataMagic
     end
   end
 
-  class IndexClient
+  class SuperClient
     attr_reader :client, :options
 
     def initialize(client, options)
@@ -50,59 +52,19 @@ module DataMagic
       @options = options
     end
 
-    def save(document)
-      @skipped_last_document = false
-      if creating?
-        create(document)
-      else
-        update(document)
-      end
+    def create_index
+      DataMagic.create_index unless config.index_exists?
     end
 
-    def skipped_last_document?
-      @skipped_last_document
-    end
-
-    private
-
-    def create(document)
-      client.index({
-        index: index_name,
-        id: document.id,
-        type: 'document',
-        body: document.data,
-      })
-    end
-
-    def update(document)
-      document.remove_ids
-      if allows_skips?
-        update_with_rescue(document)
-      else
-        update_without_rescue(document)
-      end
-    end
-
-    def update_without_rescue(document)
-      client.update({
-        index: index_name,
-        id: document.id,
-        type: 'document',
-        body: {doc: document.data},
-      })
-    end
-
-    def update_with_rescue(document)
-      update_with_rescue(document)
-    rescue Elasticsearch::Transport::Transport::Errors::NotFound
-      @skipped_last_document = true
+    def refresh_index
+      client.indices.refresh index: index_name
     end
 
     def creating?
       options[:nest] == nil
     end
 
-    def allows_skips?
+    def allow_skips?
       options[:nest][:parent_missing] == 'skip'
     end
 
@@ -113,20 +75,86 @@ module DataMagic
     def config
       DataMagic.config
     end
+
+    extend Forwardable
+
+    def_delegators :client, :index, :update
+  end
+
+  class Repository
+    attr_reader :client, :document
+
+    def initialize(client, document)
+      @client = client
+      @document = document
+    end
+
+    def save
+      @skipped = false
+      if client.creating?
+        create
+      else
+        update
+      end
+    end
+
+    def skipped?
+      @skipped
+    end
+
+    def save
+      if client.creating?
+        create
+      else
+        update
+      end
+    end
+
+    private
+
+    def update
+      if client.allow_skips?
+        update_with_rescue
+      else
+        update_without_rescue
+      end
+    end
+
+    def create
+      client.index({
+        index: client.index_name,
+        id: document.id,
+        type: 'document',
+        body: document.data
+      })
+    end
+
+    def update_without_rescue
+      client.update({
+        index: client.index_name,
+        id: document.id,
+        type: 'document',
+        body: {doc: document.data}
+      })
+    end
+
+    def update_with_rescue
+      update_without_rescue
+    rescue Elasticsearch::Transport::Transport::Errors::NotFound
+      @skipped = true
+    end
   end
 
   # data could be a String or an io stream
   def self.import_csv(data, options={})
-    self.create_index unless config.index_exists?
-    es_index_name = self.config.scoped_index_name
+    super_client = SuperClient.new(client, options)
+    super_client.create_index
 
     builder_data = BuilderData.new(data, options)
     builder_data.normalize!
     builder_data.log_metadata
 
     output = Output.new
-
-    index_client = IndexClient.new(client, options)
 
     begin
       CSV.parse(
@@ -136,6 +164,7 @@ module DataMagic
       ) do |row|
         # process row
         document = DocumentBuilder.create(row, builder_data, config)
+        repository = Repository.new(super_client, document)
 
         output.log(document)
         output.set_headers(document)
@@ -147,33 +176,8 @@ module DataMagic
                       "in row: #{document.preview(255)}"
         end
 
-        index_client.save(document)
-        output.skipping(document.id) if index_client.skipped_last_document?
-
-        #if options[:nest] == nil  #first time or normal case
-          #client.index({
-            #index: es_index_name,
-            #id: document.id,
-            #type: 'document',
-            #body: document.data,
-          #})
-        #else
-          #begin
-            #document.remove_ids
-            #client.update({
-              #index: es_index_name,
-              #id: document.id,
-              #type: 'document',
-              #body: {doc: document.data},
-            #})
-          #rescue Elasticsearch::Transport::Transport::Errors::NotFound => e
-            #if options[:nest][:parent_missing] == 'skip'
-              #output.skipping(id)
-            #else
-              #raise e
-            #end
-          #end
-        #end
+        repository.save
+        output.skipping(document.id) if repository.skipped?
 
         output.increment
 
@@ -189,7 +193,7 @@ module DataMagic
 
     output.validate!
 
-    client.indices.refresh index: es_index_name
+    super_client.refresh_index
     logger.info "done: #{output.row_count} rows"
     return [output.row_count, output.headers]
   end
