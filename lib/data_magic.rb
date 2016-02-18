@@ -280,8 +280,8 @@ module DataMagic
   def self.client
     opts = {}
     if ENV['ES_DEBUG']
-      tracer = Logger.new(STDERR)
-      tracer.formatter = ->(_s, _d, _p, m) { "#{m.gsub(/^.*$/) { |n| '   ' + n }}\n" }
+      tracer = Logger.new(STDOUT)
+      tracer.formatter = ->(_s, _d, _p, m) { "ES - #{m.gsub(/^.*$/) { |n| '   ' + n }}\n" }
       opts[:tracer] = tracer
     end
     if @client.nil?
