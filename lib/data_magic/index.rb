@@ -25,29 +25,9 @@ module DataMagic
         headers: true,
         header_converters: lambda { |str| str.strip.to_sym }
       ) do |row|
-        # process row
-        document = DocumentBuilder.create(row, importer.builder_data, config)
-        repository = Repository.new(importer.client, document)
-
-        importer.output.log(document)
-        importer.set_headers(document)
-
-        logger.info "id: #{document.id.inspect}"
-        if document.id_empty?
-          logger.warn "unexpected blank id for "+
-                      "unique: #{config.data['unique'].inspect} "+
-                      "in row: #{document.preview(255)}"
-        end
-
-        repository.save
-        importer.skipping(document.id) if repository.skipped?
-
-        importer.increment
-
-        if options[:limit_rows] && importer.row_count == options[:limit_rows]
-          importer.log_limit
-          break
-        end
+        row_importer = RowImporter.new(row, importer)
+        row_importer.process
+        break if importer.at_limit?
       end
     rescue InvalidData => e
       Config.logger.error e.message

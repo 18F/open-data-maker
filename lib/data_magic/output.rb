@@ -1,3 +1,4 @@
+module DataMagic
   class Output
     attr_reader :row_count, :headers, :skipped
 
@@ -53,3 +54,4 @@
       logger.info "indexing rows: #{row_count}..."
     end
   end
+end

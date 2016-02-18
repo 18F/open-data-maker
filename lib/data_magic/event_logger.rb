@@ -10,11 +10,8 @@ module DataMagic
       self.send(event, *args)
     end
 
-    def setup
-      opts = importer.options.reject { |k,v| k == :mapping }
-      info("options", opts)
-      info("new_field_names", importer.new_field_names)
-      info("additional_data", importer.additional_data)
+    def debug(message, object=nil, limit=nil)
+      logger.debug(full_message(message, object, limit))
     end
 
     def info(message, object=nil, limit=nil)
