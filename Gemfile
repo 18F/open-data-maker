@@ -24,6 +24,7 @@ gem 'actionview'
 gem 'dotenv'
 gem 'oj'
 gem 'parslet'
+gem 'parallel'
 
 # Project requirements
 gem 'rake'
