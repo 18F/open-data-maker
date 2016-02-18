@@ -37,20 +37,54 @@ module DataMagic
         raise InvalidData, "invalid file format" if empty?
       end
 
+      def chunk_size
+        (ENV['CHUNK_SIZE'] || 100).to_i
+      end
+
+      def nprocs
+        (ENV['NPROCS'] || 1).to_i
+      end
+
       def parse_csv
-        CSV.parse(
+        if nprocs == 1
+          parse_csv_whole
+        else
+          parse_csv_chunked
+        end
+        data.close
+      end
+
+      def parse_csv_whole
+        CSV.new(
           data,
           headers: true,
           header_converters: lambda { |str| str.strip.to_sym }
-        ) do |row|
+        ).each do |row|
           RowImporter.process(row, self)
           break if at_limit?
         end
       end
 
+      def parse_csv_chunked
+        CSV.new(
+          data,
+          headers: true,
+          header_converters: lambda { |str| str.strip.to_sym }
+        ).each.each_slice(chunk_size) do |chunk|
+          break if at_limit?
+          chunks_per_proc = (chunk.size / nprocs.to_f).ceil
+          Parallel.each(chunk.each_slice(chunks_per_proc)) do |rows|
+            rows.each_with_index do |row, idx|
+              RowImporter.process(row, self)
+            end
+          end
+          increment(chunk.size)
+        end
+      end
+
       def setup
         client.create_index
-        builder_data.normalize!
+        #builder_data.normalize!
         log_setup
       end
 
