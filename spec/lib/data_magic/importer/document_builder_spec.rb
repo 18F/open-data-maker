@@ -2,8 +2,7 @@ require 'spec_helper'
 require 'data_magic'
 require 'hashie'
 
-describe DataMagic::DocumentBuilder do
-
+describe DataMagic::Index::DocumentBuilder do
   let(:config)     { DataMagic::Config.new(load_datayaml: false) }
   let(:fields)     { {} }
   let(:options)    { {} }
@@ -15,7 +14,7 @@ describe DataMagic::DocumentBuilder do
       additional_data: additional
     })
   }
-  let(:document)   { DataMagic::DocumentBuilder.build(subject, builder_data, config) }
+  let(:document)   { DataMagic::Index::DocumentBuilder.build(subject, builder_data, config) }
 
   RSpec.configure do |c|
     c.alias_it_should_behave_like_to :it_correctly, 'correctly:'
@@ -84,7 +83,7 @@ describe DataMagic::DocumentBuilder do
         let(:expected_document)  { { 'one' => 0.12, 'two' => nil, 'one_or_two' => 0.12  } }
         it "reports calculated fields" do
           expect(
-            DataMagic::DocumentBuilder.send(:calculated_fields,subject, config)
+            DataMagic::Index::DocumentBuilder.send(:calculated_fields,subject, config)
           ).to eq('one_or_two' => 0.12)
         end
         it_correctly "creates a document"

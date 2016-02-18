@@ -1,14 +1,14 @@
 require 'forwardable'
 
 require_relative 'config'
-require_relative 'builder_data'
-require_relative 'event_logger'
-require_relative 'document'
-require_relative 'document_builder'
-require_relative 'importer'
-require_relative 'output'
-require_relative 'repository'
-require_relative 'super_client'
+require_relative 'index/builder_data'
+require_relative 'index/event_logger'
+require_relative 'index/document'
+require_relative 'index/document_builder'
+require_relative 'index/importer'
+require_relative 'index/output'
+require_relative 'index/repository'
+require_relative 'index/super_client'
 
 require 'action_view'  # for distance_of_time_in_words (logging time)
 include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (logging time)
@@ -16,27 +16,7 @@ include ActionView::Helpers::DateHelper  # for distance_of_time_in_words (loggin
 module DataMagic
   # data could be a String or an io stream
   def self.import_csv(data, options={})
-    importer = Importer.new(data, options)
-    importer.setup
-
-    begin
-      CSV.parse(
-        importer.data,
-        headers: true,
-        header_converters: lambda { |str| str.strip.to_sym }
-      ) do |row|
-        row_importer = RowImporter.new(row, importer)
-        row_importer.process
-        break if importer.at_limit?
-      end
-    rescue InvalidData => e
-      Config.logger.error e.message
-      raise InvalidData, "invalid file format" if importer.empty?
-    end
-
-    importer.finish!
-
-    return [importer.row_count, importer.headers]
+    Index::Importer.process(data, options)
   end
 
   def self.import_with_dictionary(options = {})
