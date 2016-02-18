@@ -318,8 +318,9 @@ module DataMagic
     def read_from_s3(bucket, key)
       result = nil
       begin
-        response = @s3.get_object(bucket: bucket, key: key)
-        result = response.body.read
+        tmpfile = Tempfile.new(key)
+        response = @s3.get_object(bucket: bucket, key: key, response_target: tmpfile)
+        result = response.body
       rescue Aws::S3::Errors::NoSuchKey
         # we don't want to raise this one, might be expected
         result = nil
@@ -336,7 +337,7 @@ module DataMagic
     def read_path_local(path)
       result = nil
       begin
-        result = File.read(path)
+        result = File.open(path, 'r:bom|utf-8')
       rescue => e
         if e.message.include? "No such file or directory"
           result = nil
@@ -348,7 +349,7 @@ module DataMagic
       result
     end
 
-    # reads a file or s3 object, returns a string
+    # opens a file or s3 object, returns an IO stream
     # path follows URI pattern
     # could be
     #   s3://username:password@bucket_name/path
