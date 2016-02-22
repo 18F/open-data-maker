@@ -9,7 +9,7 @@ require_relative 'load/local_adapter'
 module DataMagic
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
-                :null_value, :file_config
+                :null_value, :file_config, :yaml_data
 
     attr_accessor :page_size
 
@@ -21,7 +21,8 @@ module DataMagic
       @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
 
-      @data_path = Load::YamlData.new(options).path
+      @yaml_data = Load::YamlData.new(options)
+      @data_path = yaml_data.path
 
       if options[:load_datayaml] == false
         @data = {}
@@ -326,23 +327,7 @@ module DataMagic
     end
 
     def read_path(path)
-      adapter = get_adapter(path)
-      raise ArgumentError, "unexpected scheme: #{scheme}" if !adapter
-
-      if adapter.is_a?(Load::S3Adapter)
-        adapter.read
-      else
-        adapter.read
-      end
-    end
-
-    def get_adapter(path)
-      adapters(path).detect(&:can_handle?)
-    end
-
-    def adapters(path)
-      uri = URI(path)
-      [Load::S3Adapter.new(uri, s3), Load::LocalAdapter.new(uri)]
+      yaml_data.read(path)
     end
 
     def load_yaml(path = nil)
