@@ -2,6 +2,10 @@ require_relative '../data_magic.rb'
 require_relative 'example.rb'
 require_relative 'category.rb'
 
+require_relative 'load/yaml_data'
+require_relative 'load/s3_adapter'
+require_relative 'load/local_adapter'
+
 module DataMagic
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
@@ -17,47 +21,12 @@ module DataMagic
       @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
 
-      @data_path = DataLoader.new(options).path
+      @data_path = Load::YamlData.new(options).path
 
       if options[:load_datayaml] == false
         @data = {}
       else
         load_datayaml
-      end
-    end
-
-    def data_loader(opts)
-      DataLoader.new(opts)
-    end
-
-    class DataLoader
-      attr_reader :options
-
-      def initialize(options)
-        @options = options
-      end
-
-      def path
-        options_path || env_path || default_path
-      end
-
-      private
-
-      def options_path
-        assure_non_empty(options[:data_path])
-      end
-
-      def env_path
-        assure_non_empty(ENV['DATA_PATH'])
-      end
-
-      def default_path
-        DataMagic::DEFAULT_PATH
-      end
-
-      def assure_non_empty(value)
-        return nil unless value && !value.empty?
-        value
       end
     end
 
@@ -356,64 +325,24 @@ module DataMagic
       old_config.nil? || old_config["version"] != @data["version"]
     end
 
-    # read from the key,
-    # return contents or...
-    # nil if not found, otherwise raise exception
-    def read_from_s3(bucket, key)
-      result = nil
-      begin
-        response = @s3.get_object(bucket: bucket, key: key)
-        result = response.body.read
-      rescue Aws::S3::Errors::NoSuchKey
-        # we don't want to raise this one, might be expected
-        result = nil
-      rescue => e
-        logger.debug "read_from_s3 failed: #{bucket} #{key} with #{e.class}:#{e.message}"
-        raise e
-      end
-      result
-    end
-
-    # read local file and return content
-    # if not found, return nil
-    # any other failure, raise exception
-    def read_path_local(path)
-      result = nil
-      begin
-        result = File.read(path)
-      rescue => e
-        if e.message.include? "No such file or directory"
-          result = nil
-        else
-          logger.error "read_path_local failed: #{path} with #{e.class}:#{e.message}"
-          raise e
-        end
-      end
-      result
-    end
-
-    # reads a file or s3 object, returns a string
-    # path follows URI pattern
-    # could be
-    #   s3://username:password@bucket_name/path
-    #   s3://bucket_name/path
-    #   s3://bucket_name
-    #   a local path like: './data'
     def read_path(path)
-      result = nil
-      uri = URI(path)
-      scheme = uri.scheme
-      case scheme
-        when nil
-          result = read_path_local(uri.path)
-        when "s3"
-          key = uri.path
-          key[0] = ''  # remove initial /
-          result = read_from_s3(uri.hostname, key)
-        else
-          raise ArgumentError, "unexpected scheme: #{scheme}"
+      adapter = get_adapter(path)
+      raise ArgumentError, "unexpected scheme: #{scheme}" if !adapter
+
+      if adapter.is_a?(Load::S3Adapter)
+        adapter.read
+      else
+        adapter.read
       end
-      result
+    end
+
+    def get_adapter(path)
+      adapters(path).detect(&:can_handle?)
+    end
+
+    def adapters(path)
+      uri = URI(path)
+      [Load::S3Adapter.new(uri, s3), Load::LocalAdapter.new(uri)]
     end
 
     def load_yaml(path = nil)
