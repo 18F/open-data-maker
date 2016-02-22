@@ -78,6 +78,10 @@ module DataMagic
               RowImporter.process(row, self)
             end
           end
+          if !headers
+            single_document = DocumentBuilder.create(chunk.first, builder_data, DataMagic.config)
+            set_headers(single_document)
+          end
           increment(chunk.size)
         end
       end
