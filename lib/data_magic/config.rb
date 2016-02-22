@@ -1,11 +1,12 @@
 require_relative '../data_magic.rb'
+require_relative 'example.rb'
+require_relative 'category.rb'
 
 module DataMagic
-  require_relative 'example.rb'
-  require_relative 'category.rb'
   class Config
     attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
                 :null_value, :file_config
+
     attr_accessor :page_size
 
     def initialize(options = {})
@@ -16,14 +17,47 @@ module DataMagic
       @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
 
-      @data_path = options[:data_path] || ENV['DATA_PATH']
-      if @data_path.nil? or @data_path.empty?
-        @data_path = DEFAULT_PATH
-      end
+      @data_path = DataLoader.new(options).path
+
       if options[:load_datayaml] == false
         @data = {}
       else
         load_datayaml
+      end
+    end
+
+    def data_loader(opts)
+      DataLoader.new(opts)
+    end
+
+    class DataLoader
+      attr_reader :options
+
+      def initialize(options)
+        @options = options
+      end
+
+      def path
+        options_path || env_path || default_path
+      end
+
+      private
+
+      def options_path
+        assure_non_empty(options[:data_path])
+      end
+
+      def env_path
+        assure_non_empty(ENV['DATA_PATH'])
+      end
+
+      def default_path
+        DataMagic::DEFAULT_PATH
+      end
+
+      def assure_non_empty(value)
+        return nil unless value && !value.empty?
+        value
       end
     end
 
@@ -42,14 +76,13 @@ module DataMagic
     end
 
     def examples
-      if @examples.nil?
-        api = api_endpoint_names[0]
-        data['examples'] ||= []
-        @examples = data['examples'].map do |i|
-          Example.new(i.merge(endpoint: api))
-        end
+      return @examples unless @examples.nil?
+
+      api = api_endpoint_names[0]
+      data['examples'] ||= []
+      @examples = data['examples'].map do |i|
+        Example.new(i.merge(endpoint: api))
       end
-      @examples
     end
 
     def categories
@@ -83,7 +116,7 @@ module DataMagic
     end
 
     def logger
-      Config.logger
+      self.class.logger
     end
 
     def csv_column_type(column_name)
