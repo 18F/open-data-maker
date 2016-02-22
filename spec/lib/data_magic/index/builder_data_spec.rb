@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'data_magic'
 
-describe "DataMagic::Index::BuilderData #normalize!" do
+describe DataMagic::Index::BuilderData,  "#normalize!" do
   it 'converts file handles to their contents' do
     f = File.new('./spec/fixtures/cities_without_yml/cities50.csv')
     builder_data = DataMagic::Index::BuilderData.new(f, {})

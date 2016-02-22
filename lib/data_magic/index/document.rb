@@ -5,7 +5,7 @@ module DataMagic
 
       def initialize(data)
         @data = data
-        @id ||= calculate_id
+        @id = calculate_id
       end
 
       def remove_ids

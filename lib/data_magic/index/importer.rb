@@ -107,7 +107,7 @@ module DataMagic
       end
 
       def event_logger
-        @event_logger ||= EventLogger.new(self)
+        @event_logger ||= EventLogger.new
       end
 
       def at_limit?
