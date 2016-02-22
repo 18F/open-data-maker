@@ -8,6 +8,7 @@ require_relative 'index/document_builder'
 require_relative 'index/importer'
 require_relative 'index/output'
 require_relative 'index/repository'
+require_relative 'index/row_importer'
 require_relative 'index/super_client'
 
 require 'action_view'  # for distance_of_time_in_words (logging time)
