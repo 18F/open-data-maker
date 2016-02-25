@@ -271,6 +271,19 @@ module DataMagic
       @field_types
     end
 
+    def recreate_indexed_config
+      # the config specifies how we index, so we always want to delete the
+      # index when we update the configuration document
+      DataMagic.client.indices.delete index: scoped_index_name if index_exists?
+      DataMagic.create_index(scoped_index_name, field_types)  ## DataMagic::Index.create ?
+      DataMagic.client.index index: scoped_index_name, type: 'config', id: 1, body: @data
+    end
+
+    def delete_index_and_reload_config
+      load_datayaml
+      recreate_indexed_config
+    end
+
     # update current configuration document in the index, if needed
     # return whether the current config was new and required an update
     def update_indexed_config
@@ -278,9 +291,7 @@ module DataMagic
       index_name = scoped_index_name
       if index_needs_update?
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
-        DataMagic.client.indices.delete index: index_name if index_exists?
-        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
-        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
+        recreate_indexed_config
         updated = true
       end
       updated

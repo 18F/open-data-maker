@@ -271,10 +271,36 @@ module DataMagic
           logger.info "re-indexing..."
 
           self.import_with_dictionary
-          logger.info "indexing on a thread"
         end
       end
     end
+  end
+
+  def self.reindex
+    logger.info "index_data_if_needed"
+    if @index_thread and @index_thread.alive?
+      Thread.kill(@index_thread)
+      @index_thread = nil
+    else
+      config.delete_index_and_reload_config  # refresh the config
+      logger.info "config loaded... hitting the big RESET button"
+      @index_thread = Thread.new do
+        logger.info "re-indexing..."
+
+        self.import_with_dictionary
+      end
+    end
+  end
+
+
+  def self.eservice_uri
+    if @eservice_uri.nil?
+      eservice = ::CF::App::Credentials.find_by_service_name(ENV['es_service'] || 'eservice')
+      logger.info "eservice: #{eservice.inspect}"
+      fail "Please set up eservice credentials in Cloud Foundry env" if eservice.nil?
+      @eservice_uri = eservice['url'] || eservice['uri']
+    end
+    @eservice_uri
   end
 
   def self.client
@@ -288,10 +314,9 @@ module DataMagic
       if ENV['VCAP_APPLICATION']    # Cloud Foundry
         logger.info "connect to Cloud Foundry elasticsearch service"
         eservice = ::CF::App::Credentials.find_by_service_name(ENV['es_service'] || 'eservice')
-        logger.info "eservice: #{eservice.inspect}"
-        service_uri = eservice['url'] || eservice['uri']
-        logger.info "service_uri: #{service_uri}"
-        opts[:host] = service_uri
+        eservice_uri = eservice['url'] || eservice['uri']
+        logger.info "eservice_uri: #{eservice_uri}"
+        opts[:host] = eservice_uri
         @client = ::Elasticsearch::Client.new(opts)
         Stretchy.configure do |c|
           c.client = @client   # use a custom client
@@ -319,6 +344,7 @@ module DataMagic
     if self.config.nil?   # only init once
       ::Aws.eager_autoload!       # see https://github.com/aws/aws-sdk-ruby/issues/833
       self.config = Config.new(s3: self.s3)    # loads data.yaml
+      self.client   # make sure we can set up the Elasticsearch client
       self.index_data_if_needed unless options[:load_now] == false
       @index_thread.join if options[:load_now] and @index_thread
     end
