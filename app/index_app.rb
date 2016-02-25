@@ -22,9 +22,8 @@ module OpenDataMaker
     end
 
     get '/reindex' do
-      DataMagic.destroy
-      DataMagic.init(load_now: true)
-      "complete"
+      DataMagic.reindex
+      "reindexing..."
     end
   end
 
