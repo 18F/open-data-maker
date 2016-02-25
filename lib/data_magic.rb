@@ -313,8 +313,6 @@ module DataMagic
     if @client.nil?
       if ENV['VCAP_APPLICATION']    # Cloud Foundry
         logger.info "connect to Cloud Foundry elasticsearch service"
-        eservice = ::CF::App::Credentials.find_by_service_name(ENV['es_service'] || 'eservice')
-        eservice_uri = eservice['url'] || eservice['uri']
         logger.info "eservice_uri: #{eservice_uri}"
         opts[:host] = eservice_uri
         @client = ::Elasticsearch::Client.new(opts)
