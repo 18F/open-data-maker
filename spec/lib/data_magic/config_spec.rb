@@ -110,7 +110,7 @@ describe DataMagic::Config do
       context "after loading config" do
         let(:fixture_path) { "./spec/fixtures/import_with_dictionary" }
         before do
-          config.load_datayaml(fixture_path)
+          config.load_yaml_data(fixture_path)
         end
         it "should be true" do
           expect(config.update_indexed_config).to be true
@@ -132,7 +132,7 @@ describe DataMagic::Config do
       end
 
       it 'should set null value field' do
-        config.load_datayaml("./spec/fixtures/import_with_null_value")
+        config.load_yaml_data("./spec/fixtures/import_with_null_value")
         expect(config.null_value).to eq('abc123')
       end
     end

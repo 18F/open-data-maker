@@ -6,28 +6,25 @@ require_relative 'load/yaml_data'
 require_relative 'load/s3_adapter'
 require_relative 'load/local_adapter'
 
+require_relative 'configuration/values'
+
+require 'forwardable'
+
 module DataMagic
   class Config
-    attr_reader :data_path, :data, :dictionary, :files, :s3, :api_endpoints,
-                :null_value, :file_config, :yaml_data
-
-    attr_accessor :page_size
+    attr_reader :data_path, :s3, :null_value, :file_config, :yaml_data, :values, :data_path
 
     def initialize(options = {})
-      @api_endpoints = {}
-      @files = []
-      @dictionary = {}
-      @page_size = DataMagic::DEFAULT_PAGE_SIZE
-      @extensions = DataMagic::DEFAULT_EXTENSIONS
+      @values = Configuration::Values.new
       @s3 = options[:s3]
 
       @yaml_data = Load::YamlData.new(options)
       @data_path = yaml_data.path
 
       if options[:load_datayaml] == false
-        @data = {}
+        values.data = {}
       else
-        load_datayaml
+        load_yaml_data
       end
     end
 
@@ -36,6 +33,9 @@ module DataMagic
       @s3 = s3
       Config.load
     end
+
+    extend Forwardable
+    def_delegators :values, :api_endpoints, :dictionary, :files, :page_size, :extensions, :data
 
     # ----------
     # Logger stuff
@@ -59,36 +59,36 @@ module DataMagic
       yaml_data.read(path)
     end
 
-    def load_yaml(path = nil)
+    def read_yaml(path = nil)
       yaml_data.read_yaml(path)
     end
 
-    def load_datayaml(directory_path = nil)
+    def load_yaml_data(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
         directory_path = data_path
       end
 
-      if @data and @data['data_path'] == directory_path
+      if data and data['data_path'] == directory_path
         logger.debug "already loaded, nothing to do!"
       else
         logger.debug "load config #{directory_path.inspect}"
-        @data = load_yaml(directory_path)
-        @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect[0..600]}"
-        @data['index'] ||= clean_index(@data_path)
-        endpoint = @data['api'] || clean_index(@data_path)
-        @dictionary = @data['dictionary'] || {}
-        @data['options'] ||= {}
-        Hashie.symbolize_keys! @data['options']
-        @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
+        values.data = read_yaml(directory_path)
+        data['unique'] ||= []
+        logger.debug "config: #{data.inspect[0..600]}"
+        data['index'] ||= clean_index(data_path)
+        endpoint = data['api'] || clean_index(data_path)
+        values.dictionary = data['dictionary'] || {}
+        data['options'] ||= {}
+        Hashie.symbolize_keys! data['options']
+        api_endpoints[endpoint] = {index: data['index']}
+        values.files, data['files'] = parse_files(directory_path, data['files'], data['options'])
 
-        logger.debug "file_config: #{@data['files'].inspect}"
-        logger.debug "no files found" if @data['files'].empty?
+        logger.debug "file_config: #{data['files'].inspect}"
+        logger.debug "no files found" if data['files'].empty?
 
         # keep track of where we loaded our data, so we can avoid loading again
-        @data['data_path'] = directory_path
+        data['data_path'] = directory_path
         @data_path = directory_path  # make sure this is set, in case it changed
       end
       scoped_index_name
@@ -96,7 +96,7 @@ module DataMagic
     # ---------
 
     def options
-      @data['options']
+      data['options']
     end
 
     def dictionary_only_search?
@@ -128,7 +128,7 @@ module DataMagic
     end
 
     def clear_all
-      unless @data.nil? or @data.empty?
+      unless data.nil? or data.empty?
         logger.info "Config.clear_all: deleting index '#{scoped_index_name}'"
         Stretchy.delete scoped_index_name
         DataMagic.client.indices.clear_cache
@@ -142,18 +142,18 @@ module DataMagic
     # fetches file configuration
     # add: whatever
     def additional_data_for_file(index)
-      @data.fetch('files', []).fetch(index, {}).fetch('add', nil)
+      data.fetch('files', []).fetch(index, {}).fetch('add', nil)
     end
 
     def info_for_file(index, field)
       field = field.to_s
-      result = @data.fetch('files', []).fetch(index, {}).fetch(field, nil)
+      result = data.fetch('files', []).fetch(index, {}).fetch(field, nil)
       result = IndifferentHash.new(result) if result.is_a? Hash
       result
     end
 
     def scoped_index_name(index_name = nil)
-      index_name ||= @data['index']
+      index_name ||= data['index']
       env = ENV['RACK_ENV']
       "#{env}-#{index_name}"
     end
@@ -161,19 +161,19 @@ module DataMagic
     # returns an array of api_endpoints
     # list of strings
     def api_endpoint_names
-      @api_endpoints.keys
+      api_endpoints.keys
     end
 
     def find_index_for(api)
-      api_info = @api_endpoints[api] || {}
+      api_info = api_endpoints[api] || {}
       api_info[:index]
     end
 
     def dictionary=(yaml_hash = {})
-      @dictionary = IndifferentHash.new(yaml_hash)
-      @dictionary.each do |key, info|
+      values.dictionary = IndifferentHash.new(yaml_hash)
+      dictionary.each do |key, info|
         if info === String
-          @dictionary[key] = {source: info}
+          dictionary[key] = {source: info}
         end
       end
     end
@@ -212,7 +212,7 @@ module DataMagic
     end
 
     def file_config
-      @data.fetch('files', [])
+      data.fetch('files', [])
     end
 
     # returns a hash that lets us know the types of what we read from csv
@@ -366,14 +366,14 @@ module DataMagic
         end
       end
       logger.debug "old config version (from es): #{(old_config.nil? ? old_config : old_config['version']).inspect}"
-      logger.debug "new config version (from data.yaml): #{@data['version'].inspect}"
+      logger.debug "new config version (from data.yaml): #{data['version'].inspect}"
 
-      old_config.nil? || old_config["version"] != @data["version"]
+      old_config.nil? || old_config["version"] != data["version"]
     end
 
     def list_files(path)
       Dir["#{path}/*"].select { |file|
-        @extensions.include? File.extname(file)
+        extensions.include? File.extname(file)
       }.map { |file|
         File.basename file
       }
@@ -418,7 +418,7 @@ module DataMagic
     end
 
     def null_value
-      @data['null_value'] || 'NULL'
+      data['null_value'] || 'NULL'
     end
   end # class Config
 end # module DataMagic
