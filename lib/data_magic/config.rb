@@ -329,9 +329,19 @@ module DataMagic
     def read_from_s3(bucket, key)
       result = nil
       begin
-        tmpfile = Tempfile.new(key)
+        # the explicit encoding required to ensure no encoding conversion is attempted,
+        # and that we write in "binary" mode.
+        tmpfile = Tempfile.new(key, encoding: 'ascii-8bit')
         response = @s3.get_object(bucket: bucket, key: key, response_target: tmpfile)
         result = response.body
+        # manual check for BOM, set pos beyond it if necessary.
+        first_three_bytes = result.sysread(3)
+        if first_three_bytes == "\xEF\xBB\xBF".force_encoding(first_three_bytes.encoding)
+          # do nothing, pos now beyond BOM
+        else
+          result.rewind
+        end
+        result
       rescue Aws::S3::Errors::NoSuchKey
         # we don't want to raise this one, might be expected
         result = nil
