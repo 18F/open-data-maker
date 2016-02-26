@@ -31,6 +31,70 @@ module DataMagic
       end
     end
 
+    def self.init(s3 = nil)
+      logger.info "Config.init #{s3.inspect}"
+      @s3 = s3
+      Config.load
+    end
+
+    # ----------
+    # Logger stuff
+    def self.logger=(new_logger)
+      @logger = new_logger
+    end
+
+    def self.logger
+      @logger ||= Logger.new("log/#{ENV['RACK_ENV'] || 'development'}.log")
+    end
+
+    def logger
+      self.class.logger
+    end
+    # ---------
+
+
+    # ----------
+    # File manipulation and stuff
+    def read_path(path)
+      yaml_data.read(path)
+    end
+
+    def load_yaml(path = nil)
+      yaml_data.read_yaml(path)
+    end
+
+    def load_datayaml(directory_path = nil)
+      logger.debug "---- Config.load -----"
+      if directory_path.nil? or directory_path.empty?
+        directory_path = data_path
+      end
+
+      if @data and @data['data_path'] == directory_path
+        logger.debug "already loaded, nothing to do!"
+      else
+        logger.debug "load config #{directory_path.inspect}"
+        @data = load_yaml(directory_path)
+        @data['unique'] ||= []
+        logger.debug "config: #{@data.inspect[0..600]}"
+        @data['index'] ||= clean_index(@data_path)
+        endpoint = @data['api'] || clean_index(@data_path)
+        @dictionary = @data['dictionary'] || {}
+        @data['options'] ||= {}
+        Hashie.symbolize_keys! @data['options']
+        @api_endpoints[endpoint] = {index: @data['index']}
+        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
+
+        logger.debug "file_config: #{@data['files'].inspect}"
+        logger.debug "no files found" if @data['files'].empty?
+
+        # keep track of where we loaded our data, so we can avoid loading again
+        @data['data_path'] = directory_path
+        @data_path = directory_path  # make sure this is set, in case it changed
+      end
+      scoped_index_name
+    end
+    # ---------
+
     def options
       @data['options']
     end
@@ -63,30 +127,12 @@ module DataMagic
       Category.new(id).assemble
     end
 
-    def self.init(s3 = nil)
-      logger.info "Config.init #{s3.inspect}"
-      @s3 = s3
-      Config.load
-    end
-
     def clear_all
       unless @data.nil? or @data.empty?
         logger.info "Config.clear_all: deleting index '#{scoped_index_name}'"
         Stretchy.delete scoped_index_name
         DataMagic.client.indices.clear_cache
       end
-    end
-
-    def self.logger=(new_logger)
-      @logger = new_logger
-    end
-
-    def self.logger
-      @logger ||= Logger.new("log/#{ENV['RACK_ENV'] || 'development'}.log")
-    end
-
-    def logger
-      self.class.logger
     end
 
     def csv_column_type(column_name)
@@ -117,7 +163,6 @@ module DataMagic
     def api_endpoint_names
       @api_endpoints.keys
     end
-
 
     def find_index_for(api)
       api_info = @api_endpoints[api] || {}
@@ -326,14 +371,6 @@ module DataMagic
       old_config.nil? || old_config["version"] != @data["version"]
     end
 
-    def read_path(path)
-      yaml_data.read(path)
-    end
-
-    def load_yaml(path = nil)
-      yaml_data.read_yaml(path)
-    end
-
     def list_files(path)
       Dir["#{path}/*"].select { |file|
         @extensions.include? File.extname(file)
@@ -383,37 +420,5 @@ module DataMagic
     def null_value
       @data['null_value'] || 'NULL'
     end
-
-    def load_datayaml(directory_path = nil)
-      logger.debug "---- Config.load -----"
-      if directory_path.nil? or directory_path.empty?
-        directory_path = data_path
-      end
-
-      if @data and @data['data_path'] == directory_path
-        logger.debug "already loaded, nothing to do!"
-      else
-        logger.debug "load config #{directory_path.inspect}"
-        @data = load_yaml(directory_path)
-        @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect[0..600]}"
-        @data['index'] ||= clean_index(@data_path)
-        endpoint = @data['api'] || clean_index(@data_path)
-        @dictionary = @data['dictionary'] || {}
-        @data['options'] ||= {}
-        Hashie.symbolize_keys! @data['options']
-        @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
-
-        logger.debug "file_config: #{@data['files'].inspect}"
-        logger.debug "no files found" if @data['files'].empty?
-
-        # keep track of where we loaded our data, so we can avoid loading again
-        @data['data_path'] = directory_path
-        @data_path = directory_path  # make sure this is set, in case it changed
-      end
-      scoped_index_name
-    end
-
   end # class Config
 end # module DataMagic
