@@ -18,7 +18,23 @@ module DataMagic
         adapter.read
       end
 
+      def read_yaml(path)
+        raw = find_and_read(path)
+        YAML.load(raw)
+      end
+
       private
+
+      def find_and_read(path)
+        read(File.join(path, "data.yaml")) ||
+          read(File.join(path, "data.yml")) ||
+          handle_nil_data(path)
+      end
+
+      def handle_nil_data(path)
+        return '{}' if ENV['ALLOW_MISSING_YML']
+        raise IOError, "No data.y?ml found at #{path}. Did you mean to define ALLOW_MISSING_YML environment variable?"
+      end
 
       def adapter
         adapters.detect(&:can_handle?)

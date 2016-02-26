@@ -331,15 +331,7 @@ module DataMagic
     end
 
     def load_yaml(path = nil)
-      logger.info "load_yaml: #{path}"
-      raw = read_path(File.join(path, "data.yaml"))
-      raw ||= read_path(File.join(path, "data.yml"))
-      raw ||= '{}' if ENV['ALLOW_MISSING_YML']
-      if raw.nil?
-        raise IOError, "No data.y?ml found at #{path}. Did you mean to define ALLOW_MISSING_YML environment variable?"
-      end
-
-      YAML.load(raw)
+      yaml_data.read_yaml(path)
     end
 
     def list_files(path)
