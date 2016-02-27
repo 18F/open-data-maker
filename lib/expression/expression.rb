@@ -16,4 +16,10 @@ class Expression
     Hashie.stringify_keys! vars
     Eval.new.apply(@tree, variables: vars)
   end
+
+  def self.find_or_create(expr, name = 'unknown')
+    @cached_expression ||= {}
+    @cached_expression[expr] ||= Expression.new(expr, name)
+    @cached_expression[expr]
+  end
 end

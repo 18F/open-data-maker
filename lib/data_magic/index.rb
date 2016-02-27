@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'patron'
 
 require_relative 'config'
 require_relative 'index/builder_data'
