@@ -1,7 +1,7 @@
 require 'data_magic'
 require 'ruby-prof'
 
-desc "import files from /data directory, to ignore invalid utf8 chars use rake import[force]"
+desc "import files from DATA_PATH, rake import[profile=true] for profile output"
 task :import, [:profile] => :environment do |t, args|
   options = {}
   start_time = Time.now

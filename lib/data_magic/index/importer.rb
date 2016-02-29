@@ -88,7 +88,6 @@ module DataMagic
 
       def setup
         client.create_index
-        #builder_data.normalize!
         log_setup
       end
 
