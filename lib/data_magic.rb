@@ -308,8 +308,8 @@ module DataMagic
     {
       transport_options: {
         request: {
-          timeout: 2*60,
-          open_timeout: 2*60
+          timeout: 5*60,
+          open_timeout: 5*60
         }
       }
     }
