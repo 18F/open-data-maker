@@ -304,7 +304,15 @@ module DataMagic
   end
 
   def self.client
-    opts = {}
+    opts =
+    {
+      transport_options: {
+        request: {
+          timeout: 2*60,
+          open_timeout: 2*60
+        }
+      }
+    }
     if ENV['ES_DEBUG']
       tracer = Logger.new(STDOUT)
       tracer.formatter = ->(_s, _d, _p, m) { "#{m.gsub(/^.*$/) { |n| '   ' + n }}\n" }

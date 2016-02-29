@@ -1,5 +1,4 @@
 require 'forwardable'
-require 'patron'
 
 require_relative 'config'
 require_relative 'index/builder_data'
@@ -46,9 +45,11 @@ module DataMagic
         logger.debug "*"*40
         logger.debug "*    #{filepath}"
         logger.debug "*"*40
+        file_start = Time.now
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
-        logger.debug "imported #{rows} rows"
+        file_end = Time.now
+        logger.debug "imported #{rows} rows in #{distance_of_time_in_words(file_end, file_start)}, ms: #{file_end - file_start}"
       rescue DataMagic::InvalidData => e
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
       end

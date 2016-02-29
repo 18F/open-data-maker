@@ -147,7 +147,6 @@ GEM
     parallel (1.6.1)
     parslet (1.7.1)
       blankslate (>= 2.0, <= 4.0)
-    patron (0.5.0)
     polyglot (0.3.5)
     pry (0.10.1)
       coderay (~> 1.1.0)
@@ -240,7 +239,6 @@ DEPENDENCIES
   padrino (= 0.12.5)
   parallel
   parslet
-  patron
   pry
   pry-byebug
   puma

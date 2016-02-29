@@ -25,7 +25,6 @@ gem 'dotenv'
 gem 'oj'
 gem 'parslet'
 gem 'parallel'
-gem 'patron'
 
 # Project requirements
 gem 'rake'
