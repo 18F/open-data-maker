@@ -324,7 +324,7 @@ module DataMagic
       # index when we update the configuration document
       DataMagic.client.indices.delete index: scoped_index_name if index_exists?
       DataMagic.create_index(scoped_index_name, field_types)  ## DataMagic::Index.create ?
-      DataMagic.client.index index: scoped_index_name, type: 'config', id: 1, body: @data
+      DataMagic.client.index index: scoped_index_name, type: 'config', id: 1, body: data
     end
 
     def delete_index_and_reload_config
@@ -344,7 +344,6 @@ module DataMagic
       end
       updated
     end
-
 
     def index_exists?(index_name=nil)
       index_name ||= scoped_index_name
