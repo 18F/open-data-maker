@@ -16,10 +16,23 @@ describe "unique key(s)" do
   let(:sort)    { nil }
   let(:result)  { DataMagic.search(query, sort: sort) }
   let(:first)   { result['results'].first }
+  let(:id_one)   { result['results'].find { |item| item['id'] == '1' } }
   let(:total)   { result['metadata']['total'] }
 
   it "creates one document per unique id" do
     expect(total).to eq(11)
+  end
+
+  it "nests documents per unique id" do
+    expect(id_one['id']).to eq('1')
+    expect(id_one['2013']).to_not be_nil
+  end
+
+  it "root document contains special 'only' fields" do
+    expect(id_one['id']).to eq('1')
+    expect(id_one['name']).to eq('Reichert University')
+    expect(id_one['city']).to eq('Normal')
+    expect(id_one['state']).to eq('AL')
   end
 
   context "can import a subset of fields" do
