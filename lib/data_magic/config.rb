@@ -287,10 +287,11 @@ module DataMagic
       DataMagic.client.indices.delete index: scoped_index_name if index_exists?
       DataMagic.create_index(scoped_index_name, field_types)  ## DataMagic::Index.create ?
       DataMagic.client.index index: scoped_index_name, type: 'config', id: 1, body: @data
+      DataMagic.client.indices.refresh index: scoped_index_name
     end
 
     def delete_index_and_reload_config
-      load_or_reload_datayaml
+      load_or_reload_datayaml(data_path)
       recreate_indexed_config
     end
 

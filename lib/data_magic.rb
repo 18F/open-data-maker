@@ -284,12 +284,11 @@ module DataMagic
       @index_thread = nil
     end
 
-    logger.info "hitting the big RESET button"
+    logger.info "DELETE the index and RELOAD config..."
     config.delete_index_and_reload_config  # refresh the config
     @index_thread = Thread.new do
       logger.info "re-indexing!"
-
-      self.import_with_dictionary
+      self.index_with_dictionary
     end
   end
 
