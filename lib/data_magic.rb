@@ -277,18 +277,19 @@ module DataMagic
   end
 
   def self.reindex
-    logger.info "index_data_if_needed"
+    logger.info "reindex"
     if @index_thread and @index_thread.alive?
+      logger.info "kill off old indexing process"
       Thread.kill(@index_thread)
       @index_thread = nil
-    else
-      config.delete_index_and_reload_config  # refresh the config
-      logger.info "config loaded... hitting the big RESET button"
-      @index_thread = Thread.new do
-        logger.info "re-indexing..."
+    end
 
-        self.import_with_dictionary
-      end
+    logger.info "hitting the big RESET button"
+    config.delete_index_and_reload_config  # refresh the config
+    @index_thread = Thread.new do
+      logger.info "re-indexing!"
+
+      self.import_with_dictionary
     end
   end
 

@@ -8,10 +8,20 @@ module DataMagic
                 :null_value, :file_config
     attr_accessor :page_size
 
-    def initialize(options = {})
+    def init_ivars
       @api_endpoints = {}
       @files = []
       @dictionary = {}
+      @examples = nil
+      @column_types = nil
+      @csv_column_types = nil
+      @field_mapping = nil
+      @calculated_field_list = nil
+      @field_types = nil
+    end
+
+    def initialize(options = {})
+      init_ivars
       @page_size = DataMagic::DEFAULT_PAGE_SIZE
       @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
@@ -280,7 +290,7 @@ module DataMagic
     end
 
     def delete_index_and_reload_config
-      load_datayaml
+      load_or_reload_datayaml
       recreate_indexed_config
     end
 
@@ -296,7 +306,6 @@ module DataMagic
       end
       updated
     end
-
 
     def index_exists?(index_name=nil)
       index_name ||= scoped_index_name
@@ -456,6 +465,28 @@ module DataMagic
       @data['null_value'] || 'NULL'
     end
 
+    def load_or_reload_datayaml(directory_path)
+      logger.debug "load config #{directory_path.inspect}"
+      init_ivars
+      @data = load_yaml(directory_path)
+      @data['unique'] ||= []
+      logger.debug "config: #{@data.inspect[0..600]}"
+      @data['index'] ||= clean_index(@data_path)
+      endpoint = @data['api'] || clean_index(@data_path)
+      @dictionary = @data['dictionary'] || {}
+      @data['options'] ||= {}
+      Hashie.symbolize_keys! @data['options']
+      @api_endpoints[endpoint] = {index: @data['index']}
+      @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
+
+      logger.debug "file_config: #{@data['files'].inspect}"
+      logger.debug "no files found" if @data['files'].empty?
+
+      # keep track of where we loaded our data, so we can avoid loading again
+      @data['data_path'] = directory_path
+      @data_path = directory_path  # make sure this is set, in case it changed
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -465,24 +496,7 @@ module DataMagic
       if @data and @data['data_path'] == directory_path
         logger.debug "already loaded, nothing to do!"
       else
-        logger.debug "load config #{directory_path.inspect}"
-        @data = load_yaml(directory_path)
-        @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect[0..600]}"
-        @data['index'] ||= clean_index(@data_path)
-        endpoint = @data['api'] || clean_index(@data_path)
-        @dictionary = @data['dictionary'] || {}
-        @data['options'] ||= {}
-        Hashie.symbolize_keys! @data['options']
-        @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
-
-        logger.debug "file_config: #{@data['files'].inspect}"
-        logger.debug "no files found" if @data['files'].empty?
-
-        # keep track of where we loaded our data, so we can avoid loading again
-        @data['data_path'] = directory_path
-        @data_path = directory_path  # make sure this is set, in case it changed
+        load_or_reload_datayaml(directory_path)
       end
       scoped_index_name
     end
