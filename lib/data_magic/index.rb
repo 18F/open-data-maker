@@ -27,7 +27,7 @@ module DataMagic
     options[:mapping] = config.field_mapping
     options = options.merge(config.options)
 
-    es_index_name = self.config.load_datayaml(options[:data_path])
+    es_index_name = self.config.load_yaml_data(options[:data_path])
     unless config.index_exists?(es_index_name)
       logger.info "creating #{es_index_name}"   # TO DO: fix #14
       create_index es_index_name, config.field_types
