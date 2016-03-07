@@ -111,8 +111,8 @@ to clear the data, assuming the data set  had an index named "president-data"
 rake es:delete[president-data]
 ```
 
-you may alternatly delete all the indices (which could affect other apps if
-they are using your local elasticsearch)
+you may alternately delete all the indices (which could affect other apps if
+they are using your local Elasticsearch)
 
 ```
 rake es:delete[_all]
@@ -121,6 +121,8 @@ rake es:delete[_all]
 ## Want to help?
 
 See [Contribution Guide](CONTRIBUTING.md)
+
+Read additional [implementation notes](NOTES.md)
 
 [Elasticsearch]: https://www.elastic.co/products/elasticsearch
 [Homebrew]: http://brew.sh/
