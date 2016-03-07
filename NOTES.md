@@ -3,10 +3,11 @@
 
 Details about the data are specified by DATA_PATH/data.yaml.  
 Where DATA_PATH is an environment variable, which may be:
-    `s3://username:password@bucket_name/path`
-    `s3://bucket_name/path`
-    `s3://bucket_name`
-    a local path like: `./data`
+
+* `s3://username:password@bucket_name/path`
+* `s3://bucket_name/path`
+* `s3://bucket_name`
+* a local path like: `./data`
 
 
 This file is loaded the first time it is needed and then stored in memory.  The contents of `data.yaml` are stored as JSON in Elasticsearch in a single document of type `config` with id `1`.  
