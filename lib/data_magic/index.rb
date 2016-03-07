@@ -8,6 +8,7 @@ require_relative 'index/document_builder'
 require_relative 'index/importer'
 require_relative 'index/output'
 require_relative 'index/repository'
+require_relative 'index/row_importer'
 require_relative 'index/super_client'
 
 require 'action_view'  # for distance_of_time_in_words (logging time)
@@ -19,19 +20,10 @@ module DataMagic
     Index::Importer.process(data, options)
   end
 
-  def self.import_with_dictionary(options = {})
+  # pre-condition: index is already created w/ config
+  def self.index_with_dictionary(options = {})
     start_time = Time.now
-    Config.logger.debug "--- import_with_dictionary, starting at #{start_time}"
-
-    #logger.debug("field_mapping: #{field_mapping.inspect}")
-    options[:mapping] = config.field_mapping
-    options = options.merge(config.options)
-
-    es_index_name = self.config.load_datayaml(options[:data_path])
-    unless config.index_exists?(es_index_name)
-      logger.info "creating #{es_index_name}"   # TO DO: fix #14
-      create_index es_index_name, config.field_types
-    end
+    Config.logger.debug "--- index_with_dictionary, starting at #{start_time}"
 
     logger.info "files: #{self.config.files}"
     config.files.each_with_index do |filepath, index|
@@ -44,9 +36,11 @@ module DataMagic
         logger.debug "*"*40
         logger.debug "*    #{filepath}"
         logger.debug "*"*40
+        file_start = Time.now
         data = config.read_path(filepath)
         rows, _ = DataMagic.import_csv(data, options)
-        logger.debug "imported #{rows} rows"
+        file_end = Time.now
+        logger.debug "imported #{rows} rows in #{distance_of_time_in_words(file_end, file_start)}, ms: #{file_end - file_start}"
       rescue DataMagic::InvalidData => e
        Config.logger.debug "Error: skipping #{filepath}, #{e.message}"
       end
@@ -54,6 +48,21 @@ module DataMagic
     end_time = Time.now
     logger.debug "indexing complete: #{distance_of_time_in_words(end_time, start_time)}"
     logger.debug "duration: #{end_time - start_time}"
+  end
+
+  def self.import_with_dictionary(options = {})
+    #logger.debug("field_mapping: #{field_mapping.inspect}")
+    options[:mapping] = config.field_mapping
+    options = options.merge(config.options)
+
+    es_index_name = self.config.load_datayaml(options[:data_path])
+    unless config.index_exists?(es_index_name)
+      logger.info "creating #{es_index_name}"   # TO DO: fix #14
+      create_index es_index_name, config.field_types
+    end
+
+    index_with_dictionary(options)
+
   end # import_with_dictionary
 
 private

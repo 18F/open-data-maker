@@ -13,13 +13,12 @@ module DataMagic
         @headers = doc.headers
       end
 
-
       def skipping(id)
         skipped << id
       end
 
-      def increment
-        @row_count += 1
+      def increment(count = 1)
+        @row_count += count
       end
 
       def validate!

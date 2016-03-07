@@ -277,18 +277,18 @@ module DataMagic
   end
 
   def self.reindex
-    logger.info "index_data_if_needed"
+    logger.info "reindex"
     if @index_thread and @index_thread.alive?
+      logger.info "kill off old indexing process"
       Thread.kill(@index_thread)
       @index_thread = nil
-    else
-      config.delete_index_and_reload_config  # refresh the config
-      logger.info "config loaded... hitting the big RESET button"
-      @index_thread = Thread.new do
-        logger.info "re-indexing..."
+    end
 
-        self.import_with_dictionary
-      end
+    logger.info "DELETE the index and RELOAD config..."
+    config.delete_index_and_reload_config  # refresh the config
+    @index_thread = Thread.new do
+      logger.info "re-indexing!"
+      self.index_with_dictionary
     end
   end
 
@@ -304,17 +304,30 @@ module DataMagic
   end
 
   def self.client
+    opts =
+    {
+      transport_options: {
+        request: {
+          timeout: 5*60,
+          open_timeout: 5*60
+        }
+      }
+    }
+    if ENV['ES_DEBUG']
+      tracer = Logger.new(STDOUT)
+      tracer.formatter = ->(_s, _d, _p, m) { "#{m.gsub(/^.*$/) { |n| '   ' + n }}\n" }
+      opts[:tracer] = tracer
+    end
     if @client.nil?
       if ENV['VCAP_APPLICATION']    # Cloud Foundry
         logger.info "connect to Cloud Foundry elasticsearch service"
         logger.info "eservice_uri: #{eservice_uri}"
-        @client = ::Elasticsearch::Client.new host: eservice_uri
-        Stretchy.configure do |c|
-          c.client = @client   # use a custom client
-        end
-      else
-        logger.info "default local elasticsearch connection"
-        @client = ::Elasticsearch::Client.new
+        opts[:host] = eservice_uri
+      end
+      logger.info "default local elasticsearch connection"
+      @client = ::Elasticsearch::Client.new(opts)
+      Stretchy.configure do |c|
+        c.client = @client   # use a custom client
       end
     end
     @client

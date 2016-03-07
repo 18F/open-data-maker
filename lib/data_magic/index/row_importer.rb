@@ -31,7 +31,7 @@ module DataMagic
       def log_row_start
         trigger("debug", "csv parsed") if importer.empty?
         trigger("info", "row #{importer.row_count}", document, 500) if importer.row_count % 500 == 0
-        trigger("info", "id", document.id)
+        #trigger("info", "id", document.id)
         if document.id_empty?
           trigger("warn", "blank id")
           trigger("warn", "unique", config.data["unique"])
