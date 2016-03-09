@@ -114,7 +114,7 @@ rake es:delete[_all]
 ```
 
 The data directory can optionally include a file called `data.yaml` (see [the sample one](sample-data/data.yaml) for its schema) that references one or more `.csv` files and specifies data types,
-field name mapping, and other.
+field name mapping, and other support data.
 
 ## Experimental web UI for indexing
 
