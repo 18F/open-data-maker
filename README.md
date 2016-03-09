@@ -22,7 +22,7 @@ See our [Installation Guide](INSTALL.md)
 
 ## How this works
 
-By default, data will be loaded from /sample-data
+By default, data will be loaded from /sample-data when you run `rake import`
 
 * [cities100.csv](sample-data/cities100.csv) - dataset of 100 most populous cities in the US
 * [data.yaml](sample-data/data.yaml) - configuration for
