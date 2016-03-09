@@ -62,6 +62,19 @@ module DataMagic
   #   Public Class Methods
   #========================================================================
 
+  # BigDecimal turns floats to strings; we undo that by casting BigDecimal down to Float.
+  def self.downgrade_big_decimal(hash)
+    hash.each do |k, v|
+      if v.is_a? BigDecimal
+        hash[k] = v.to_f
+      elsif v.is_a? Hash
+        downgrade_big_decimal(hash[k])
+      end
+    end
+    
+    hash
+  end
+  
   # thin layer on elasticsearch query
   def self.search(terms, options = {})
     terms = IndifferentHash.new(terms)
@@ -107,8 +120,9 @@ module DataMagic
 
         found.keys.each { |key| found[key] = found[key][0] }
         # now it should look like this:
-        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace}
-
+        # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace"}
+        downgrade_big_decimal found
+        
         # re-insert null fields that didn't get returned by ES
         query_body[:fields].each do |field|
           if !found.has_key?(field)
@@ -143,9 +157,10 @@ module DataMagic
         if options[:metrics] && options[:metrics].size > 0
           aggregations[f_name] = values.reject { |k, v| !(options[:metrics].include? k) }
         else
-          # Keep everything is no metric list is provided
+          # Keep all metrics returned by ES, if no metric list is provided as an API parameter
           aggregations[f_name] = values
         end
+        downgrade_big_decimal aggregations[f_name]        
       end
 
       simple_result.merge!({"aggregations" => aggregations})

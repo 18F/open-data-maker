@@ -30,7 +30,7 @@ describe "DataMagic #search" do
       it "can find document with one attribute" do
         result = DataMagic.search({name: "Marilyn"})
         expected["results"] = [{"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield",
-                                "age" => "14", "height" => "2"}]
+                                "age" => "14", "height" => "2801928409.81029800129"}]
         expect(result).to eq(expected)
       end
 
@@ -44,8 +44,9 @@ describe "DataMagic #search" do
       it "can find a document with a set of values delimited by commas" do
         result = DataMagic.search({name: "Paul,Marilyn"})
         expected['metadata']["total"] = 3
+
         expect(result["results"]).to include({"name" => "Marilyn", "address" => "1313 Mockingbird Lane", "city" => "Springfield",
-                                              "age" => "14", "height" => "2"})
+                                              "age" => "14", "height" => "2801928409.81029800129"})
         expect(result["results"]).to include({"name" => "Paul", "address" => "15 Penny Lane", "city" => "Liverpool",
                                               "age" => "10", "height" => "142"})
         expect(result["results"]).to include({"name" => "Paul", "address" => "19 N Square", "city" => "Boston",
@@ -131,13 +132,13 @@ describe "DataMagic #search" do
     it "can correctly compute filtered statistics" do
       expected["metadata"]["total"] = 2
       result = DataMagic.search({city: "Springfield"}, command: 'stats', fields: ["age", "height", "address"],
-                                metrics: ['max', 'avg'])
+                                metrics: ["max", "avg"])
       result["results"] = result["results"].sort_by { |k| k["age"] }
 
       expected["results"] = []
       expected["aggregations"] = {
         "age" => { "max" => 70.0, "avg" => 42.0},
-        "height" => {"max"=>142.0, "avg"=>72.0}
+        "height" => {"max"=>14210984098501.5, "avg"=>7106893013455.655}
       }
 
       expect(result).to eq(expected)
