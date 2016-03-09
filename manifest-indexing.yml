@@ -1,0 +1,14 @@
+---
+applications:
+-  name: ccapi-indexing
+   command: bundle exec puma -C ./config/puma.rb
+   instances: 1
+   memory: 2G
+   services:
+   - bservice
+   - eservice
+   env:
+     MAX_THREADS: 5
+     WEB_CONCURRENCY: 1
+     INDEX_APP: enable
+     NPROCS: 2

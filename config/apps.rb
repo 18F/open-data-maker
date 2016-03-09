@@ -35,5 +35,11 @@ Padrino.configure_apps do
 
 end
 
+# If needed, mount the app that does indexing
+if ENV['INDEX_APP'] == "enable"
+  puts "mounting index app"
+  Padrino.mount('OpenDataMaker::IndexApp', :app_file => Padrino.root('app/index_app.rb')).to('/index')
+end
+
 # Mounts the core application for this project
 Padrino.mount('OpenDataMaker::App', :app_file => Padrino.root('app/app.rb')).to('/')

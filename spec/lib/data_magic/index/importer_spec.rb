@@ -1,22 +1,18 @@
 require 'spec_helper'
 require 'data_magic'
 
-describe "DataMagic #import_csv" do
+describe "DataMagic::Index::Importer" do
   before do
     ENV['DATA_PATH'] = './spec/fixtures/minimal'
     DataMagic.init(load_now: false)
   end
   after do
     DataMagic.destroy
-    #expect(DataMagic.client.indices.get(index: '_all')).to be_empty
   end
 
-  it "throws errors for bad format" do
-    data = StringIO.new("not csv format")
-    expect{DataMagic.import_csv(data)}.to raise_error(DataMagic::InvalidData)
-  end
+  it "indexes in parallel based on NPROCS" do
+    stub_const('ENV', { 'NPROCS' => '2' })
 
-  it "reads file and reports number of rows and headers" do
     data_str = <<-eos
 a,b
 1,2
@@ -27,5 +23,4 @@ eos
     expect(num_rows).to be(2)
     expect(fields).to eq(['a', 'b'])
   end
-
 end

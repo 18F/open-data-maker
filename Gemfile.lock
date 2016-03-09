@@ -144,6 +144,7 @@ GEM
       padrino-core (= 0.12.5)
     padrino-support (0.12.5)
       activesupport (>= 3.1)
+    parallel (1.6.1)
     parslet (1.7.1)
       blankslate (>= 2.0, <= 4.0)
     polyglot (0.3.5)
@@ -183,6 +184,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.3.0)
     rspec-support (3.3.0)
+    ruby-prof (0.15.9)
     safe_yaml (1.0.4)
     sass (3.4.16)
     signet (0.6.1)
@@ -235,6 +237,7 @@ DEPENDENCIES
   newrelic_rpm
   oj
   padrino (= 0.12.5)
+  parallel
   parslet
   pry
   pry-byebug
@@ -243,6 +246,7 @@ DEPENDENCIES
   rake
   rspec
   rspec-mocks
+  ruby-prof
   safe_yaml
   sass
   stretchy

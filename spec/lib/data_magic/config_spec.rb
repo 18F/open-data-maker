@@ -36,7 +36,7 @@ describe DataMagic::Config do
         status: 200
       )
       allow(fake_s3).to receive(:get_object)
-        .with(bucket: 'mybucket', key: 'data.yaml')
+        .with(bucket: 'mybucket', key: 'data.yaml', response_target: duck_type(:read))
         .and_return(fake_get_object_response)
       config = DataMagic::Config.new(s3: fake_s3)
       expect(config.s3).to eq(fake_s3)
@@ -48,7 +48,7 @@ describe DataMagic::Config do
       fake_s3 = class_spy("Fake Aws::S3::Client")
 
       allow(fake_s3).to receive(:get_object)
-        .with(bucket: 'mybucket', key: 'data.yaml')
+        .with(bucket: 'mybucket', key: 'data.yaml', response_target: duck_type(:read))
         .and_raise(RuntimeError)
       expect {
         DataMagic::Config.new(s3: fake_s3)

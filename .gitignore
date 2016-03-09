@@ -12,6 +12,7 @@ db/*.db
 .cfignore
 .vagrant
 .idea/
+*profile*
 
 public/stylesheets/application.css*
 

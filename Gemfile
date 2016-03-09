@@ -24,6 +24,7 @@ gem 'actionview'
 gem 'dotenv'
 gem 'oj'
 gem 'parslet'
+gem 'parallel'
 
 # Project requirements
 gem 'rake'
@@ -43,6 +44,8 @@ end
 
 group 'dev' do
   gem 'google_drive'
+  gem 'ruby-prof'
+
 end
 # Padrino Stable Gem
 gem 'padrino', '0.12.5'
