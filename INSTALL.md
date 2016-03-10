@@ -56,6 +56,13 @@ script, you can restart it with this command:
 
 ```brew services restart elasticsearch```
 
+
+### Import the data
+
+To get started, you can import sample data with:
+
+`rake import`
+
 ### Start the app
 
 ```
@@ -83,18 +90,6 @@ http://127.0.0.1:3000/v1/cities?name=Cleveland. You should see something like:
 
 ### Custom Datasets
 
-If you set the `DATA_PATH` environment variable to reference a new dataset,
-it will be imported when the app starts up.  
-
-The data directory can optionally include a file called `data.yaml` (see [the sample one](sample-data/data.yaml) for its schema) that references one or more `.csv` files and specifies data types,
-field name mapping, and other.
-
-The app will check the version
-in that file and if it is new, the old index (of the same name) will be
-removed and re-created.
-
-### Importing Data Manually
-
 While the app is running (or anytime) you can run `rake import`. For instance, if you had a `presidents/data.yaml` file, you would import
 it with:
 
@@ -111,16 +106,29 @@ to clear the data, assuming the data set  had an index named "president-data"
 rake es:delete[president-data]
 ```
 
-you may alternatly delete all the indices (which could affect other apps if
-they are using your local elasticsearch)
+you may alternately delete all the indices (which could affect other apps if
+they are using your local Elasticsearch)
 
 ```
 rake es:delete[_all]
 ```
 
+The data directory can optionally include a file called `data.yaml` (see [the sample one](sample-data/data.yaml) for its schema) that references one or more `.csv` files and specifies data types,
+field name mapping, and other support data.
+
+## Experimental web UI for indexing
+
+Optionally, you can enable indexing from webapp, but this option is still experimental:
+* `export INDEX_APP=enable`
+* in your browser, go to /index/reindex
+
+the old index (if present) will be deleted and re-created from source files at DATA_PATH.
+
 ## Want to help?
 
 See [Contribution Guide](CONTRIBUTING.md)
+
+Read additional [implementation notes](NOTES.md)
 
 [Elasticsearch]: https://www.elastic.co/products/elasticsearch
 [Homebrew]: http://brew.sh/

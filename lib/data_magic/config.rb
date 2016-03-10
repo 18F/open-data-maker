@@ -8,10 +8,20 @@ module DataMagic
                 :null_value, :file_config
     attr_accessor :page_size
 
-    def initialize(options = {})
+    def init_ivars
       @api_endpoints = {}
       @files = []
       @dictionary = {}
+      @examples = nil
+      @column_types = nil
+      @csv_column_types = nil
+      @field_mapping = nil
+      @calculated_field_list = nil
+      @field_types = nil
+    end
+
+    def initialize(options = {})
+      init_ivars
       @page_size = DataMagic::DEFAULT_PAGE_SIZE
       @extensions = DataMagic::DEFAULT_EXTENSIONS
       @s3 = options[:s3]
@@ -271,6 +281,20 @@ module DataMagic
       @field_types
     end
 
+    def recreate_indexed_config
+      # the config specifies how we index, so we always want to delete the
+      # index when we update the configuration document
+      DataMagic.client.indices.delete index: scoped_index_name if index_exists?
+      DataMagic.create_index(scoped_index_name, field_types)  ## DataMagic::Index.create ?
+      DataMagic.client.index index: scoped_index_name, type: 'config', id: 1, body: @data
+      DataMagic.client.indices.refresh index: scoped_index_name
+    end
+
+    def delete_index_and_reload_config
+      load_or_reload_datayaml(data_path)
+      recreate_indexed_config
+    end
+
     # update current configuration document in the index, if needed
     # return whether the current config was new and required an update
     def update_indexed_config
@@ -278,18 +302,15 @@ module DataMagic
       index_name = scoped_index_name
       if index_needs_update?
         logger.debug "--------> new config -> new index: #{@data.inspect[0..255]}"
-        DataMagic.client.indices.delete index: index_name if index_exists?
-        DataMagic.create_index(index_name, field_types)  ## DataMagic::Index.create ?
-        DataMagic.client.index index: index_name, type: 'config', id: 1, body: @data
+        recreate_indexed_config
         updated = true
       end
       updated
     end
 
-
     def index_exists?(index_name=nil)
       index_name ||= scoped_index_name
-      logger.info "looking for: #{index_name}"
+      logger.debug "looking for: #{index_name}"
       DataMagic.client.indices.exists? index: index_name
     end
 
@@ -318,8 +339,19 @@ module DataMagic
     def read_from_s3(bucket, key)
       result = nil
       begin
-        response = @s3.get_object(bucket: bucket, key: key)
-        result = response.body.read
+        # the explicit encoding required to ensure no encoding conversion is attempted,
+        # and that we write in "binary" mode.
+        tmpfile = Tempfile.new(key, encoding: 'ascii-8bit')
+        response = @s3.get_object(bucket: bucket, key: key, response_target: tmpfile)
+        result = response.body
+        # manual check for BOM, set pos beyond it if necessary.
+        first_three_bytes = result.sysread(3)
+        if first_three_bytes == "\xEF\xBB\xBF".force_encoding(first_three_bytes.encoding)
+          # do nothing, pos now beyond BOM
+        else
+          result.rewind
+        end
+        result
       rescue Aws::S3::Errors::NoSuchKey
         # we don't want to raise this one, might be expected
         result = nil
@@ -336,7 +368,7 @@ module DataMagic
     def read_path_local(path)
       result = nil
       begin
-        result = File.read(path)
+        result = File.open(path, 'r:bom|utf-8')
       rescue => e
         if e.message.include? "No such file or directory"
           result = nil
@@ -348,7 +380,7 @@ module DataMagic
       result
     end
 
-    # reads a file or s3 object, returns a string
+    # opens a file or s3 object, returns an IO stream
     # path follows URI pattern
     # could be
     #   s3://username:password@bucket_name/path
@@ -434,6 +466,28 @@ module DataMagic
       @data['null_value'] || 'NULL'
     end
 
+    def load_or_reload_datayaml(directory_path)
+      logger.debug "load config #{directory_path.inspect}"
+      init_ivars
+      @data = load_yaml(directory_path)
+      @data['unique'] ||= []
+      logger.debug "config: #{@data.inspect[0..600]}"
+      @data['index'] ||= clean_index(@data_path)
+      endpoint = @data['api'] || clean_index(@data_path)
+      @dictionary = @data['dictionary'] || {}
+      @data['options'] ||= {}
+      Hashie.symbolize_keys! @data['options']
+      @api_endpoints[endpoint] = {index: @data['index']}
+      @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
+
+      logger.debug "file_config: #{@data['files'].inspect}"
+      logger.debug "no files found" if @data['files'].empty?
+
+      # keep track of where we loaded our data, so we can avoid loading again
+      @data['data_path'] = directory_path
+      @data_path = directory_path  # make sure this is set, in case it changed
+    end
+
     def load_datayaml(directory_path = nil)
       logger.debug "---- Config.load -----"
       if directory_path.nil? or directory_path.empty?
@@ -443,24 +497,7 @@ module DataMagic
       if @data and @data['data_path'] == directory_path
         logger.debug "already loaded, nothing to do!"
       else
-        logger.debug "load config #{directory_path.inspect}"
-        @data = load_yaml(directory_path)
-        @data['unique'] ||= []
-        logger.debug "config: #{@data.inspect[0..600]}"
-        @data['index'] ||= clean_index(@data_path)
-        endpoint = @data['api'] || clean_index(@data_path)
-        @dictionary = @data['dictionary'] || {}
-        @data['options'] ||= {}
-        Hashie.symbolize_keys! @data['options']
-        @api_endpoints[endpoint] = {index: @data['index']}
-        @files, @data['files'] = parse_files(directory_path, @data['files'], @data['options'])
-
-        logger.debug "file_config: #{@data['files'].inspect}"
-        logger.debug "no files found" if @data['files'].empty?
-
-        # keep track of where we loaded our data, so we can avoid loading again
-        @data['data_path'] = directory_path
-        @data_path = directory_path  # make sure this is set, in case it changed
+        load_or_reload_datayaml(directory_path)
       end
       scoped_index_name
     end
