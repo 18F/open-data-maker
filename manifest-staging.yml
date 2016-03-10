@@ -2,7 +2,7 @@
 applications:
 -  name: ccapi-staging
    command: bundle exec puma -C ./config/puma.rb
-   instances: 3
+   instances: 1
    memory: 2G
    services:
    - bservice
