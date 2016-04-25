@@ -2,7 +2,8 @@
 set -e
 
 if [ ! -n "$1" ]; then
-  echo "Usage: create-space.sh spacename"
+  echo "Usage: From inside open-data-maker directory..."
+  echo "  create-space.sh spacename"
   exit 1
 fi
 echo "Creating space: $1"
@@ -12,7 +13,7 @@ SPACE=$1
 cf create-space ${SPACE} -o ed
 
 echo "# When creating the space, the user which creates it is a SpaceManager"
-echo "# Add developers using: cf set-space-role USERNAME ed ${SPACE} SpaceDeveloper" 
+echo "# Add developers using: cf set-space-role USERNAME ed ${SPACE} SpaceDeveloper"
 
 # Target the space
 cf target -o ed -s ${SPACE}
@@ -30,13 +31,16 @@ echo "# cf create-service s3 basic backup"
 # Create the ElasticSearch service
 cf create-service elasticsearch-swarm-1.7.5 3x eservice
 
-echo "# To create the API server push the ccapi-${SPACE} app:"
-echo "cf push -f manifest-${SPACE}.yml"
+echo "Creating the API server by pushing the ccapi-${SPACE} app:"
+cf push -f manifest-${SPACE}.yml
+echo "By default the app will use the data-files bucket, leaving DATA_PATH env blank"
 
 echo "# For data archive / downloads, these are served via a S3 proxy"
 echo "# The /downloads path is redirected via CloudFront to"
 echo "# ed-public-download.apps.cloud.gov which is in the production space"
 echo "# To create additional S3 proxies: https://github.com/18F/cg-s3-proxy"
+
+echo "TODO: how to put files in the bucket"
 
 echo "# now you need to index"
 echo "cf-ssh -f manifest-${SPACE}"
@@ -45,4 +49,3 @@ echo "echo $DATA_PATH"
 echo "# if blank, you will get default cities data"
 echo "rake import"
 echo "# when this is done, go to https://ccapi-${SPACE}.18f.gov and explore"
-
