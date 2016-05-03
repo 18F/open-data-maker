@@ -9,7 +9,6 @@ db/*.db
 .*.sw*
 .env
 .*.env
-.cfignore
 .vagrant
 .idea/
 *profile*
