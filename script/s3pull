@@ -4,7 +4,7 @@ require_relative 's3config.rb'
 
 @s3 = ::Aws::S3::Client.new
 
-bucket = ENV['s3_bucket']
+bucket = ENV['BUCKET_NAME']
 
 dirname = 'real-data'
 unless File.directory?(dirname)
