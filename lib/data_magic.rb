@@ -41,8 +41,11 @@ module DataMagic
 
   def self.s3
     if @s3.nil?
-      if ENV['VCAP_APPLICATION']
-        s3cred = ::CF::App::Credentials.find_by_service_name(ENV['s3_bucket_service'] || 'bservice')
+      if ENV['VCAP_APPLICATION']  # in Cloud Foundry
+        cfcred = ::CF::App::Credentials.find_by_service_name(ENV['s3_bucket_service'] || 'data-files')
+        s3cred = {'access_key'=> cfcred['access_key_id'], 'secret_key' => cfcred['secret_access_key']}
+        bucket_name = cfcred['bucket']
+        # TODO: default DATA_PATH to s3://{bucket_name}
       else
         s3cred = {'access_key'=>  ENV['s3_access_key'], 'secret_key' => ENV['s3_secret_key']}
       end
