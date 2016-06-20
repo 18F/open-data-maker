@@ -227,6 +227,7 @@ module DataMagic
   # convert the types from data.yaml to Elasticsearch-specific types
   def self.es_field_types(field_types)
     custom_type = {
+      'date' => {type: 'date', format: "yyyy-MM-dd"},
       'literal' => {type: 'string', index:'not_analyzed'},
       'name' => {type: 'string', index:'not_analyzed'},
       'lowercase_name' => {type: 'string', index:'not_analyzed', store: false},

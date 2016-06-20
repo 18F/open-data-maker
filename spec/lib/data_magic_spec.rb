@@ -24,6 +24,13 @@ describe DataMagic do
       end
     end
 
+    context 'with type "date"' do
+      it 'returns the date field with date type in default format' do
+        expect(described_class.es_field_types({ 'date' => 'date' }))
+        .to eq({"date"=>{:type=>"date",:format=>"yyyy-MM-dd"}})                                       
+      end
+    end
+
   end
 
 end
