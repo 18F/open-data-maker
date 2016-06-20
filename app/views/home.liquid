@@ -1,6 +1,6 @@
-<section>
+<section class="usa-grid">
   <div class="header">
-    <img class="logo" style="float: left" src="https://18f.gsa.gov/assets/images/logo-18f.png">
+    <img class="logo usa-width-one-sixth" style="float: left" src="https://18f.gsa.gov/assets/images/logo-18f.png">
     <br/>
     <h1 class="title">{{ title }}</h1>
     <div style="clear: both"></div>
@@ -8,28 +8,30 @@
   </br>
 </section>
 
-<h2>API endpoints</h2>
-
-<ul>
-{% for name in endpoints %}
-  <li><a href="/v1/{{ name }}">{{ name }}</a></li>
-{% endfor %}
-</ul>
-
-{% if examples.size > 0 %}
-  <h2>Examples</h2>
+<section class="usa-grid">
+  <h2>API endpoints</h2>
 
   <ul>
-  {% for ex in examples %}
-    <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
+  {% for name in endpoints %}
+    <li><a href="/v1/{{ name }}">{{ name }}</a></li>
   {% endfor %}
   </ul>
-{% endif %}
 
-<h2 class="bottom-margin">Browse Data Details by Category</h2>
-<div class="categories">
-  <div id="categories-list" class="categories__column"></div>
-</div>
+  {% if examples.size > 0 %}
+    <h2>Examples</h2>
+
+    <ul>
+    {% for ex in examples %}
+      <li><a href="{{ ex.link }}">{{ ex.name }}</a> {{ ex.description }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+
+  <h2 class="bottom-margin">Browse Data Details by Category</h2>
+  <div class="categories">
+    <div id="categories-list" class="categories__column"></div>
+  </div>
+</section>
 
 <script>
   var categories = {{ categories }} ;
