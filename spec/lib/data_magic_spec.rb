@@ -26,4 +26,14 @@ describe DataMagic do
 
   end
 
+  describe '.client' do
+    context 'if running in cloud foundry' do
+      it 'fails if eservice has not been bound' do
+        ENV['VCAP_APPLICATION'] = "hello" # pass CF check
+        ENV['VCAP_SERVICES'] = "{}"
+        expect { DataMagic.client }.to raise_error("Please set up eservice credentials in Cloud Foundry env")
+      end
+    end
+  end
+
 end
