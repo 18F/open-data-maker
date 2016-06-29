@@ -141,8 +141,8 @@ describe 'api', type: 'feature' do
 
           expect(result.length).to eq 2
 
-          expect(result[0]).to eq %w(id code name state population area.land area.water location.lat location.lon)
-          expect(result[1]).to eq %w(1714000 00428803 Chicago IL 2695598 227.635 6.479 41.837551 -87.681844)
+          expect(result[0]).to eq %w(id code name state population location.lat location.lon area.land area.water)
+          expect(result[1]).to eq %w(1714000 00428803 Chicago IL 2695598 41.837551 -87.681844 227.635 6.479 )
         end
       end
 
