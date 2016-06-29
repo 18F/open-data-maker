@@ -171,7 +171,7 @@ module DataMagic
   def self.create_index(es_index_name = nil, field_types={})
     logger.info "create_index field_types: #{field_types.inspect[0..500]}"
     es_index_name ||= self.config.scoped_index_name
-    field_types['location'] = 'geo_point'
+    field_types['location'] = 'lat_lon' # custom lat_lon type maps to geo_point with additional field options
     es_types = NestedHash.new.add(es_field_types(field_types))
     nested_object_type(es_types)
     begin
@@ -234,6 +234,11 @@ module DataMagic
                           index_analyzer: 'autocomplete_index',
                           search_analyzer: 'autocomplete_search'
       },
+      'lat_lon' => { type: 'geo_point',
+                     lat_lon: true,
+                     store: true
+
+      }
    }
     field_types.each_with_object({}) do |(key, type), result|
       result[key] = custom_type[type]

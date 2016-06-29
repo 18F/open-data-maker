@@ -270,7 +270,6 @@ module DataMagic
         logger.info "field_types #{fields.inspect}"
         fields.each do |field_name, info|
           type = info['type'] || "string"
-          type = nil if field_name == 'location.lat' || field_name == 'location.lon'
           #logger.info "field #{field_name}: #{type.inspect}"
           @field_types[field_name] = type unless type.nil?
           if type == 'name' || type == 'autocomplete'

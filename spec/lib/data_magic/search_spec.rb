@@ -191,6 +191,18 @@ describe "DataMagic #search" do
       expected['metadata']["total"] = expected["results"].length
       expect(result).to eq(expected)
     end
+
+    it "#search with a fields filter can return location.lat and location.lon values" do
+      sf_location = { lat: 37.727239, lon: -123.032229 }
+      DataMagic.logger.debug "sfo_location[:lat] #{sf_location[:lat].class} #{sf_location[:lat].inspect}"
+      response = DataMagic.search({city: "San Francisco"}, {:fields => ["location.lat", "location.lon"]})
+      result = response["results"][0]
+      expect(result.keys.length).to eq(2)
+      expect(result).to include("location.lat")
+      expect(result).to include("location.lat")
+      expect(result["location.lat"]).to eq sf_location[:lat]
+      expect(result["location.lon"]).to eq sf_location[:lon]
+    end
   end
 
   describe "with sample-data" do

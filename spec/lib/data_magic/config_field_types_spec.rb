@@ -72,13 +72,17 @@ describe 'DataMagic::Config #field_types' do
     end
   end
 
-  it "supports special case for location fields as nil" do
-    # special case for location in create_index
+  it "supports location.lat and location.lon fields" do
+    allow(config).to receive(:file_config).and_return([{'name' => 'one.csv'}])
     allow(config).to receive(:dictionary).and_return(
-      IndifferentHash.new 'location.lat': {source:'LAT_COLUMN'},
-                          'location.lon': {source:'LON_COLUMN'}
-
+      IndifferentHash.new 'location.lat': {source:'LAT_COLUMN', type: 'float'},
+                          'location.lon': {source:'LON_COLUMN', type: 'float'}
     )
-    expect(config.field_types).to eq({})
+    expect(config.field_types).to eq(
+      {
+        'location.lat'=>'float',
+        'location.lon'=>'float'
+      }
+    )
   end
 end
