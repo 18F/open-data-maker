@@ -105,7 +105,9 @@ module DataMagic
         # each result looks like this:
         # {"city"=>["Springfield"], "address"=>["742 Evergreen Terrace"]}
 
-        found.keys.each { |key| found[key] = found[key][0] }
+        found.keys.each { |key|
+          found[key] = found[key].size === 1 ? found[key][0] : found[key]
+        }
         # now it should look like this:
         # {"city"=>"Springfield", "address"=>"742 Evergreen Terrace}
 
@@ -234,6 +236,10 @@ module DataMagic
                           index_analyzer: 'autocomplete_index',
                           search_analyzer: 'autocomplete_search'
       },
+      'multivalue' => {
+          type: 'string',
+          position_offset_gap: 100
+      }
    }
     field_types.each_with_object({}) do |(key, type), result|
       result[key] = custom_type[type]
