@@ -77,6 +77,7 @@ module DataMagic
         def lowercase_columns(row, field_types = {})
           new_columns = {}
           row.each do |key, value|
+            next if value.nil?
             type = field_types[key.to_sym] || field_types[key.to_s]
             new_columns["_#{key}"] = value.downcase if type == "name" || type == "autocomplete"
           end
