@@ -162,6 +162,30 @@ describe DataMagic::Config do
     end
   end
 
+  context ".multivalue_field_list" do
+    let(:config) { DataMagic::Config.new(load_datayaml: false) }
+    it "finds fields with 'multivalue' property" do
+      allow(config).to receive(:dictionary).and_return(
+          {
+              one: {
+                  source: 'column1',
+                  type: 'float'
+              },
+              two: {
+                  source: 'column2',
+                  type: 'float'
+              },
+              names: {
+                  source: 'THING_NAMES',
+                  type: 'multivalue',
+                  description: 'something with multiple names'
+              }
+          }
+      )
+      expect(config.multivalue_field_list).to eq(['names'])
+    end
+  end
+
   context ".only_field_list" do
     let(:config) { DataMagic::Config.new(load_datayaml: false) }
     let(:simple_fields) do

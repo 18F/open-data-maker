@@ -17,6 +17,7 @@ module DataMagic
       @csv_column_types = nil
       @field_mapping = nil
       @calculated_field_list = nil
+      @multivalue_field_list = nil
       @field_types = nil
     end
 
@@ -244,6 +245,20 @@ module DataMagic
         end
       end
       @calculated_field_list
+    end
+
+    def multivalue_field_list
+      if @multivalue_field_list.nil?
+        @multivalue_field_list = []
+        dictionary.each do |field_name, info|
+          if info.is_a? Hash
+            if info[:type] === 'multivalue'
+              @multivalue_field_list << field_name.to_s
+            end
+          end
+        end
+      end
+      @multivalue_field_list
     end
 
     def field_type(field_name)

@@ -113,6 +113,51 @@ describe DataMagic::Index::DocumentBuilder do
         it_correctly "creates a document"
       end
     end
+
+    context "with multivalue type" do
+      before do
+        allow(config).to receive(:csv_column_type).with(:THING_NAMES).and_return('multivalue')
+        allow(config).to receive(:multivalue_field_list).and_return(['names_for_thing'])
+      end
+
+      describe "with default comma separator" do
+        let(:fields) { config.field_mapping }
+        context "stores multi value string as array" do
+          before do
+            config.dictionary = {
+                names_for_thing: {
+                    source: 'THING_NAMES',
+                    type: 'multivalue',
+                    description: 'a field that has multiple names'
+                }
+            }
+          end
+          subject {{ THING_NAMES: 'foo,bar,foo bar' }}
+          let(:expected_document) {{ 'names_for_thing' => ['foo', 'bar', 'foo bar'] }}
+          it_correctly "creates a document"
+        end
+      end
+
+      describe "with a specified separator" do
+        before do
+          config.dictionary = {
+              names_for_thing: {
+                  source: 'THING_NAMES',
+                  type: 'multivalue',
+                  separator: '|',
+                  description: 'a field that has multiple names'
+              }
+          }
+        end
+        let(:fields) { config.field_mapping }
+        context "and stores multi value string as array" do
+          subject {{ THING_NAMES: 'foo|bar|foo bar' }}
+          let(:expected_document) {{ 'names_for_thing' => ['foo', 'bar', 'foo bar'] }}
+          it_correctly "creates a document"
+        end
+      end
+
+    end
   end
 
   describe "boolean expressions with integer inputs" do
