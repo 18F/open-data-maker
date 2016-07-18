@@ -238,7 +238,7 @@ module DataMagic
       },
       'multivalue' => {
           type: 'string',
-          position_increment_gap: 100
+          position_offset_gap: 100
       }
    }
     field_types.each_with_object({}) do |(key, type), result|
