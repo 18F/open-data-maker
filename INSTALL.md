@@ -3,7 +3,7 @@
 If you just want to install and run, then you can just download a
 [zip file](https://github.com/18F/open-data-maker/archive/master.zip).
 
-You will still need the the dependencies below, but you don't need to
+You will still need the dependencies below, but you don't need to
 clone the git repo for the source code.
 
 ## Install Prerequisites
