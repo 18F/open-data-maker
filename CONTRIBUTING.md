@@ -61,7 +61,8 @@ To run all the tests:
 
 Treat commit messages as an email message that describes what you changed and why.
 
-The first line of the commit log must be treated as as an email
+The first line of the commit log 
+as an email
 subject line.  It must be strictly no greater than 50 characters long.
 The subject must stand on its own and not only make external
 references such as to relevant bug numbers.
@@ -90,7 +91,7 @@ chances of your issue being dealt with quickly:
 * **Motivation for or Use Case** - explain why this is a bug for you
 * **Version(s)** - is it a regression?
 * **Browsers and Operating System** - is this a problem with all browsers or only IE8?
-* **Reproduce the error** - provide a live example, screenshot, and/or a unambiguous set of steps. The more the better.
+* **Reproduce the error** - provide a live example, screenshot, and/or an unambiguous set of steps. The more the better.
 * **Related issues** - has a similar issue been reported before?  Reference the related issues in the descrioption.
 * **Suggest a Fix** - if you can't fix the bug yourself, perhaps you can point to what might be
   causing the problem (line of code or commit).  If you're requesting a feature, describe how the feature might work to resolve the user story.
@@ -182,6 +183,6 @@ Anyone who reviews a pull request should leave a note to let others know that
 someone has looked at it. For larger commits, we like to have a +1 from someone
 else on the core team and/or from other contributor(s). Please note if you
 reviewed the code or tested locally -- a +1 by itself will typically be
-interpreted as your thinking its a good idea, but not having reviewed in detail.
+interpreted as your thinking it's a good idea, but not having reviewed in detail.
 
 [Google Group]: https://groups.google.com/d/forum/open-data-maker
