@@ -100,7 +100,7 @@ Here's how it might look in the future:
 ![Download all the data or make choices to create a csv with a subset](/doc/csv-download.png)
 
 ### Acknowledgements
-Zipcode latitude and longitude provided by [GeoNames](http://www.geonames.org/) under under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).
+Zipcode latitude and longitude provided by [GeoNames](http://www.geonames.org/) under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).
 
 ### Public domain
 

@@ -43,7 +43,7 @@ In this query URL:
  * `.json` is the Format. Note the dot between the Endpoint and Format. Also note that, since JSON is the default output format, we didn't _have_ to specify it.
  * In keeping with standard [URI Query String syntax](https://en.wikipedia.org/wiki/Query_string), the `?` and `&` characters are used to begin and separate the list of query parameters.
  * `school.degrees_awarded.predominant=2,3` is a Field Parameter. In this case, it's searching for records which have a `school.degrees_awarded.predominant` value of either `2` or `3`.
- * `_fields=id,school.name,2013.student.size` is an Option Parameter, as denoted by the initial underscore character. `_fields` is used to limit the output fields to those in the given list. We strongly recommend using the `_fields` parameter to reduce the amount of data returned by the API, thus increasing performance.
+ * `_fields=id, school.name, 2013.student.size` is an Option Parameter, as denoted by the initial underscore character. `_fields` is used to limit the output fields to those in the given list. We strongly recommend using the `_fields` parameter to reduce the amount of data returned by the API, thus increasing performance.
 
 ### JSON Output Example
 
@@ -89,7 +89,7 @@ A successful query will return a JSON with two top-level elements:
 
 ### Error Example
 
-Let's change the query so as to generate an error when it's executed:
+Let's change the query to generate an error when it's executed:
 
 ```
 https://api.data.gov/ed/collegescorecard/v1/schools.json?school.degrees_awarded.predominant=frog&_fields=id,school.name,wombat
@@ -187,7 +187,7 @@ You can perform extra refinement and organisation of search results using **opti
 
 ### Limiting Returned Fields with `_fields`
 
-By default, records returned in the query response include all their stored fields. However, you can limit the fields returned with the `_fields` option parameter. This parameter takes a comma-separated list of field names. For example: `_fields=id,school.name,school.state` will return result records that only contain those three fields.
+By default, records returned in the query response include all their stored fields. However, you can limit the fields returned with the `_fields` option parameter. This parameter takes a comma-separated list of field names. For example: `_fields=id, school.name, school.state` will return result records that only contain those three fields.
 
 Requesting specific fields in the response will significantly improve performance and reduce JSON traffic, and is recommended.
 
