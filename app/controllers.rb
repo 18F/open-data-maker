@@ -19,7 +19,11 @@ OpenDataMaker::App.controllers do
   end
 end
 
-CACHE_TTL = 300
+# Specifies how long resources should be cached (in seconds) by
+# either api.data.gov, intermediate caches, or the user's browser.
+# This should balance risk of caching bad data versus unnecessary
+# hits against the back-end.
+CACHE_TTL = 3600
 
 # All API requests are prefixed by the API version
 # in this case, "v1" - e.g. "/vi/endpoints" etc.
